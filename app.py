@@ -7,9 +7,25 @@ if BASE_DIR not in sys.path:
 
 import spaces
 import gradio as gr
+from gradio.routes import App
 from server import app as fastapi_app
 
-# Función decorada con ZeroGPU para satisfacer los requisitos del runtime de Hugging Face
+# Parchear App.create_app a nivel de módulo para que, ya sea que Hugging Face
+# ejecute `python app.py` o importe `demo` directamente, todas las rutas de nuestra
+# aplicación FastAPI (interfaz en '/', APIs, assets, videos) se inserten con máxima
+# prioridad antes que cualquier ruta o catch-all interno de Gradio.
+original_create_app = App.create_app
+
+def custom_create_app(*args, **kwargs):
+    gradio_app = original_create_app(*args, **kwargs)
+    # Insertar todas nuestras rutas y montajes estáticos al inicio
+    for route in reversed(fastapi_app.routes):
+        gradio_app.router.routes.insert(0, route)
+    return gradio_app
+
+App.create_app = custom_create_app
+
+# ZeroGPU registration
 @spaces.GPU(duration=120)
 def gpu_worker():
     return True
@@ -20,23 +36,12 @@ with gr.Blocks(title="JesusReels Studio") as demo:
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "7860"))
-    
-    # 1. Iniciar Gradio con cola activa (ZeroGPU engancha aquí su informe de inicio)
-    res = demo.queue().launch(
+    print("\n=======================================================")
+    print(f"  JESUS REELS STUDIO - Hugging Face - Puerto {port}")
+    print("=======================================================\n")
+    demo.queue().launch(
         server_name="0.0.0.0",
         server_port=port,
-        prevent_thread_lock=True,
+        prevent_thread_lock=False,
         show_error=True
     )
-    launched_app = res[0]
-
-    # 2. Insertar todas las rutas del servidor FastAPI (incluyendo '/', '/assets', '/static', '/studio/api/...')
-    # en la posición 0 del router de Gradio para que se atiendan directamente sin ser interceptadas por el catch-all de Gradio.
-    for route in reversed(fastapi_app.routes):
-        launched_app.router.routes.insert(0, route)
-
-    print("\n=======================================================")
-    print(f"  JESUS REELS STUDIO - Hugging Face - Activo en puerto {port}")
-    print("=======================================================\n")
-    
-    demo.block_thread()

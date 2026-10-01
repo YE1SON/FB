@@ -25,7 +25,17 @@ os.makedirs(ASSETS_DIR, exist_ok=True)
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="JesusReels Studio", version="2.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount static and assets folders
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

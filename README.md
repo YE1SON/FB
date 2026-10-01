@@ -1,3 +1,14 @@
+---
+title: Jesus Reels Studio
+emoji: ✝️
+colorFrom: yellow
+colorTo: indigo
+sdk: gradio
+sdk_version: 6.29.0
+app_file: app.py
+pinned: false
+---
+
 # JesusReels Studio ✝️
 ### Creador de Vídeos y Reels Cristianos de Alta Retención para Facebook (Audiencia de EE. UU.)
 

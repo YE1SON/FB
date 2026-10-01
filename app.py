@@ -5,15 +5,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+# Desactivar proxy de Node / SSR para que Python atienda directamente en el puerto 7860
+os.environ["GRADIO_SSR_MODE"] = "False"
+os.environ["GRADIO_NODE_PATH"] = ""
+
 import spaces
 import gradio as gr
 from gradio.routes import App
 from server import app as fastapi_app
 
-# Parchear App.create_app a nivel de módulo para que, ya sea que Hugging Face
-# ejecute `python app.py` o importe `demo` directamente, todas las rutas de nuestra
-# aplicación FastAPI (interfaz en '/', APIs, assets, videos) se inserten con máxima
-# prioridad antes que cualquier ruta o catch-all interno de Gradio.
+# Parchear App.create_app para insertar todas las rutas de FastAPI al inicio del router
 original_create_app = App.create_app
 
 def custom_create_app(*args, **kwargs):
@@ -43,5 +44,6 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=port,
         prevent_thread_lock=False,
-        show_error=True
+        show_error=True,
+        ssr_mode=False
     )

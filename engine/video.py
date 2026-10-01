@@ -38,12 +38,13 @@ def render_reel(
     filter_complex = (
         f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
         f"crop=1080:1920,"
-        f"zoompan=z='min(zoom+{zoom_step:.6f},1.12)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih*0.4-(ih*0.4/zoom)':s=1080x1920:fps={fps},"
+        f"zoompan=z='min(zoom+{zoom_step:.6f},1.12)':d=1:x='iw/2-(iw/zoom/2)':y='ih*0.4-(ih*0.4/zoom)':s=1080x1920:fps={fps},"
         f"ass='{norm_ass}'[v]"
     )
 
     cmd = [
         "ffmpeg", "-y",
+        "-threads", "2",
         "-loop", "1",
         "-i", image_path,
         "-i", audio_path,
@@ -51,8 +52,8 @@ def render_reel(
         "-map", "[v]",
         "-map", "1:a",
         "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-crf", "22",
+        "-preset", "ultrafast",
+        "-crf", "23",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",
         "-b:a", "192k",

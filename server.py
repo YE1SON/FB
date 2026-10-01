@@ -80,6 +80,7 @@ def health_check():
     return {"status": "ok", "app": "JesusReels Studio", "version": "2.0.0"}
 
 @app.get("/")
+@app.get("/app-view")
 def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 

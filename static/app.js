@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1. Cargar Temas Virales
   async function loadThemes() {
     try {
-      const res = await fetch("/api/themes");
+      const res = await fetch("/studio/api/themes");
       const themes = await res.json();
       themeSelect.innerHTML = themes
         .map(t => `<option value="${t.key}">${t.title}</option>`)
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 2. Cargar Voces en Inglés
   async function loadVoices() {
     try {
-      const res = await fetch("/api/voices");
+      const res = await fetch("/studio/api/voices");
       const voices = await res.json();
       voiceSelect.innerHTML = voices
         .map(v => `<option value="${v.key}" ${v.key === "christopher" ? "selected" : ""}>${v.name}</option>`)
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 3. Cargar Imágenes y Escenas Bíblicas
   async function loadImages() {
     try {
-      const res = await fetch("/api/images");
+      const res = await fetch("/studio/api/images");
       const images = await res.json();
       imageGallery.innerHTML = images
         .map(img => `
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnGenerateScript.disabled = true;
     btnGenerateScript.textContent = "⏳ Generando Guion en Inglés...";
     try {
-      const res = await fetch("/api/generate-script", {
+      const res = await fetch("/studio/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnSyncScriptToImage.textContent = "⏳ Analizando Oración...";
 
     try {
-      const res = await fetch("/api/generate-image-prompt", {
+      const res = await fetch("/studio/api/generate-image-prompt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnPreviewAudio.disabled = true;
     btnPreviewAudio.textContent = "⏳ Sintetizando Voz...";
     try {
-      const res = await fetch("/api/preview-audio", {
+      const res = await fetch("/studio/api/preview-audio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -199,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/upload-image", {
+      const res = await fetch("/studio/api/upload-image", {
         method: "POST",
         body: formData
       });
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData();
         formData.append("file", file);
 
-        const uploadRes = await fetch("/api/upload-image", {
+        const uploadRes = await fetch("/studio/api/upload-image", {
           method: "POST",
           body: formData
         });
@@ -324,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderStatusSub.textContent = "Animando movimiento de cámara Ken Burns (1080x1920)...";
       }, 3000);
 
-      const res = await fetch("/api/render-video", {
+      const res = await fetch("/studio/api/render-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -380,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 12. Cargar Biblioteca de Videos Recientes
   async function loadRecentOutputs() {
     try {
-      const res = await fetch("/api/outputs");
+      const res = await fetch("/studio/api/outputs");
       const outputs = await res.json();
       if (outputs.length === 0) {
         recentList.innerHTML = `<p class="text-muted">Aún no hay videos generados.</p>`;

@@ -84,19 +84,23 @@ def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 @app.get("/api/themes")
+@app.get("/studio/api/themes")
 def list_themes():
     return get_themes_list()
 
 @app.post("/api/generate-script")
+@app.post("/studio/api/generate-script")
 def api_generate_script(req: ScriptRequest):
     return generate_script(req.theme_key, req.custom_topic)
 
 @app.post("/api/generate-image-prompt")
+@app.post("/studio/api/generate-image-prompt")
 def api_generate_image_prompt(req: ImagePromptRequest):
     prompt = generate_image_prompt_for_script(req.theme_key, req.script_text, req.custom_topic)
     return {"prompt": prompt}
 
 @app.get("/api/voices")
+@app.get("/studio/api/voices")
 def list_voices():
     return [
         {"key": "christopher", "name": "Christopher (Solemne, Profundo y Reverente — Voz de Jesús)", "gender": "Hombre"},
@@ -107,6 +111,7 @@ def list_voices():
     ]
 
 @app.get("/api/subtitle-styles")
+@app.get("/studio/api/subtitle-styles")
 def list_subtitle_styles():
     return [
         {"key": k, "name": v["name"], "font": v["font"]}
@@ -114,6 +119,7 @@ def list_subtitle_styles():
     ]
 
 @app.get("/api/images")
+@app.get("/studio/api/images")
 def list_images():
     files = [
         f for f in os.listdir(ASSETS_DIR)
@@ -130,6 +136,7 @@ def list_images():
     ]
 
 @app.post("/api/upload-image")
+@app.post("/studio/api/upload-image")
 async def upload_image(file: UploadFile = File(...)):
     filename = f"custom_{uuid.uuid4().hex[:8]}_{file.filename}"
     filepath = os.path.join(ASSETS_DIR, filename)
@@ -138,6 +145,7 @@ async def upload_image(file: UploadFile = File(...)):
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida"}
 
 @app.post("/api/preview-audio")
+@app.post("/studio/api/preview-audio")
 async def preview_audio(req: AudioPreviewRequest):
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="El texto no puede estar vacío.")
@@ -150,6 +158,7 @@ async def preview_audio(req: AudioPreviewRequest):
     return {"audio_url": f"/outputs/{audio_id}"}
 
 @app.post("/api/render-video")
+@app.post("/studio/api/render-video")
 async def api_render_video(req: RenderRequest):
     full_text = f"{req.hook.strip()} {req.body.strip()} {req.cta.strip()}"
     if not full_text.strip():
@@ -182,6 +191,7 @@ async def api_render_video(req: RenderRequest):
     }
 
 @app.get("/api/outputs")
+@app.get("/studio/api/outputs")
 def list_outputs():
     files = [
         f for f in os.listdir(OUTPUTS_DIR)

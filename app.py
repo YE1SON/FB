@@ -3,6 +3,7 @@ import sys
 import uuid
 import asyncio
 from pathlib import Path
+import spaces
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -77,7 +78,7 @@ def fn_update_image_preview(image_label):
         return path
     return None
 
-async def fn_preview_audio(hook, body, cta, voice_label, speed_label):
+def fn_preview_audio(hook, body, cta, voice_label, speed_label):
     full_text = f"{hook.strip()} {body.strip()} {cta.strip()}".strip()
     if not full_text:
         raise gr.Error("Por favor ingresa texto en el guion para generar el audio.")
@@ -89,10 +90,11 @@ async def fn_preview_audio(hook, body, cta, voice_label, speed_label):
     audio_id = f"preview_{uuid.uuid4().hex[:8]}.mp3"
     audio_path = os.path.join(OUTPUTS_DIR, audio_id)
     
-    await synthesize_speech(full_text, voice_info["id"], audio_path, rate=rate)
+    asyncio.run(synthesize_speech(full_text, voice_info["id"], audio_path, rate=rate))
     return audio_path
 
-async def fn_render_video(hook, body, cta, voice_label, speed_label, image_label, uploaded_image, style_label, size_label, progress=gr.Progress()):
+@spaces.GPU(duration=120)
+def fn_render_video(hook, body, cta, voice_label, speed_label, image_label, uploaded_image, style_label, size_label, progress=gr.Progress()):
     full_text = f"{hook.strip()} {body.strip()} {cta.strip()}".strip()
     if not full_text:
         raise gr.Error("El guion no puede estar vacío.")
@@ -120,7 +122,7 @@ async def fn_render_video(hook, body, cta, voice_label, speed_label, image_label
     rate = SPEED_MAP.get(speed_label, "+0%")
 
     progress(0.3, desc="Generando narración en audio y marcas de tiempo con Edge-TTS...")
-    cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=rate)
+    cues = asyncio.run(synthesize_speech(full_text, voice_info["id"], audio_file, rate=rate))
 
     progress(0.5, desc="Generando subtítulos dinámicos con sincronización palabra a palabra...")
     style_key = STYLE_MAP.get(style_label, "gold_highlight")

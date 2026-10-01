@@ -1,0 +1,190 @@
+import os
+import sys
+import uuid
+import shutil
+from typing import Optional
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, VIRAL_THEMES
+from engine.tts import synthesize_speech, get_available_voices, VOICES
+from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
+from engine.video import render_reel
+
+ASSETS_DIR = os.path.join(BASE_DIR, "assets", "images")
+OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
+os.makedirs(ASSETS_DIR, exist_ok=True)
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
+
+app = FastAPI(title="JesusReels Studio", version="2.0.0")
+
+# Mount static and assets folders
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
+app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
+
+IMAGE_METADATA = {
+    "jesus_healing_miracle.jpg": "🕊️ Jesús Sanando a un Quebrantado",
+    "jesus_reaching_hand.jpg": "🌊 Jesús Rescatando en la Tormenta",
+    "jesus_praying_gethsemane.jpg": "🌌 Jesús Orando en Getsemaní",
+    "jesus_comforting_embrace.jpg": "🫂 Jesús Abrazando y Secando Lágrimas",
+    "holy_cross_calvary.jpg": "✝️ La Santa Cruz en el Calvario",
+    "jesus_holy_bible.jpg": "📖 Jesús con la Santa Biblia Iluminada"
+}
+
+class ScriptRequest(BaseModel):
+    theme_key: Optional[str] = None
+    custom_topic: Optional[str] = None
+
+class ImagePromptRequest(BaseModel):
+    theme_key: Optional[str] = None
+    script_text: str = ""
+    custom_topic: Optional[str] = None
+
+class AudioPreviewRequest(BaseModel):
+    text: str
+    voice_key: str = "christopher"
+    rate: str = "+0%"
+
+class RenderRequest(BaseModel):
+    hook: str
+    body: str
+    cta: str
+    voice_key: str = "christopher"
+    rate: str = "+0%"
+    image_name: str = "jesus_healing_miracle.jpg"
+    subtitle_style: str = "gold_highlight"
+    subtitle_size: str = "normal"
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "app": "JesusReels Studio", "version": "2.0.0"}
+
+@app.get("/")
+def serve_index():
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+@app.get("/api/themes")
+def list_themes():
+    return get_themes_list()
+
+@app.post("/api/generate-script")
+def api_generate_script(req: ScriptRequest):
+    return generate_script(req.theme_key, req.custom_topic)
+
+@app.post("/api/generate-image-prompt")
+def api_generate_image_prompt(req: ImagePromptRequest):
+    prompt = generate_image_prompt_for_script(req.theme_key, req.script_text, req.custom_topic)
+    return {"prompt": prompt}
+
+@app.get("/api/voices")
+def list_voices():
+    return [
+        {"key": "christopher", "name": "Christopher (Solemne, Profundo y Reverente — Voz de Jesús)", "gender": "Hombre"},
+        {"key": "guy", "name": "Guy (Apasionado, Emocional y Directo)", "gender": "Hombre"},
+        {"key": "brian", "name": "Brian (Tranquilo, Cálido e Inspirador)", "gender": "Hombre"},
+        {"key": "andrew", "name": "Andrew (Moderno, Expresivo y Cercano)", "gender": "Hombre"},
+        {"key": "jenny", "name": "Jenny (Dulce, Maternal y Reconfortante)", "gender": "Mujer"}
+    ]
+
+@app.get("/api/subtitle-styles")
+def list_subtitle_styles():
+    return [
+        {"key": k, "name": v["name"], "font": v["font"]}
+        for k, v in SUBTITLE_STYLES.items()
+    ]
+
+@app.get("/api/images")
+def list_images():
+    files = [
+        f for f in os.listdir(ASSETS_DIR)
+        if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+    ]
+    files.sort(key=lambda x: (0 if x in IMAGE_METADATA else 1, x))
+    return [
+        {
+            "filename": f,
+            "url": f"/assets/images/{f}",
+            "label": IMAGE_METADATA.get(f, f"Personalizada ({f[:15]}...)")
+        }
+        for f in files
+    ]
+
+@app.post("/api/upload-image")
+async def upload_image(file: UploadFile = File(...)):
+    filename = f"custom_{uuid.uuid4().hex[:8]}_{file.filename}"
+    filepath = os.path.join(ASSETS_DIR, filename)
+    with open(filepath, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida"}
+
+@app.post("/api/preview-audio")
+async def preview_audio(req: AudioPreviewRequest):
+    if not req.text.strip():
+        raise HTTPException(status_code=400, detail="El texto no puede estar vacío.")
+        
+    voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
+    audio_id = f"preview_{uuid.uuid4().hex[:8]}.mp3"
+    audio_path = os.path.join(OUTPUTS_DIR, audio_id)
+    
+    await synthesize_speech(req.text, voice_info["id"], audio_path, rate=req.rate)
+    return {"audio_url": f"/outputs/{audio_id}"}
+
+@app.post("/api/render-video")
+async def api_render_video(req: RenderRequest):
+    full_text = f"{req.hook.strip()} {req.body.strip()} {req.cta.strip()}"
+    if not full_text.strip():
+        raise HTTPException(status_code=400, detail="El guion no puede estar vacío.")
+        
+    session_id = uuid.uuid4().hex[:8]
+    audio_file = os.path.join(OUTPUTS_DIR, f"{session_id}_audio.mp3")
+    ass_file = os.path.join(OUTPUTS_DIR, f"{session_id}_subs.ass")
+    output_video = os.path.join(OUTPUTS_DIR, f"reel_{session_id}.mp4")
+    
+    image_file = os.path.join(ASSETS_DIR, req.image_name)
+    if not os.path.exists(image_file):
+        avail = [f for f in os.listdir(ASSETS_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        if avail:
+            image_file = os.path.join(ASSETS_DIR, avail[0])
+        else:
+            raise HTTPException(status_code=400, detail="No hay imágenes disponibles.")
+
+    voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
+    
+    cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
+    margin_v = 700 if req.subtitle_size == "large" else 750
+    generate_viral_ass(cues, ass_file, style_key=req.subtitle_style, margin_v=margin_v)
+    render_reel(image_file, audio_file, ass_file, output_video)
+    
+    return {
+        "status": "success",
+        "video_url": f"/outputs/reel_{session_id}.mp4",
+        "filename": f"reel_{session_id}.mp4"
+    }
+
+@app.get("/api/outputs")
+def list_outputs():
+    files = [
+        f for f in os.listdir(OUTPUTS_DIR)
+        if f.lower().endswith(".mp4")
+    ]
+    files.sort(key=lambda f: os.path.getmtime(os.path.join(OUTPUTS_DIR, f)), reverse=True)
+    return [{"filename": f, "url": f"/outputs/{f}"} for f in files]
+
+if __name__ == "__main__":
+    import uvicorn
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "8050"))
+    print("\n=======================================================")
+    print(f"  JESUS REELS STUDIO - Ejecutando en http://{host}:{port}")
+    print("=======================================================\n")
+    uvicorn.run("server:app", host=host, port=port, reload=False)

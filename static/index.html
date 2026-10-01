@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>JesusReels Studio - Creador de Videos Cristianos para Facebook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- Puter.js para generación de imágenes por IA en el navegador (100% Gratuito) -->
+  <script src="https://js.puter.com/v2/"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Encabezado Principal -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="cross-icon" aria-hidden="true">✝</span>
+        <div>
+          <h1>JesusReels <span>Studio</span></h1>
+          <p class="tagline">Creador de Reels y Videos Cristianos de Alta Retención para Facebook (Público de EE. UU.)</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-free">100% Gratuito</span>
+        <span class="badge badge-hd">Formato Vertical 9:16 (1080x1920)</span>
+      </div>
+    </header>
+
+    <!-- Botón Flotante / Acceso Rápido Móvil para saltar al reproductor -->
+    <div class="mobile-quick-nav">
+      <a href="#previewSection" class="btn btn-outline btn-sm">
+        📱 Ver Vista Previa del Móvil ↓
+      </a>
+    </div>
+
+    <!-- Área de Trabajo Principal -->
+    <main class="workspace">
+      <!-- Columna Izquierda: Controles y Creador -->
+      <section class="controls-panel">
+        
+        <!-- Paso 1: Guion y Psicología de Retención -->
+        <div class="card card-step">
+          <div class="card-header">
+            <span class="step-num">1</span>
+            <div>
+              <h2>Tema Viral y Generador de Guion</h2>
+              <p>Ganchos y oraciones diseñados para retener la atención en los primeros 3 segundos</p>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="themeSelect">Selecciona un Tema Viral Comprobado</label>
+            <select id="themeSelect" class="form-control">
+              <!-- Inyectado dinámicamente -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="customTopic">O escribe un Tema o Dolor Específico (Opcional)</label>
+            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Sanidad de un hijo, Superar ataques de pánico, Deudas bancarias...">
+          </div>
+
+          <button id="btnGenerateScript" class="btn btn-secondary btn-block">
+            ✨ Generar Guion de Alta Retención (en Inglés)
+          </button>
+
+          <div class="script-editor-boxes">
+            <div class="script-field hook-field">
+              <div class="field-label">
+                <span>🎣 El Gancho / Hook (0s a 3s)</span>
+                <small>Frena el scroll de inmediato</small>
+              </div>
+              <textarea id="scriptHook" rows="2" class="form-control" placeholder="Do not scroll past this video..."></textarea>
+            </div>
+
+            <div class="script-field body-field">
+              <div class="field-label">
+                <span>❤️ Mensaje al Corazón / Oración (4s a 35s)</span>
+                <small>Conecta emocional y espiritualmente</small>
+              </div>
+              <textarea id="scriptBody" rows="4" class="form-control" placeholder="Jesus says: I saw your tears last night in secret..."></textarea>
+            </div>
+
+            <div class="script-field cta-field">
+              <div class="field-label">
+                <span>🔥 Llamado a la Acción / CTA (Engagement)</span>
+                <small>Provoca cientos de comentarios 'AMÉN' y compartidos</small>
+              </div>
+              <textarea id="scriptCta" rows="2" class="form-control" placeholder="Comment 'AMEN' and share this with family..."></textarea>
+            </div>
+          </div>
+
+          <!-- Botón de Sincronización Guion -> Imagen -->
+          <div class="script-to-image-sync">
+            <button id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block mt-10">
+              🪄 Sincronizar: Crear Prompt de Imagen que Coincida con este Guion
+            </button>
+            <small class="text-muted block mt-5">Analiza el dolor y las palabras de la oración para crear la escena exacta.</small>
+          </div>
+        </div>
+
+        <!-- Paso 2: Voz y Locución en Inglés -->
+        <div class="card card-step">
+          <div class="card-header">
+            <span class="step-num">2</span>
+            <div>
+              <h2>Voz y Locución en Inglés de EE. UU.</h2>
+              <p>Voces neuronales de calidad cinematográfica (Sin límites ni pagos)</p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-8">
+              <label for="voiceSelect">Voz del Narrador</label>
+              <select id="voiceSelect" class="form-control">
+                <!-- Inyectado dinámicamente -->
+              </select>
+            </div>
+            <div class="form-group col-4">
+              <label for="rateSelect">Velocidad</label>
+              <select id="rateSelect" class="form-control">
+                <option value="-5%">Solemne (-5%)</option>
+                <option value="+0%" selected>Natural (0%)</option>
+                <option value="+5%">Dinámica (+5%)</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="btnPreviewAudio" class="btn btn-outline btn-block">
+            🔊 Escuchar Previa del Audio
+          </button>
+          <audio id="audioPreviewPlayer" controls style="display:none; width: 100%; margin-top: 10px;"></audio>
+        </div>
+
+        <!-- Paso 3: Selección de Escenas Bíblicas y Generador IA -->
+        <div class="card card-step">
+          <div class="card-header">
+            <span class="step-num">3</span>
+            <div>
+              <h2>Escena Bíblica e Imagen Relacionada</h2>
+              <p>Elige escenas maestras de alta emoción o genera nuevas que ilustren la oración</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Galería de Escenas Bíblicas (Toca para seleccionar)</label>
+            <div class="image-gallery-picker" id="imageGallery">
+              <!-- Inyectado dinámicamente -->
+            </div>
+          </div>
+
+          <!-- Generador de Nuevas Imágenes con IA -->
+          <div class="ai-generator-box">
+            <div class="ai-box-header">
+              <span>🎨 Generador de Imágenes IA en Base al Guion</span>
+            </div>
+            <div class="form-group">
+              <label for="aiImagePrompt" class="sub-label">Prompt Visual (En inglés para la IA):</label>
+              <textarea id="aiImagePrompt" rows="3" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, 9:16 vertical..."></textarea>
+            </div>
+            <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
+              🎨 Crear Imagen con IA (Puter / Navegador)
+            </button>
+            <small class="text-muted block mt-5">Genera una imagen cinematográfica vertical 9:16 que se añade a tu galería automáticamente.</small>
+          </div>
+
+          <div class="upload-wrapper mt-15">
+            <label class="btn-upload" for="imageUpload">
+              📁 O Subir Mi Propia Imagen desde la Computadora / Celular
+            </label>
+            <input type="file" id="imageUpload" accept="image/*" style="display:none;">
+          </div>
+        </div>
+
+        <!-- Paso 4: Estilos de Subtítulos -->
+        <div class="card card-step">
+          <div class="card-header">
+            <span class="step-num">4</span>
+            <div>
+              <h2>Estilos de Subtítulos Virales</h2>
+              <p>Elige el diseño visual que mejor combine con tu video</p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-8">
+              <label for="subtitleStyleSelect">Diseño y Colores de Subtítulo</label>
+              <select id="subtitleStyleSelect" class="form-control">
+                <option value="gold_highlight" selected>🌟 Oro Viral (Blanco con Resalte Dorado)</option>
+                <option value="neon_cyan">⚡ Neón Eléctrico (Blanco con Resalte Cyan/Lima)</option>
+                <option value="fire_coral">🔥 Fuego & Pasión (Blanco con Resalte Coral Fuego)</option>
+                <option value="royal_purple">👑 Púrpura Sacro (Blanco con Resalte Magenta Real)</option>
+                <option value="black_box">🏷️ Cartela Moderna (Texto Amarillo en Caja Negra)</option>
+                <option value="pure_minimal">⚪ Blanco Puro Minimalista (Cinematográfico)</option>
+              </select>
+            </div>
+            <div class="form-group col-4">
+              <label for="subtitleSizeSelect">Tamaño</label>
+              <select id="subtitleSizeSelect" class="form-control">
+                <option value="normal" selected>Normal</option>
+                <option value="large">Grande</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Render Final -->
+        <button id="btnRenderVideo" class="btn btn-primary btn-large btn-block">
+          🎬 GENERAR REEL VIRAL (MP4 EN 1080x1920)
+        </button>
+
+      </section>
+
+      <!-- Columna Derecha: Vista Previa en Móvil y Descarga -->
+      <section class="preview-panel" id="previewSection">
+        <div class="preview-sticky-wrap">
+          <div class="preview-header-mobile">
+            <h3>📱 Vista Previa en Tiempo Real</h3>
+          </div>
+
+          <div class="phone-mockup">
+            <div class="phone-screen">
+              <!-- Escenario Idle -->
+              <div class="stage-placeholder" id="stagePlaceholder">
+                <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
+                <div class="stage-overlay">
+                  <div class="live-subtitle-preview" id="liveSubPreview">
+                    <span class="sub-word">DO</span> <span class="sub-word highlight">NOT</span> <span class="sub-word">SCROLL</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reproductor de Video Final -->
+              <video id="finalVideoPlayer" controls playsinline loop style="display: none;"></video>
+
+              <!-- Pantalla de Carga Durante Render -->
+              <div class="render-overlay" id="renderOverlay" style="display: none;">
+                <div class="spinner"></div>
+                <h3 id="renderStatusText">Creando tu Reel Viral...</h3>
+                <p id="renderStatusSub">Sintetizando voz y animando cámara...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones de Video Generado -->
+          <div class="video-actions" id="videoActions" style="display: none;">
+            <a id="btnDownloadVideo" href="#" download="jesus_reel.mp4" class="btn btn-success btn-large btn-block">
+              ⬇️ Descargar Video MP4 (1080x1920)
+            </a>
+            <button id="btnCopyCaption" class="btn btn-outline btn-block mt-10">
+              📋 Copiar Texto del Post y Hashtags para Facebook
+            </button>
+          </div>
+
+          <!-- Biblioteca de Videos Recientes -->
+          <div class="card recent-reels-card">
+            <h3>Biblioteca de Videos Recientes</h3>
+            <div class="recent-list" id="recentList">
+              <p class="text-muted">Aún no hay videos generados. ¡Crea el primero!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

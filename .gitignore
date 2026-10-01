@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Outputs generated locally (keep directory empty in repo)
+outputs/*.mp4
+outputs/*.mp3
+outputs/*.ass
+!outputs/.gitkeep
+
+# Virtual environment
+.venv/
+env/
+venv/
+.env
+
+# OS files
+Thumbs.db
+.DS_Store

@@ -120,6 +120,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  const btnRerollPrompt = document.getElementById("btnRerollPrompt");
+  if (btnRerollPrompt) {
+    btnRerollPrompt.addEventListener("click", async () => {
+      btnRerollPrompt.disabled = true;
+      btnRerollPrompt.textContent = "⏳ Variando...";
+      await triggerSyncPrompt();
+      btnRerollPrompt.disabled = false;
+      btnRerollPrompt.textContent = "🎲 Otra Variación de Escena";
+    });
+  }
+
   // 5. Sincronizar Prompt de Imagen según el Guion Editado
   async function triggerSyncPrompt() {
     const fullText = `${scriptHook.value} ${scriptBody.value} ${scriptCta.value}`.trim();
@@ -129,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     btnSyncScriptToImage.disabled = true;
-    btnSyncScriptToImage.textContent = "⏳ Analizando Oración...";
+    btnSyncScriptToImage.textContent = "⏳ Creando Escena que Coincida con la Oración...";
 
     try {
       const res = await fetch("/studio/api/generate-image-prompt", {
@@ -143,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const data = await res.json();
       aiImagePrompt.value = data.prompt;
-      btnSyncScriptToImage.textContent = "✅ ¡Prompt Sincronizado con la Oración!";
+      btnSyncScriptToImage.textContent = "✅ ¡Escena Sincronizada con la Oración!";
       setTimeout(() => {
         btnSyncScriptToImage.textContent = "🪄 Sincronizar: Crear Prompt de Imagen que Coincida con este Guion";
         btnSyncScriptToImage.disabled = false;
@@ -224,7 +235,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btnGenerateAiImage.textContent = "🎨 Generando con IA... (Espera unos segundos)";
 
     try {
-      const enhancedPrompt = `Ultra-realistic cinematic 8k vertical 9:16 portrait of ${promptText}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic`;
+      let enhancedPrompt = promptText;
+      if (!enhancedPrompt.toLowerCase().includes("8k") && !enhancedPrompt.toLowerCase().includes("vertical")) {
+        enhancedPrompt = `Ultra-realistic cinematic 8k vertical 9:16 portrait of ${enhancedPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic`;
+      }
 
       if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2img) {
         const imgElement = await puter.ai.txt2img(enhancedPrompt);

@@ -19,33 +19,32 @@ def render_reel(
     fps: int = 30
 ) -> str:
     """
-    Renders high-quality 1080x1920 vertical Reel with smooth Ken Burns animation and burned ASS subtitles.
+    Renders high-quality 1080x1920 vertical Reel with smooth, dynamic Ken Burns camera zoom-in animation
+    towards Jesus' face and burned ASS dynamic subtitles.
     """
     duration = get_audio_duration(audio_path)
     total_frames = int((duration + 0.5) * fps)
     
-    # Calculate subtle zoom speed: zoom from 1.0 to 1.10 over total_frames
-    zoom_step = 0.10 / max(total_frames, 1)
+    # Velocidad de zoom dinámico: acercamiento progresivo y fluido del 1.0 hasta 1.25 durante todo el audio
+    zoom_speed = 0.22 / max(total_frames, 1)
 
     # Windows path formatting for FFmpeg ass filter
-    # FFmpeg ass filter requires forward slashes and colon escaping if absolute
     norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
     
-    # Filter complex:
-    # 1. Scale image to at least 1080x1920, center-crop.
-    # 2. zoompan: slow zoom towards upper-center (face).
-    # 3. ass: burn subtitles.
+    # Cadena de filtros FFmpeg:
+    # 1. Escala la imagen a 1080x1920 manteniendo aspecto y recorta sobrante
+    # 2. zoompan: recibe la imagen y genera `total_frames` fotogramas realizando un acercamiento (zoom-in)
+    #    constante y cinematográfico centrado en el rostro de Jesús (x=50%, y=35%).
+    # 3. ass: quema los subtítulos dinámicos sincronizados palabra por palabra.
     filter_complex = (
-        f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,"
-        f"crop=1080:1920,"
-        f"zoompan=z='min(zoom+{zoom_step:.6f},1.12)':d=1:x='iw/2-(iw/zoom/2)':y='ih*0.4-(ih*0.4/zoom)':s=1080x1920:fps={fps},"
+        f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+        f"zoompan=z='min(zoom+{zoom_speed:.6f},1.26)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih*0.35-(ih*0.35/zoom)':s=1080x1920:fps={fps},"
         f"ass='{norm_ass}'[v]"
     )
 
     cmd = [
         "ffmpeg", "-y",
         "-threads", "2",
-        "-loop", "1",
         "-i", image_path,
         "-i", audio_path,
         "-filter_complex", filter_complex,
@@ -61,7 +60,7 @@ def render_reel(
         output_mp4_path
     ]
 
-    print("Running FFmpeg render...")
+    print(f"Running FFmpeg render with smooth zoom-in ({total_frames} frames)...")
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         print("FFmpeg Error:", result.stderr)

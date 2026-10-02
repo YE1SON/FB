@@ -153,8 +153,11 @@
 
           <!-- Generador de Nuevas Imágenes con IA -->
           <div class="ai-generator-box">
-            <div class="ai-box-header">
+            <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <span>🎨 Generador de Imágenes IA en Base al Guion</span>
+              <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra escena que también coincide con tu guion">
+                🎲 Otra Variación de Escena
+              </button>
             </div>
             <div class="form-group">
               <label for="aiImagePrompt" class="sub-label">Prompt Visual (En inglés para la IA):</label>

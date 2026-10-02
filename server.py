@@ -15,7 +15,7 @@ if BASE_DIR not in sys.path:
 from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, VIRAL_THEMES
 from engine.tts import synthesize_speech, get_available_voices, VOICES
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
-from engine.video import render_reel
+from engine.video import render_reel, WORSHIP_TRACKS
 
 ASSETS_DIR = os.path.join(BASE_DIR, "assets", "images")
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
@@ -74,6 +74,15 @@ class RenderRequest(BaseModel):
     image_name: str = "jesus_healing_miracle.jpg"
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
+    music_track: str = "worship_piano_peace"
+
+@app.get("/api/worship-tracks")
+@app.get("/studio/api/worship-tracks")
+def list_worship_tracks():
+    return [
+        {"key": k, "name": v}
+        for k, v in WORSHIP_TRACKS.items()
+    ]
 
 @app.get("/health")
 def health_check():
@@ -183,7 +192,7 @@ async def api_render_video(req: RenderRequest):
     cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
     margin_v = 700 if req.subtitle_size == "large" else 750
     generate_viral_ass(cues, ass_file, style_key=req.subtitle_style, margin_v=margin_v)
-    render_reel(image_file, audio_file, ass_file, output_video)
+    render_reel(image_file, audio_file, ass_file, output_video, music_track=req.music_track)
     
     return {
         "status": "success",

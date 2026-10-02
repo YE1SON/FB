@@ -10,8 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const voiceSelect = document.getElementById("voiceSelect");
   const rateSelect = document.getElementById("rateSelect");
+  const musicSelect = document.getElementById("musicSelect");
   const btnPreviewAudio = document.getElementById("btnPreviewAudio");
   const audioPreviewPlayer = document.getElementById("audioPreviewPlayer");
+
+  let currentSeoCaption = "";
 
   const imageGallery = document.getElementById("imageGallery");
   const imageUpload = document.getElementById("imageUpload");
@@ -62,6 +65,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // 2b. Cargar Música de Fondo de Adoración
+  async function loadWorshipTracks() {
+    try {
+      const res = await fetch("/studio/api/worship-tracks");
+      const tracks = await res.json();
+      if (musicSelect) {
+        musicSelect.innerHTML = tracks
+          .map(t => `<option value="${t.key}" ${t.key === "worship_piano_peace" ? "selected" : ""}>${t.name}</option>`)
+          .join("");
+      }
+    } catch (e) {
+      console.error("Error al cargar pistas de adoración:", e);
+    }
+  }
+
   // 3. Cargar Imágenes y Escenas Bíblicas
   async function loadImages() {
     try {
@@ -107,6 +125,10 @@ document.addEventListener("DOMContentLoaded", () => {
       scriptHook.value = data.hook;
       scriptBody.value = data.body;
       scriptCta.value = data.cta;
+
+      if (data.seo_caption) {
+        currentSeoCaption = data.seo_caption;
+      }
 
       // Sincronizar automáticamente el prompt para la IA
       if (data.image_prompt) {
@@ -349,7 +371,8 @@ document.addEventListener("DOMContentLoaded", () => {
           rate: rateSelect.value,
           image_name: selectedImageName,
           subtitle_style: subtitleStyleSelect.value,
-          subtitle_size: subtitleSizeSelect.value
+          subtitle_size: subtitleSizeSelect.value,
+          music_track: musicSelect ? musicSelect.value : "worship_piano_peace"
         })
       });
 
@@ -380,11 +403,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 11. Copiar Texto y Hashtags para Facebook
+  // 11. Copiar Texto y Hashtags para Facebook (Optimizado para SEO de Meta 2026)
   btnCopyCaption.addEventListener("click", () => {
-    const caption = `${scriptHook.value} 🙏\n\n${scriptBody.value}\n\n${scriptCta.value}\n\n#Jesus #GodLovesYou #Faith #ChristianReels #Prayer #Amen #DailyDevotional #JesusChrist`;
+    let caption = currentSeoCaption;
+    if (!caption) {
+      caption = `${scriptHook.value} 🙏✨\n\n${scriptBody.value}\n\n${scriptCta.value}\n\n#DailyPrayer #ChristianReels #FaithOverFear #JesusLovesYou`;
+    }
     navigator.clipboard.writeText(caption).then(() => {
-      btnCopyCaption.textContent = "✅ ¡Copiado al Portapapeles!";
+      btnCopyCaption.textContent = "✅ ¡Copiado con SEO y 4 Hashtags!";
       setTimeout(() => {
         btnCopyCaption.textContent = "📋 Copiar Texto del Post y Hashtags para Facebook";
       }, 2500);
@@ -433,6 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function init() {
     await loadThemes();
     await loadVoices();
+    await loadWorshipTracks();
     await loadImages();
     await loadRecentOutputs();
     await triggerGenerateScript();

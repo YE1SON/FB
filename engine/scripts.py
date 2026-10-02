@@ -3,128 +3,143 @@ from typing import Dict, List, Optional
 
 VIRAL_THEMES = {
     "silent_battles": {
-        "title": "💔 Batallas Silenciosas y Lágrimas en Secreto",
-        "description": "Para espectadores que luchan con soledad, dolor oculto o depresión.",
+        "title": "💔 Batallas Silenciosas y Sanidad Emocional",
+        "description": "Para creyentes que enfrentan soledad, dolor oculto o cargas pesadas.",
+        "scripture": "Psalm 34:18 — The Lord is close to the brokenhearted and saves those who are crushed in spirit.",
+        "hashtags": ["#DailyPrayer", "#ChristianReels", "#HealingPrayer", "#JesusLovesYou"],
         "hooks": [
-            "Do not scroll past this video. God told me someone watching this cried themselves to sleep last night.",
-            "Stop scrolling for just 20 seconds. Jesus knows the heavy burden you couldn't tell anyone about.",
-            "This video didn't appear on your screen by accident. Jesus wants you to know He saw your silent tears.",
-            "Wait, don't swipe away. God has an urgent message for the battle you are fighting alone."
+            "The enemy wants you to believe you are fighting this battle alone. Here is the truth:",
+            "Before you carry that heavy worry into tomorrow, take 20 seconds to receive this peace.",
+            "If your heart felt overwhelmed today, let these words from Jesus comfort your soul:",
+            "Whenever you feel at your breaking point, remember what God promises you right now:"
         ],
         "bodies": [
-            "You have been smiling in front of people, but breaking down when you are alone. Jesus says: My child, I have not forgotten you. The storm you are in right now is not meant to drown you; it is meant to clear your path. I am restoring what was broken, healing your wounded heart, and fighting battles you know nothing about.",
-            "You feel like you are at your breaking point, wondering if anyone cares. Jesus says: I was right there in the room when you wept in silence. I am collecting every single tear you shed. Your pain has an expiration date, and your breakthrough is closer than you think. Stand firm, because I am holding your hand.",
-            "You have been carrying a heavy weight on your chest for so long. Jesus says: Lay it at My feet right now. You were never created to carry this anxiety on your own. I am releasing supernatural peace over your mind, lifting your depression, and breathing new life into your spirit."
+            "Jesus says: I see every burden you carry in silence. The storm you are in right now is not meant to break you, but to draw you closer to My heart. I am restoring your peace, lifting the heaviness from your chest, and fighting for you even when you cannot see it.",
+            "Jesus says: My child, you do not have to carry tomorrow's worries tonight. I collected every tear you shed in secret. I am turning your deepest pain into your greatest testimony, and My supernatural peace is surrounding your mind right now.",
+            "Jesus says: Come to Me, all you who are weary and burdened, and I will give you rest. Lay down the guilt, the exhaustion, and the fear. You are deeply loved, and My strength is made perfect in your weakness."
         ],
         "ctas": [
-            "If you receive this promise in your spirit tonight, comment 'AMEN', share this with someone who needs God's peace, and follow for your daily prayer.",
-            "If you believe God is fighting for you, type 'AMEN', send this to a friend fighting a silent battle, and follow this page so you never miss your daily blessing.",
-            "Claim this victory right now by commenting 'AMEN'. Share this message to spread God's love, and follow for more daily hope."
+            "Drop a heart or leave your prayer request below. Our community is praying over every comment tonight.",
+            "Leave your first name below so we can lift you up in prayer. Save this reminder for tomorrow morning.",
+            "Who in your life needs this comfort today? Share this blessing to bring God's light into their day."
         ]
     },
     "financial_breakthrough": {
-        "title": "💰 Milagro Financiero y Puertas Abiertas",
-        "description": "Para personas con deudas, desempleo o estrés por cuentas pendientes.",
+        "title": "💰 Provisión Divina y Puertas Abiertas",
+        "description": "Para quienes necesitan fe para el trabajo, deudas o sustento familiar.",
+        "scripture": "Philippians 4:19 — And my God will meet all your needs according to the riches of his glory in Christ Jesus.",
+        "hashtags": ["#DailyPrayer", "#ChristianReels", "#FinancialBreakthrough", "#GodProvides"],
         "hooks": [
-            "Before you close this app, listen closely: your season of financial famine is ending this week.",
-            "If you are stressed about money, debts, or unpaid bills, do not scroll past this 30-second prayer.",
-            "Jesus says: The door that was slammed in your face was Me protecting you from a trap. Listen to this.",
-            "Stop scrolling right now. God is about to turn your financial struggle into a testimony."
+            "If you have been losing sleep worrying about finances or bills, listen to this promise:",
+            "When every earthly door seems closed, remember who holds the keys to heaven:",
+            "God saw your faithfulness in the struggle, and your season of famine is about to shift:",
+            "Before you let financial stress steal your peace, let this scripture anchor your soul:"
         ],
         "bodies": [
-            "You have been lying awake calculating numbers and wondering how you will make it through. Jesus says: I own the cattle on a thousand hills. I will open doors that no man can shut. I will send provision from places you never expected. Trust My timing, because lack is not your final chapter.",
-            "You have sowed in tears, and now you are about to reap in joy. Jesus says: Do not lose faith in the middle of the struggle. I am preparing a table before you. Unexpected blessings, relief, and divine favor are on their way to your home right now.",
-            "The enemy tried to make you believe you would stay trapped in debt and struggle forever. Jesus says: I am the God of breakthroughs. What seemed impossible in your bank account, I am turning around for your good."
+            "Jesus says: I own the cattle on a thousand hills. Do not let numbers and deadlines make you forget that I am your Provider. I will open doors no man can shut, and release unexpected favor into your home.",
+            "Jesus says: You have sowed in tears, and now you will reap in joy. Trust My timing. What seemed impossible in your bank account, I am turning into a miraculous breakthrough for your household.",
+            "Jesus says: Seek first the kingdom of God, and all these things will be added to you. I will never leave your table empty. Keep your eyes on Me, for divine abundance is heading your way."
         ],
         "ctas": [
-            "Type 'I RECEIVE IT' and 'AMEN' in the comments to seal this blessing. Share this with your family and follow for your daily prayer.",
-            "If you trust God with your finances, comment 'AMEN', share this video with someone who needs hope, and follow this page.",
-            "Comment 'AMEN' to claim your breakthrough, share this to bless someone today, and follow for more inspirational prayers."
+            "Leave your prayer request for provision below. We are believing together for open doors in your life.",
+            "Save this prayer to start your week in faith, and share it with someone who needs financial hope.",
+            "Drop a 🙏 below if you trust God as your Provider tonight. We are praying for your family's breakthrough."
         ]
     },
     "bedtime_blessing": {
-        "title": "🛌 Oración de Paz Antes de Dormir",
-        "description": "Oraciones reconfortantes para antes de dormir para aliviar la mente.",
+        "title": "🛌 Paz y Protección Antes de Dormir",
+        "description": "Oraciones serenas de descanso para calmar la mente y alejar pesadillas.",
+        "scripture": "Psalm 4:8 — In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.",
+        "hashtags": ["#BedtimePrayer", "#NightPrayer", "#ChristianReels", "#PeaceOfGod"],
         "hooks": [
-            "Before you close your eyes and go to sleep tonight, give Jesus just 25 seconds.",
-            "Do not go to sleep tonight with anxiety in your chest. Listen to this blessing first.",
-            "It's late, but God kept you awake for this exact video. Take a deep breath and listen.",
-            "Before you put your phone down to sleep, receive this powerful night prayer."
+            "Before you close your eyes to sleep tonight, leave every battle in God's hands:",
+            "If your mind is racing with anxious thoughts tonight, breathe in this sacred peace:",
+            "The day is finished, and God kept you awake for this 20-second bedtime blessing:",
+            "Before you put your phone down to rest, receive this peaceful prayer over your home:"
         ],
         "bodies": [
-            "Tonight, leave every worry, every fear, and every unfinished battle in My hands. Jesus says: Sleep in peace. No evil will come near your dwelling. My angels are stationed around your home, watching over your children and protecting your mind from nightmares and fear.",
-            "The day was hard, but it is finished. Jesus says: In My presence there is rest. Breathe out the tension, breathe in My grace. Tomorrow is filled with new mercies and fresh strength. Close your eyes knowing you are deeply loved.",
-            "You don't have to figure everything out tonight. Jesus says: Be still and know that I am God. Rest your weary head. I am working on the solutions while you sleep, and joy is coming in the morning."
+            "Jesus says: Sleep in peace. No weapon of darkness will touch your dwelling. My holy angels are stationed around your home, watching over your children and covering your mind with celestial calm.",
+            "Jesus says: Breathe out the tension of today. In My presence there is quiet rest. You do not have to solve tomorrow tonight. Close your eyes knowing you are safe under the shadow of My wings.",
+            "Jesus says: Be still and know that I am God. While you rest your weary body, I am working on the answers you need. Tomorrow brings new mercies and fresh morning joy."
         ],
         "ctas": [
-            "Comment 'AMEN' to receive God's peace over your sleep, share this with someone you love before they rest, and follow for daily night prayers.",
-            "Type 'AMEN' for peaceful sleep tonight. Share this blessing and follow this page to wake up with God tomorrow.",
-            "Declare peace over your home by commenting 'AMEN', share with family, and follow for your nightly prayer."
+            "Leave your first name or family name below so we can cover your sleep in prayer tonight.",
+            "Save this prayer for every night you need deep peace, and send it to someone you love before they rest.",
+            "Drop a 🕊️ below to claim God's restful peace over your home tonight."
         ]
     },
     "family_healing": {
-        "title": "👨‍👩‍👧 Protección y Restauración Familiar",
-        "description": "Para discordia familiar, hijos rebeldes, enfermedad o matrimonios heridos.",
+        "title": "👨‍👩‍👧 Protección y Unidad Familiar",
+        "description": "Para bendecir a los hijos, sanar matrimonios y proteger el hogar.",
+        "scripture": "Joshua 24:15 — But as for me and my household, we will serve the Lord.",
+        "hashtags": ["#FamilyPrayer", "#ChristianReels", "#MarriageBlessing", "#FaithInGod"],
         "hooks": [
-            "If you love your family, do not scroll past this prayer. Jesus is stepping into your home.",
-            "Stop scrolling right now. This is a powerful prayer of protection for your children and family.",
-            "Jesus says: I have heard every prayer you whispered for your loved ones. Listen to this.",
-            "Before you swipe away, let this prayer cover your household from sickness and discord."
+            "If you love your family and children, let this scripture cover your home today:",
+            "God has heard every quiet prayer you whispered for your loved ones. Here is His promise:",
+            "Before discord or worry tries to steal your household's joy, speak this truth:",
+            "A powerful blessing of protection over your children and family tonight:"
         ],
         "bodies": [
-            "I see the division, the stress, and the sickness that has tried to attack your family. Jesus says: Peace be still in your household. I am breaking every generational curse, healing physical pain, and restoring love between parents and children. Your home will be a sanctuary of light.",
-            "You have been worried sick about your children and their future. Jesus says: Hand them to Me. My angels are guarding their footsteps. Where there was rebellion, I will place wisdom; where there was sorrow, I will plant laughter.",
-            "No weapon formed against your family will prosper. Jesus says: I am placing a hedge of holy protection around your front door. Sickness will flee, anxiety will break, and My divine health will reign in your house."
+            "Jesus says: Peace be still in your home. I am placing a hedge of holy protection around your family. Where there was division, I will restore unity; where there was rebellion, I will place wisdom and love.",
+            "Jesus says: Trust your children into My hands. My angels are guarding their footsteps from every hidden snare. Sickness will flee, and My divine joy will fill every room of your house.",
+            "Jesus says: I am healing the broken communication in your home. Let My love wash over your marriage and your children. Your household will stand as a shining light of My grace."
         ],
         "ctas": [
-            "Write the first name of your family member in the comments with 'AMEN' to cover them in prayer. Share this and follow for daily blessings.",
-            "Comment 'AMEN' to protect your household today. Share this with your loved ones and follow this page.",
-            "Claim healing for your family by typing 'AMEN', share this prayer, and follow for daily spiritual encouragement."
+            "Write the name of a family member below so we can lift them up in prayer tonight.",
+            "Save this blessing for your family altar, and share it to protect another home today.",
+            "Drop a ❤️ in the comments to claim divine peace over your children and marriage."
         ]
     },
     "divine_protection": {
-        "title": "🛡️ Contra la Ansiedad y Ataques del Enemigo",
-        "description": "Oración de alta autoridad contra el pánico, dudas y batallas espirituales.",
+        "title": "🛡️ Escudo Contra la Ansiedad y el Temor",
+        "description": "Autoridad bíblica para derribar el pánico, ataques espirituales y miedo al futuro.",
+        "scripture": "Isaiah 41:10 — Fear not, for I am with you; be not dismayed, for I am your God.",
+        "hashtags": ["#FaithOverFear", "#OvercomingAnxiety", "#ChristianReels", "#JesusSaves"],
         "hooks": [
-            "The enemy does not want you to watch this video, but Jesus wants you to hear it right now.",
-            "If your heart is racing with anxiety or fear today, pause and let Jesus speak to you.",
-            "Do not scroll. You are not losing your mind, you are under spiritual attack, and God is fighting for you.",
-            "Stop scrolling for 20 seconds. The battle you are in right now ends in your victory."
+            "When fear whispers that you won't survive this storm, remember who commands the wind:",
+            "If anxiety is trying to overwhelm your chest right now, take a deep breath and listen:",
+            "You are not losing your mind; you are in a spiritual battle, and Jesus is fighting for you:",
+            "Before you let fear dictate your decisions, anchor your thoughts in this eternal promise:"
         ],
         "bodies": [
-            "Fear is a liar, and anxiety has no authority over you. Jesus says: I have already defeated the darkness. Put on the full armor of God. No scheme of the enemy will derail the destiny I have written for your life. You are more than a conqueror through Christ who strengthens you.",
-            "When anxiety whispers that you won't survive this, remember the Red Sea, remember the empty tomb. Jesus says: Peace I leave with you, My peace I give to you. Stand strong. The giant in front of you is nothing compared to the God inside of you.",
-            "I break every chain of panic, fear, and hopelessness right now. Jesus says: Rise up. I have given you power, love, and a sound mind. You will walk out of this season stronger, wiser, and anointed."
+            "Jesus says: Fear is a liar, and anxiety has no power over you. I have already defeated the darkness at the cross. The giant in front of you is nothing compared to the God inside of you. Stand firm.",
+            "Jesus says: Peace I leave with you; My supernatural peace I give to you. I have given you power, love, and a sound mind. You will walk out of this trial stronger and full of My glory.",
+            "Jesus says: No weapon formed against you will prosper. I am your fortress and your deliverer. Even when you walk through the darkest valley, My rod and staff will comfort you."
         ],
         "ctas": [
-            "Comment 'I AM PROTECTED' and 'AMEN' right now. Share this to break someone else's anxiety today, and follow this page.",
-            "Type 'AMEN' if you trust Jesus more than your fear. Share this video and follow for your daily spiritual shield.",
-            "Declare your victory by commenting 'AMEN'. Send this to a friend who needs courage, and follow for more daily faith."
+            "Leave a prayer request below if you need prayer against anxiety tonight. You are not alone.",
+            "Save this verse on your phone for whenever panic tries to return. God is with you.",
+            "Drop a 🛡️ in the comments to declare that fear has no authority over your life today."
         ]
     },
     "miracle_healing": {
-        "title": "🕊️ Sanidad Milagrosa y Fuerza Física",
-        "description": "Para quienes sufren dolor corporal, diagnósticos médicos o cansancio extremo.",
+        "title": "🕊️ Sanidad Milagrosa y Fortaleza Física",
+        "description": "Para quienes luchan con diagnósticos médicos, dolor físico o agotamiento.",
+        "scripture": "Jeremiah 17:14 — Heal me, Lord, and I will be healed; save me and I will be saved, for you are the one I praise.",
+        "hashtags": ["#HealingPrayer", "#Miracles", "#ChristianReels", "#JesusHeals"],
         "hooks": [
-            "If you or someone you love needs physical healing today, do not scroll past this prayer.",
-            "Jesus says: By My stripes, you are healed. Stop scrolling and let these words touch your body.",
-            "The doctor may have given a bad report, but God has the final say. Listen to this 30 seconds."
+            "The doctor may have given a difficult report, but God always has the final word:",
+            "If your physical body is tired and aching tonight, receive this prayer of divine strength:",
+            "Before sickness steals your hope, remember that Jesus carried our infirmities on the cross:",
+            "A sacred prayer for physical healing and renewed strength over your life right now:"
         ],
         "bodies": [
-            "I see the physical exhaustion and the pain you have endured. Jesus says: I am the Lord who heals you. I am sending divine restoration into your cells, cleansing your bloodstream, and renewing your strength like the eagles. What medicine couldn't fix, My holy grace is touching right now.",
-            "Do not give up hope. Jesus says: I carried every disease and infirmity to the cross. Let My peace wash over your body from the crown of your head to the soles of your feet. You will live and declare the works of the Lord."
+            "Jesus says: I am the Lord who heals you. I am sending divine restoration into your cells, renewing your energy like the eagles, and washing away pain from the crown of your head to your feet.",
+            "Jesus says: Do not lose hope. What medical science could not fix, My holy grace is touching right now. Let My supernatural warmth flow through your body, restoring health and vitality.",
+            "Jesus says: I see the silent physical battle you have fought. Rise up in faith. My healing light is driving away disease and breathing new life into your spirit."
         ],
         "ctas": [
-            "Comment 'I RECEIVE MY HEALING' and 'AMEN'. Share this with someone who is sick today, and follow for your daily prayer.",
-            "Type 'AMEN' in faith for complete healing. Share this blessing and follow this page for daily encouragement."
+            "Leave the first name of someone who needs physical healing below. Our community is praying for them.",
+            "Save this prayer to listen to each morning for strength, and share it with someone who is sick today.",
+            "Drop a 🙏 below in faith for complete healing and restoration over your body."
         ]
     }
 }
 
-# Banco rico de escenarios visuales detallados y específicos para cada contexto
+# Banco de escenas para el generador de imágenes (sin cambios drásticos, ya funciona de maravilla)
 SCENARIO_POOLS = {
     "storm_rescue": [
-        "Dramatic first-person POV looking up as Jesus Christ stands on turbulent stormy sea waters, reaching his strong compassionate hand directly toward the viewer to pull them from dark crashing waves, radiant sunbeams piercing through storm clouds",
+        "Dramatic first-person POV looking up as Jesus Christ stands on turbulent stormy sea waves, reaching his strong compassionate hand directly toward the viewer to pull them from dark crashing waves, radiant sunbeams piercing through storm clouds",
         "Jesus Christ standing at the bow of an ancient wooden fishing boat on the Sea of Galilee, holding up his right hand commanding the raging tempest to be still, clouds breaking to reveal brilliant golden heavenly light",
         "Jesus Christ pulling a trembling believer up out of roaring ocean waters into safety, compassionate urgent gaze, clothes wet from sea spray, dramatic golden divine rim lighting",
         "Jesus Christ walking serenely across churning ocean waves in the middle of a thunderstorm, illuminated by a celestial golden aura, smiling calmly with outstretched hand of rescue"
@@ -184,7 +199,6 @@ SCENARIO_POOLS = {
     ]
 }
 
-# Mapeo de términos en español/inglés para temas personalizados
 CUSTOM_TOPIC_TRANSLATIONS = {
     "hijo": "a beloved sick or struggling son/child",
     "hija": "a beloved sick or struggling daughter/child",
@@ -240,16 +254,9 @@ ARTISTIC_DETAILS = [
 ]
 
 def generate_image_prompt_for_script(theme_key: Optional[str] = None, script_text: str = "", custom_topic: Optional[str] = None) -> str:
-    """
-    Analiza el texto exacto del guion, tema y dolor personalizado para generar
-    un prompt de imagen único, altamente específico y variado que coincide con la oración.
-    """
     full_text = f"{script_text} {custom_topic or ''}".lower()
-    
-    # Sistema de puntuación para seleccionar la categoría más precisa
     scores = {cat: 0 for cat in SCENARIO_POOLS.keys()}
     
-    # Puntuación por tema predeterminado
     if theme_key == "financial_breakthrough":
         scores["financial_doors"] += 4
     elif theme_key == "bedtime_blessing":
@@ -263,57 +270,46 @@ def generate_image_prompt_for_script(theme_key: Optional[str] = None, script_tex
     elif theme_key == "silent_battles":
         scores["tears_comfort"] += 3
 
-    # Palabras clave para tormenta / rescate
     for w in ["storm", "water", "drown", "sea", "wave", "sink", "boat", "ocean", "tempest", "tormenta", "olas", "mar"]:
         if w in full_text:
             scores["storm_rescue"] += 2
 
-    # Palabras clave para sanidad física
     for w in ["heal", "sick", "disease", "pain", "doctor", "medicine", "body", "cells", "infirmity", "cancer", "fever", "stripes", "sanar", "sanidad", "enfermedad", "dolor", "salud"]:
         if w in full_text:
             scores["miracle_healing"] += 2
 
-    # Palabras clave para finanzas / puertas
     for w in ["financial", "money", "debt", "bills", "lack", "famine", "provision", "job", "doors", "bank", "breakthrough", "dinero", "deuda", "deudas", "finanzas", "trabajo", "puertas", "cuentas"]:
         if w in full_text:
             scores["financial_doors"] += 2
 
-    # Palabras clave para noche / dormir
     for w in ["sleep", "night", "bed", "dream", "nightmare", "rest", "weary", "awake", "evening", "dormir", "noche", "cama", "sueño", "descanso"]:
         if w in full_text:
             scores["night_peace"] += 2
 
-    # Palabras clave para familia / niños / matrimonio
     for w in ["family", "child", "children", "son", "daughter", "mother", "father", "marriage", "husband", "wife", "home", "household", "familia", "hijo", "hijos", "hija", "madre", "padre", "matrimonio", "hogar", "casa"]:
         if w in full_text:
             scores["family_children"] += 2
 
-    # Palabras clave para ansiedad / pánico / protección
     for w in ["anxiety", "fear", "panic", "enemy", "attack", "chains", "armor", "giant", "darkness", "mind", "shield", "protect", "ansiedad", "miedo", "temor", "pánico", "enemigo", "mente", "escudo"]:
         if w in full_text:
             scores["anxiety_shield"] += 2
 
-    # Palabras clave para Getsemaní / oración solitaria
     for w in ["gethsemane", "garden", "kneel", "pray", "prayer", "solitary", "alone", "getsemaní", "oración", "orar"]:
         if w in full_text:
             scores["gethsemane_prayer"] += 2
 
-    # Palabras clave para lágrimas / quebranto
     for w in ["tear", "tears", "cried", "wept", "broken", "brokenhearted", "sorrow", "grief", "weeping", "lágrima", "lágrimas", "llorar", "quebrantado", "tristeza"]:
         if w in full_text:
             scores["tears_comfort"] += 2
 
-    # Palabras clave para cruz / calvario
     for w in ["cross", "calvary", "tomb", "resurrection", "sacrifice", "blood", "cruz", "calvario", "tumba", "resurrección"]:
         if w in full_text:
             scores["cross_calvary"] += 2
 
-    # Palabras clave para biblia / escrituras
     for w in ["bible", "scripture", "scriptures", "word", "verse", "scroll", "biblia", "palabra", "escritura"]:
         if w in full_text:
             scores["holy_scriptures"] += 2
 
-    # Elegir la categoría ganadora (con un pequeño elemento de selección si hay empate)
     best_score = max(scores.values())
     top_categories = [cat for cat, s in scores.items() if s == best_score and s > 0]
     
@@ -332,10 +328,8 @@ def generate_image_prompt_for_script(theme_key: Optional[str] = None, script_tex
     else:
         chosen_category = random.choice(list(SCENARIO_POOLS.keys()))
 
-    # Elegir una escena del grupo ganador aleatoriamente para garantizar variedad
     base_scene = random.choice(SCENARIO_POOLS[chosen_category])
 
-    # Manejar tema personalizado si existe
     topic_addon = ""
     if custom_topic and custom_topic.strip():
         ct_clean = custom_topic.strip().lower()
@@ -348,32 +342,53 @@ def generate_image_prompt_for_script(theme_key: Optional[str] = None, script_tex
             matched_translation = custom_topic.strip()
         topic_addon = f", especially centered on bringing miraculous intervention and peace for {matched_translation}"
 
-    # Añadir variaciones cinematográficas aleatorias
     angle = random.choice(CAMERA_ANGLES)
     lighting = random.choice(LIGHTING_MOODS)
     details = random.choice(ARTISTIC_DETAILS)
 
-    prompt = f"{base_scene}{topic_addon}, {lighting}, {details}, {angle}"
-    return prompt
+    return f"{base_scene}{topic_addon}, {lighting}, {details}, {angle}"
+
+def generate_seo_caption(theme_key: str, hook: str, body: str, cta: str) -> str:
+    """
+    Generates a high-converting, Facebook SEO-compliant caption for 2026:
+    - Line 1: Keyword-rich hook anchor
+    - Line 2: The scripture verse
+    - Line 3: Authentic prayer wall CTA (Meaningful Social Interaction)
+    - Line 4: Exactly 3 to 4 hyper-targeted CamelCase hashtags (Zero spam)
+    """
+    theme = VIRAL_THEMES.get(theme_key, VIRAL_THEMES["silent_battles"])
+    scripture = theme.get("scripture", "Psalm 34:18 — The Lord is close to the brokenhearted.")
+    hashtags = " ".join(theme.get("hashtags", ["#DailyPrayer", "#ChristianReels", "#FaithInGod"]))
+    
+    caption = (
+        f"{hook} 🙏✨\n\n"
+        f"📖 Scripture: {scripture}\n\n"
+        f"{cta}\n\n"
+        f"{hashtags}"
+    )
+    return caption
 
 def generate_script(theme_key: Optional[str] = None, custom_topic: Optional[str] = None) -> Dict[str, str]:
     if theme_key and theme_key in VIRAL_THEMES:
-        theme = VIRAL_THEMES[theme_key]
         chosen_key = theme_key
     else:
         chosen_key = random.choice(list(VIRAL_THEMES.keys()))
-        theme = VIRAL_THEMES[chosen_key]
+        
+    theme = VIRAL_THEMES[chosen_key]
 
     hook = random.choice(theme["hooks"])
     body = random.choice(theme["bodies"])
     cta = random.choice(theme["ctas"])
 
     if custom_topic and custom_topic.strip():
-        topic = custom_topic.strip()
-        hook = f"Do not scroll past this video. If you are struggling with {topic.lower()} right now, listen to what Jesus says."
+        topic = custom_topic.strip().lower()
+        # Translate or clean up topic
+        clean_topic = CUSTOM_TOPIC_TRANSLATIONS.get(topic, topic)
+        hook = f"If you have been praying silently over {clean_topic}, receive this promise from God tonight:"
 
     full_text = f"{hook} {body} {cta}"
     image_prompt = generate_image_prompt_for_script(chosen_key, full_text, custom_topic)
+    seo_caption = generate_seo_caption(chosen_key, hook, body, cta)
 
     return {
         "theme": theme["title"],
@@ -382,7 +397,9 @@ def generate_script(theme_key: Optional[str] = None, custom_topic: Optional[str]
         "body": body,
         "cta": cta,
         "full_text": full_text,
-        "image_prompt": image_prompt
+        "image_prompt": image_prompt,
+        "seo_caption": seo_caption,
+        "scripture": theme["scripture"]
     }
 
 def get_themes_list():

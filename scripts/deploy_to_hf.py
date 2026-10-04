@@ -8,13 +8,14 @@ REPO_TYPE = "space"
 api = HfApi(token=TOKEN)
 
 files_to_upload = [
-    ("engine/broll.py", "engine/broll.py"),
     ("engine/scripts.py", "engine/scripts.py"),
     ("engine/subtitles.py", "engine/subtitles.py"),
     ("engine/video.py", "engine/video.py"),
     ("server.py", "server.py"),
+    ("app.py", "app.py"),
     ("static/app.js", "static/app.js"),
     ("static/index.html", "static/index.html"),
+    ("static/style.css", "static/style.css"),
     ("requirements.txt", "requirements.txt"),
 ]
 

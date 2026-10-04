@@ -1,6 +1,11 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Elementos de la interfaz
+function bootstrapJesusStudio() {
   const themeSelect = document.getElementById("themeSelect");
+  if (!themeSelect) {
+    setTimeout(bootstrapJesusStudio, 60);
+    return;
+  }
+
+  // Elementos de la interfaz
   const customTopic = document.getElementById("customTopic");
   const btnGenerateScript = document.getElementById("btnGenerateScript");
   const scriptHook = document.getElementById("scriptHook");
@@ -708,4 +713,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   init();
-});
+}
+
+bootstrapJesusStudio();

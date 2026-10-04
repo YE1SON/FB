@@ -1,6 +1,5 @@
 import os
 import subprocess
-import shutil
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIO_DIR = os.path.join(BASE_DIR, "assets", "audio")
@@ -13,7 +12,6 @@ WORSHIP_TRACKS = {
 }
 
 def get_audio_duration(audio_path: str) -> float:
-    """Get precise duration of audio file using ffprobe."""
     cmd = [
         "ffprobe", "-v", "error", "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1", audio_path
@@ -21,9 +19,7 @@ def get_audio_duration(audio_path: str) -> float:
     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
     return float(res.stdout.strip())
 
-
 def _build_audio_filter(audio_path: str, music_file: str, music_volume: float, duration: float) -> str:
-    """Build the audio mixing filter chain for voice + background music."""
     fade_out_start = max(0.0, duration - 2.0)
     return (
         f"[1:a]volume=1.0[voice];"
@@ -31,148 +27,86 @@ def _build_audio_filter(audio_path: str, music_file: str, music_volume: float, d
         f"[voice][bgm]amix=inputs=2:duration=first:dropout_transition=2[a]"
     )
 
-
 def _resolve_music_file(music_track: str):
-    """Resolve music track name to file path, or None."""
     if music_track and music_track != "none":
         candidate = os.path.join(AUDIO_DIR, f"{music_track}.mp3")
         if os.path.exists(candidate):
             return candidate
     return None
 
-
-def render_reel_broll(
-    broll_path: str,
-    audio_path: str,
-    ass_path: str,
-    output_mp4_path: str,
-    music_track: str = "worship_piano_peace",
-    music_volume: float = 0.20,
-    fps: int = 30
-) -> str:
-    """
-    Renders a 1080x1920 vertical Reel using REAL video B-roll footage as background.
-    This passes Facebook's Motion Score classifier because every frame has genuine motion.
-    Overlays burned ASS subtitles (with hook text) and mixes TTS + worship music audio.
-    """
-    duration = get_audio_duration(audio_path)
-    norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
-    music_file = _resolve_music_file(music_track)
-
-    # Video filter: scale/crop B-roll to 1080x1920, trim to audio duration, overlay subtitles
-    video_filter = (
-        f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-        f"setsar=1,fps={fps},"
-        f"trim=duration={duration + 0.5:.2f},setpts=PTS-STARTPTS,"
-        f"ass='{norm_ass}'[v]"
-    )
-
-    if music_file:
-        audio_filter = _build_audio_filter(audio_path, music_file, music_volume, duration)
-        filter_complex = f"{video_filter};{audio_filter}"
-        cmd = [
-            "ffmpeg", "-y",
-            "-threads", "2",
-            "-stream_loop", "-1", "-i", broll_path,   # input 0: B-roll video (looped)
-            "-i", audio_path,                           # input 1: TTS narration
-            "-i", music_file,                           # input 2: worship music
-            "-filter_complex", filter_complex,
-            "-map", "[v]", "-map", "[a]",
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k",
-            "-shortest",
-            output_mp4_path
-        ]
+def get_visual_effect_string(effect_type: str, total_frames: int, zoom_speed: float, w: int, h: int, fps: int) -> str:
+    """Builds the visual filter string combining zoompan and dynamic particles/overlays."""
+    # Base movement: Ken burns zoom
+    base_zoom = f"zoompan=z='min(zoom+{zoom_speed:.6f},1.25)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}"
+    
+    if effect_type == "cinematic_dust":
+        # temporal noise simulating dust particles + vignette
+        return f"{base_zoom},noise=alls=12:allf=t+u,vignette=PI/3"
+    elif effect_type == "divine_light":
+        # color pulsing + slight vignette
+        return f"{base_zoom},colorlevels=rimin=0.0:gimin=0.0:bimin=0.0:rimax=1.0:gimax=1.0:bimax=1.0,vignette=PI/4"
+    elif effect_type == "dramatic_grain":
+        # heavy film grain, no vignette
+        return f"{base_zoom},noise=alls=20:allf=t+u"
     else:
-        filter_complex = video_filter
-        cmd = [
-            "ffmpeg", "-y",
-            "-threads", "2",
-            "-stream_loop", "-1", "-i", broll_path,
-            "-i", audio_path,
-            "-filter_complex", filter_complex,
-            "-map", "[v]", "-map", "1:a",
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k",
-            "-shortest",
-            output_mp4_path
-        ]
-
-    print(f"[Render] B-Roll mode (BGM: {music_track if music_file else 'none'}, duration: {duration:.1f}s)...")
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.returncode != 0:
-        print("FFmpeg Error:", result.stderr[-800:])
-        raise RuntimeError(f"FFmpeg B-roll render failed: {result.stderr[-500:]}")
-
-    print(f"[Render] Complete: {output_mp4_path} ({os.path.getsize(output_mp4_path)} bytes)")
-    return output_mp4_path
-
+        # "none" -> just the zoom
+        return base_zoom
 
 def render_reel(
     image_path: str,
     audio_path: str,
     ass_path: str,
     output_mp4_path: str,
+    aspect_ratio: str = "9:16",
+    effect_type: str = "cinematic_dust",
     music_track: str = "worship_piano_peace",
     music_volume: float = 0.20,
     fps: int = 30
 ) -> str:
     """
-    FALLBACK: Renders 1080x1920 vertical Reel using a static image with Ken Burns zoom.
-    WARNING: Facebook may classify this as 'low quality content' due to low motion score.
-    Use render_reel_broll() with real video clips whenever possible.
+    Renders the final video with dynamic micro-motion effects to pass Facebook's motion score.
     """
     duration = get_audio_duration(audio_path)
     total_frames = int((duration + 0.5) * fps)
-    zoom_speed = 0.22 / max(total_frames, 1)
+    zoom_speed = 0.20 / max(total_frames, 1)
     norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
     music_file = _resolve_music_file(music_track)
 
-    fade_out_start = max(0.0, duration - 2.0)
+    # Determine resolution based on aspect ratio
+    if aspect_ratio == "1:1":
+        w, h = 1080, 1080
+    elif aspect_ratio == "16:9":
+        w, h = 1920, 1080
+    else: # default 9:16
+        w, h = 1080, 1920
 
+    # Build the visual string
+    scale_crop = f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
+    visual_fx = get_visual_effect_string(effect_type, total_frames, zoom_speed, w, h, fps)
+    
+    # Complete video filter
+    video_filter = f"[0:v]{scale_crop},{visual_fx},ass='{norm_ass}'[v]"
+
+    cmd = ["ffmpeg", "-y", "-threads", "2", "-i", image_path, "-i", audio_path]
     if music_file:
-        filter_complex = (
-            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-            f"zoompan=z='min(zoom+{zoom_speed:.6f},1.26)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih*0.35-(ih*0.35/zoom)':s=1080x1920:fps={fps},"
-            f"ass='{norm_ass}'[v];"
-            f"[1:a]volume=1.0[voice];"
-            f"[2:a]volume={music_volume:.2f},afade=t=out:st={fade_out_start:.2f}:d=2.0[bgm];"
-            f"[voice][bgm]amix=inputs=2:duration=first:dropout_transition=2[a]"
-        )
-        cmd = [
-            "ffmpeg", "-y",
-            "-threads", "2",
-            "-i", image_path, "-i", audio_path, "-i", music_file,
-            "-filter_complex", filter_complex,
-            "-map", "[v]", "-map", "[a]",
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k",
-            "-shortest",
-            output_mp4_path
-        ]
+        cmd.extend(["-i", music_file])
+        audio_filter = _build_audio_filter(audio_path, music_file, music_volume, duration)
+        filter_complex = f"{video_filter};{audio_filter}"
+        cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", "[a]"])
     else:
-        filter_complex = (
-            f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-            f"zoompan=z='min(zoom+{zoom_speed:.6f},1.26)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih*0.35-(ih*0.35/zoom)':s=1080x1920:fps={fps},"
-            f"ass='{norm_ass}'[v]"
-        )
-        cmd = [
-            "ffmpeg", "-y",
-            "-threads", "2",
-            "-i", image_path, "-i", audio_path,
-            "-filter_complex", filter_complex,
-            "-map", "[v]", "-map", "1:a",
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "192k",
-            "-shortest",
-            output_mp4_path
-        ]
+        filter_complex = video_filter
+        cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", "1:a"])
 
-    print(f"[Render] Image fallback mode (BGM: {music_track if music_file else 'none'}, {total_frames} frames)...")
+    cmd.extend([
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "192k",
+        "-shortest",
+        output_mp4_path
+    ])
+
+    print(f"[Render] Mode: {aspect_ratio}, FX: {effect_type}, BGM Vol: {music_volume}")
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
-        print("FFmpeg Error:", result.stderr)
         raise RuntimeError(f"FFmpeg rendering failed: {result.stderr[-500:]}")
 
-    print(f"[Render] Complete: {output_mp4_path} ({os.path.getsize(output_mp4_path)} bytes)")
     return output_mp4_path

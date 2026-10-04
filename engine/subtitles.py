@@ -153,9 +153,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if len(chunk) > 1 and highlight_bgr != primary:
                 normal_part = " ".join(chunk[:-1]).upper()
                 highlight_word = chunk[-1].upper()
-                text_formatted = f"{normal_part} {{\\c{highlight_bgr}&}}{highlight_word}{{\\r}}"
+                # Dynamic pop animation: scale up to 125%, then shrink back to 100% over 120ms
+                text_formatted = f"{normal_part} {{\\c{highlight_bgr}&\\fscx125\\fscy125\\t(0,120,\\fscx100\\fscy100)}}{highlight_word}{{\\r}}"
             else:
-                text_formatted = f"{{\\c{highlight_bgr}&}}{' '.join(chunk).upper()}{{\\r}}"
+                text_formatted = f"{{\\c{highlight_bgr}&\\fscx125\\fscy125\\t(0,120,\\fscx100\\fscy100)}}{' '.join(chunk).upper()}{{\\r}}"
 
             events.append(f"Dialogue: 0,{t_start_str},{t_end_str},ViralMain,,0,0,0,,{text_formatted}")
             cur_time = chunk_end

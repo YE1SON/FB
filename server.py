@@ -15,8 +15,7 @@ if BASE_DIR not in sys.path:
 from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, VIRAL_THEMES
 from engine.tts import synthesize_speech, get_available_voices, VOICES
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
-from engine.video import render_reel, render_reel_broll, WORSHIP_TRACKS
-from engine.broll import get_broll_clip, get_broll_status
+from engine.video import render_reel, WORSHIP_TRACKS
 
 ASSETS_DIR = os.path.join(BASE_DIR, "assets", "images")
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
@@ -28,7 +27,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="JesusReels Studio", version="3.0.0")
+app = FastAPI(title="JesusReels Studio", version="4.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,18 +75,10 @@ class RenderRequest(BaseModel):
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
     music_track: str = "worship_piano_peace"
-    video_mode: str = "broll"       # "broll" (real video) or "image" (static fallback)
-    theme_key: str = ""             # needed for B-roll query selection
-    hook_text: str = ""             # bold visual text for first 2 seconds
-
-
-# ─── B-Roll Status ───────────────────────────────────────────────────────────
-
-@app.get("/api/broll-status")
-@app.get("/studio/api/broll-status")
-def api_broll_status():
-    """Check if Pexels API is configured for B-roll video backgrounds."""
-    return get_broll_status()
+    music_volume: float = 0.20
+    aspect_ratio: str = "9:16"
+    effect_type: str = "cinematic_dust"
+    hook_text: str = ""
 
 
 # ─── Worship Tracks ──────────────────────────────────────────────────────────
@@ -105,12 +96,10 @@ def list_worship_tracks():
 
 @app.get("/health")
 def health_check():
-    broll = get_broll_status()
     return {
         "status": "ok",
         "app": "JesusReels Studio",
-        "version": "3.0.0",
-        "broll_available": broll["available"]
+        "version": "4.0.0"
     }
 
 @app.get("/")
@@ -223,8 +212,14 @@ async def api_render_video(req: RenderRequest):
     voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
     cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
 
-    # 2. Generate ASS subtitles (with hook_text bold overlay if provided)
+    # 2. Generate ASS subtitles
     margin_v = 700 if req.subtitle_size == "large" else 750
+    # Adjust margin for 1:1 and 16:9
+    if req.aspect_ratio == "1:1":
+        margin_v = 150
+    elif req.aspect_ratio == "16:9":
+        margin_v = 100
+
     generate_viral_ass(
         cues, ass_file,
         style_key=req.subtitle_style,
@@ -232,30 +227,15 @@ async def api_render_video(req: RenderRequest):
         hook_text=req.hook_text
     )
 
-    # 3. Render video — B-roll mode (real video) or Image fallback
-    if req.video_mode == "broll":
-        # Try to get a B-roll clip from Pexels
-        broll_clip = get_broll_clip(req.theme_key or "silent_battles")
-        if broll_clip:
-            render_reel_broll(
-                broll_clip, audio_file, ass_file, output_video,
-                music_track=req.music_track
-            )
-        else:
-            # Pexels unavailable — fall back to image mode with warning
-            print("[Server] B-roll unavailable, falling back to image mode.")
-            image_file = _resolve_image(req.image_name)
-            render_reel(
-                image_file, audio_file, ass_file, output_video,
-                music_track=req.music_track
-            )
-    else:
-        # Explicit image mode (legacy)
-        image_file = _resolve_image(req.image_name)
-        render_reel(
-            image_file, audio_file, ass_file, output_video,
-            music_track=req.music_track
-        )
+    # 3. Render video (Micro-Motion Engine)
+    image_file = _resolve_image(req.image_name)
+    render_reel(
+        image_file, audio_file, ass_file, output_video,
+        aspect_ratio=req.aspect_ratio,
+        effect_type=req.effect_type,
+        music_track=req.music_track,
+        music_volume=req.music_volume
+    )
 
     return {
         "status": "success",
@@ -265,7 +245,6 @@ async def api_render_video(req: RenderRequest):
 
 
 def _resolve_image(image_name: str) -> str:
-    """Resolve image name to absolute path, with fallback."""
     image_file = os.path.join(ASSETS_DIR, image_name)
     if not os.path.exists(image_file):
         avail = [f for f in os.listdir(ASSETS_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
@@ -289,13 +268,11 @@ def list_outputs():
     return [{"filename": f, "url": f"/outputs/{f}"} for f in files]
 
 
-# ─── Main ───────────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
     import uvicorn
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "8050"))
     print("\n=======================================================")
-    print(f"  JESUS REELS STUDIO v3.0 — http://{host}:{port}")
+    print(f"  JESUS REELS STUDIO v4.0 — http://{host}:{port}")
     print("=======================================================\n")
     uvicorn.run("server:app", host=host, port=port, reload=False)

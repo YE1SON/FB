@@ -128,52 +128,61 @@
             </div>
           </div>
 
-          <!-- Selector de Música de Fondo -->
-          <div class="form-group" style="margin-top: 10px;">
-            <label for="musicSelect">🎵 Música de Fondo de Adoración (Ambient Worship)</label>
-            <select id="musicSelect" class="form-control">
-              <!-- Inyectado dinámicamente -->
-            </select>
-            <small class="text-muted block mt-5">Mezclada suavemente (-20dB) detrás de la voz para crear atmósfera espiritual y retención emocional.</small>
+        <!-- Selector de Música de Fondo y Volumen -->
+          <div class="form-row" style="margin-top: 10px;">
+            <div class="form-group col-8">
+              <label for="musicSelect">🎵 Música de Adoración</label>
+              <select id="musicSelect" class="form-control">
+                <!-- Inyectado dinámicamente -->
+              </select>
+            </div>
+            <div class="form-group col-4">
+              <label for="musicVolume">Volumen</label>
+              <input type="range" id="musicVolume" class="form-control" min="0" max="100" value="20" style="width: 100%; height: 38px;">
+            </div>
           </div>
+          <small class="text-muted block mt-5">Controla la intensidad de la música de fondo. Recomendado: 15-25 para no tapar la voz.</small>
 
-          <button id="btnPreviewAudio" class="btn btn-outline btn-block">
+          <button id="btnPreviewAudio" class="btn btn-outline btn-block mt-10">
             🔊 Escuchar Previa del Audio
           </button>
           <audio id="audioPreviewPlayer" controls style="display:none; width: 100%; margin-top: 10px;"></audio>
         </div>
 
-        <!-- Paso 3: Fondo del Video (B-Roll vs Imagen) -->
+        <!-- Paso 3: Motor Visual y Formato -->
         <div class="card card-step">
           <div class="card-header">
             <span class="step-num">3</span>
             <div>
-              <h2>Fondo del Video</h2>
-              <p>Elige el tipo de fondo visual para tu Reel</p>
+              <h2>Formato y Motor Visual Híbrido</h2>
+              <p>Partículas y efectos dinámicos sobre imágenes estáticas para superar el "Motion Score" de Facebook 2026.</p>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="videoModeSelect">Modo de Video</label>
-            <select id="videoModeSelect" class="form-control">
-              <option value="broll" selected>🎬 Video Cinematográfico B-Roll (Recomendado — Pasa el Motion Score de Meta)</option>
-              <option value="image">🖼️ Imagen Bíblica con Zoom (Modo Legado — Riesgo de baja distribución)</option>
-            </select>
-            <small class="text-muted block mt-5" id="videoModeHint">
-              Los clips de video reales (nubes, naturaleza, atardeceres) pasan el clasificador de calidad de Facebook. Las imágenes estáticas con zoom son penalizadas.
-            </small>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="aspectRatioSelect">Formato del Video</label>
+              <select id="aspectRatioSelect" class="form-control">
+                <option value="9:16" selected>📱 9:16 (Reels/Shorts/TikTok)</option>
+                <option value="1:1">⬛ 1:1 (Instagram Post/Cuadrado)</option>
+                <option value="16:9">📺 16:9 (YouTube/TV)</option>
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label for="effectTypeSelect">Efecto Visual (Micro-Movimiento)</label>
+              <select id="effectTypeSelect" class="form-control">
+                <option value="cinematic_dust" selected>✨ Polvo Cinematográfico (Recomendado)</option>
+                <option value="divine_light">☀️ Rayos de Luz y Pulso</option>
+                <option value="dramatic_grain">🌧️ Grano Dramático (Lluvia Ligera)</option>
+                <option value="none">🖼️ Ninguno (Solo Zoom, Estático)</option>
+              </select>
+            </div>
           </div>
 
-          <!-- B-Roll Info (shown when broll mode) -->
-          <div id="brollInfo" class="broll-status-box" style="padding: 12px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 8px; margin-top: 10px;">
-            <p style="margin: 0; font-size: 13px;">🎥 <strong>Video B-Roll automático:</strong> Se descargará un clip de video real de Pixabay que coincida con el tema de tu guion. Incluye nubes, atardeceres, naturaleza, velas y más.</p>
-            <p id="brollApiStatus" style="margin: 5px 0 0; font-size: 12px; opacity: 0.8;">Verificando conexión con Pixabay...</p>
-          </div>
-
-          <!-- Image Gallery (shown when image mode) -->
-          <div id="imageGallerySection" style="display: none;">
+          <!-- Image Gallery -->
+          <div id="imageGallerySection">
             <div class="form-group" style="margin-top: 15px;">
-              <label>Galería de Escenas Bíblicas (Toca para seleccionar)</label>
+              <label>Galería de Escenas Visuales (Toca para seleccionar)</label>
               <div class="image-gallery-picker" id="imageGallery">
                 <!-- Inyectado dinámicamente -->
               </div>
@@ -182,19 +191,19 @@
             <!-- Generador de Nuevas Imágenes con IA -->
             <div class="ai-generator-box">
               <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span>🎨 Generador de Imágenes IA en Base al Guion</span>
+                <span>🎨 Generador de Imágenes IA (Unreal Engine 5 Style)</span>
                 <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra escena que también coincide con tu guion">
-                  🎲 Otra Variación de Escena
+                  🎲 Otra Variante Visual
                 </button>
               </div>
               <div class="form-group">
-                <label for="aiImagePrompt" class="sub-label">Prompt Visual (En inglés para la IA):</label>
-                <textarea id="aiImagePrompt" rows="3" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, 9:16 vertical..."></textarea>
+                <label for="aiImagePrompt" class="sub-label">Prompt Visual Cinematográfico (IA):</label>
+                <textarea id="aiImagePrompt" rows="4" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, hyper-realistic, dynamic..."></textarea>
               </div>
               <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
-                🎨 Crear Imagen con IA (Puter / Navegador)
+                🎨 Crear Imagen con IA (100% Gratis - Puter)
               </button>
-              <small class="text-muted block mt-5">Genera una imagen cinematográfica vertical 9:16 que se añade a tu galería automáticamente.</small>
+              <small class="text-muted block mt-5">Se creará con iluminación dramática y detalles realistas para que no luzca "llana".</small>
             </div>
 
             <div class="upload-wrapper mt-15">

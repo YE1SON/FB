@@ -399,16 +399,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderStatusSub.textContent = "Extrayendo marcas de tiempo palabra por palabra...";
 
     try {
-      const isBroll = videoModeSelect ? videoModeSelect.value === "broll" : false;
+      const effectSelect = document.getElementById("effectTypeSelect");
+      const aspectSelect = document.getElementById("aspectRatioSelect");
+      const volumeInput = document.getElementById("musicVolume");
 
       const progressTimer = setTimeout(() => {
-        if (isBroll) {
-          renderStatusText.textContent = "Descargando Video B-Roll de Pixabay...";
-          renderStatusSub.textContent = "Componiendo video cinematográfico con subtítulos (1080x1920)...";
-        } else {
-          renderStatusText.textContent = "Quemando Subtítulos Dinámicos...";
-          renderStatusSub.textContent = "Animando movimiento de cámara Ken Burns (1080x1920)...";
-        }
+        renderStatusText.textContent = "Aplicando Motor Visual de Micro-Movimiento...";
+        renderStatusSub.textContent = "Agregando animaciones, partículas y subtítulos dinámicos...";
       }, 3000);
 
       const res = await fetch("/studio/api/render-video", {
@@ -424,7 +421,9 @@ document.addEventListener("DOMContentLoaded", () => {
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
           music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
-          video_mode: videoModeSelect ? videoModeSelect.value : "broll",
+          music_volume: volumeInput ? parseFloat(volumeInput.value) / 100.0 : 0.20,
+          aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
+          effect_type: effectSelect ? effectSelect.value : "cinematic_dust",
           theme_key: themeSelect ? themeSelect.value : "",
           hook_text: currentHookText || ""
         })

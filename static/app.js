@@ -15,6 +15,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const audioPreviewPlayer = document.getElementById("audioPreviewPlayer");
 
   let currentSeoCaption = "";
+  let currentHookText = "";
+
+  const videoModeSelect = document.getElementById("videoModeSelect");
+  const imageGallerySection = document.getElementById("imageGallerySection");
+  const brollInfo = document.getElementById("brollInfo");
+  const brollApiStatus = document.getElementById("brollApiStatus");
 
   const imageGallery = document.getElementById("imageGallery");
   const imageUpload = document.getElementById("imageUpload");
@@ -80,6 +86,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // 2c. Verificar estado de B-Roll (Pexels API)
+  async function loadBrollStatus() {
+    try {
+      const res = await fetch("/studio/api/broll-status");
+      const status = await res.json();
+      if (brollApiStatus) {
+        if (status.available) {
+          brollApiStatus.textContent = `✅ Pexels API conectada. ${status.cached_clips} clips en caché.`;
+          brollApiStatus.style.color = "#2ecc71";
+        } else {
+          brollApiStatus.textContent = "⚠️ PEXELS_API_KEY no configurada. Configúrala en los Secrets del Space para usar B-Roll.";
+          brollApiStatus.style.color = "#e74c3c";
+        }
+      }
+    } catch (e) {
+      if (brollApiStatus) {
+        brollApiStatus.textContent = "⚠️ No se pudo verificar la conexión con Pexels.";
+      }
+    }
+  }
+
+  // 2d. Toggle entre modo B-Roll y modo Imagen
+  function toggleVideoMode() {
+    if (!videoModeSelect) return;
+    const mode = videoModeSelect.value;
+    if (mode === "broll") {
+      if (brollInfo) brollInfo.style.display = "block";
+      if (imageGallerySection) imageGallerySection.style.display = "none";
+    } else {
+      if (brollInfo) brollInfo.style.display = "none";
+      if (imageGallerySection) imageGallerySection.style.display = "block";
+    }
+  }
+
   // 3. Cargar Imágenes y Escenas Bíblicas
   async function loadImages() {
     try {
@@ -125,6 +165,10 @@ document.addEventListener("DOMContentLoaded", () => {
       scriptHook.value = data.hook;
       scriptBody.value = data.body;
       scriptCta.value = data.cta;
+
+      if (data.hook_text) {
+        currentHookText = data.hook_text;
+      }
 
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
@@ -302,25 +346,25 @@ document.addEventListener("DOMContentLoaded", () => {
     liveSubPreview.style.fontSize = isLarge ? "28px" : "22px";
 
     if (style === "gold_highlight") {
-      liveSubPreview.innerHTML = `<span class="sub-word">DO</span> <span class="sub-word highlight" style="color: #ffd700;">NOT</span> <span class="sub-word">SCROLL</span>`;
+      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #ffd700;">WITH YOU</span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "neon_cyan") {
-      liveSubPreview.innerHTML = `<span class="sub-word">DO</span> <span class="sub-word highlight" style="color: #00ffcc;">NOT</span> <span class="sub-word">SCROLL</span>`;
+      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #00ffcc;">WITH YOU</span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "fire_coral") {
-      liveSubPreview.innerHTML = `<span class="sub-word">DO</span> <span class="sub-word highlight" style="color: #ff5722;">NOT</span> <span class="sub-word">SCROLL</span>`;
+      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #ff5722;">WITH YOU</span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "royal_purple") {
-      liveSubPreview.innerHTML = `<span class="sub-word">DO</span> <span class="sub-word highlight" style="color: #e040fb;">NOT</span> <span class="sub-word">SCROLL</span>`;
+      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #e040fb;">WITH YOU</span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "black_box") {
-      liveSubPreview.innerHTML = `<span style="background: rgba(0,0,0,0.85); color: #ffff00; padding: 4px 10px; border-radius: 4px;">DO NOT SCROLL</span>`;
+      liveSubPreview.innerHTML = `<span style="background: rgba(0,0,0,0.85); color: #ffff00; padding: 4px 10px; border-radius: 4px;">GOD IS WITH YOU</span>`;
     } else if (style === "pure_minimal") {
-      liveSubPreview.innerHTML = `<span style="color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">DO NOT SCROLL</span>`;
+      liveSubPreview.innerHTML = `<span style="color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">GOD IS WITH YOU</span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     }
@@ -355,9 +399,16 @@ document.addEventListener("DOMContentLoaded", () => {
     renderStatusSub.textContent = "Extrayendo marcas de tiempo palabra por palabra...";
 
     try {
+      const isBroll = videoModeSelect ? videoModeSelect.value === "broll" : false;
+
       const progressTimer = setTimeout(() => {
-        renderStatusText.textContent = "Quemando Subtítulos Dinámicos...";
-        renderStatusSub.textContent = "Animando movimiento de cámara Ken Burns (1080x1920)...";
+        if (isBroll) {
+          renderStatusText.textContent = "Descargando Video B-Roll de Pexels...";
+          renderStatusSub.textContent = "Componiendo video cinematográfico con subtítulos (1080x1920)...";
+        } else {
+          renderStatusText.textContent = "Quemando Subtítulos Dinámicos...";
+          renderStatusSub.textContent = "Animando movimiento de cámara Ken Burns (1080x1920)...";
+        }
       }, 3000);
 
       const res = await fetch("/studio/api/render-video", {
@@ -372,7 +423,10 @@ document.addEventListener("DOMContentLoaded", () => {
           image_name: selectedImageName,
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
-          music_track: musicSelect ? musicSelect.value : "worship_piano_peace"
+          music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
+          video_mode: videoModeSelect ? videoModeSelect.value : "broll",
+          theme_key: themeSelect ? themeSelect.value : "",
+          hook_text: currentHookText || ""
         })
       });
 
@@ -455,15 +509,20 @@ document.addEventListener("DOMContentLoaded", () => {
   btnPreviewAudio.addEventListener("click", triggerAudioPreview);
   btnRenderVideo.addEventListener("click", triggerRenderVideo);
   themeSelect.addEventListener("change", triggerGenerateScript);
+  if (videoModeSelect) {
+    videoModeSelect.addEventListener("change", toggleVideoMode);
+  }
 
   async function init() {
     await loadThemes();
     await loadVoices();
     await loadWorshipTracks();
+    await loadBrollStatus();
     await loadImages();
     await loadRecentOutputs();
     await triggerGenerateScript();
     updateSubtitlePreview();
+    toggleVideoMode();
   }
 
   init();

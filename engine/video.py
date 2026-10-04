@@ -21,6 +21,93 @@ def get_audio_duration(audio_path: str) -> float:
     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
     return float(res.stdout.strip())
 
+
+def _build_audio_filter(audio_path: str, music_file: str, music_volume: float, duration: float) -> str:
+    """Build the audio mixing filter chain for voice + background music."""
+    fade_out_start = max(0.0, duration - 2.0)
+    return (
+        f"[1:a]volume=1.0[voice];"
+        f"[2:a]volume={music_volume:.2f},afade=t=out:st={fade_out_start:.2f}:d=2.0[bgm];"
+        f"[voice][bgm]amix=inputs=2:duration=first:dropout_transition=2[a]"
+    )
+
+
+def _resolve_music_file(music_track: str):
+    """Resolve music track name to file path, or None."""
+    if music_track and music_track != "none":
+        candidate = os.path.join(AUDIO_DIR, f"{music_track}.mp3")
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
+def render_reel_broll(
+    broll_path: str,
+    audio_path: str,
+    ass_path: str,
+    output_mp4_path: str,
+    music_track: str = "worship_piano_peace",
+    music_volume: float = 0.20,
+    fps: int = 30
+) -> str:
+    """
+    Renders a 1080x1920 vertical Reel using REAL video B-roll footage as background.
+    This passes Facebook's Motion Score classifier because every frame has genuine motion.
+    Overlays burned ASS subtitles (with hook text) and mixes TTS + worship music audio.
+    """
+    duration = get_audio_duration(audio_path)
+    norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
+    music_file = _resolve_music_file(music_track)
+
+    # Video filter: scale/crop B-roll to 1080x1920, trim to audio duration, overlay subtitles
+    video_filter = (
+        f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+        f"setsar=1,fps={fps},"
+        f"trim=duration={duration + 0.5:.2f},setpts=PTS-STARTPTS,"
+        f"ass='{norm_ass}'[v]"
+    )
+
+    if music_file:
+        audio_filter = _build_audio_filter(audio_path, music_file, music_volume, duration)
+        filter_complex = f"{video_filter};{audio_filter}"
+        cmd = [
+            "ffmpeg", "-y",
+            "-threads", "2",
+            "-stream_loop", "-1", "-i", broll_path,   # input 0: B-roll video (looped)
+            "-i", audio_path,                           # input 1: TTS narration
+            "-i", music_file,                           # input 2: worship music
+            "-filter_complex", filter_complex,
+            "-map", "[v]", "-map", "[a]",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "192k",
+            "-shortest",
+            output_mp4_path
+        ]
+    else:
+        filter_complex = video_filter
+        cmd = [
+            "ffmpeg", "-y",
+            "-threads", "2",
+            "-stream_loop", "-1", "-i", broll_path,
+            "-i", audio_path,
+            "-filter_complex", filter_complex,
+            "-map", "[v]", "-map", "1:a",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "192k",
+            "-shortest",
+            output_mp4_path
+        ]
+
+    print(f"[Render] B-Roll mode (BGM: {music_track if music_file else 'none'}, duration: {duration:.1f}s)...")
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if result.returncode != 0:
+        print("FFmpeg Error:", result.stderr[-800:])
+        raise RuntimeError(f"FFmpeg B-roll render failed: {result.stderr[-500:]}")
+
+    print(f"[Render] Complete: {output_mp4_path} ({os.path.getsize(output_mp4_path)} bytes)")
+    return output_mp4_path
+
+
 def render_reel(
     image_path: str,
     audio_path: str,
@@ -31,24 +118,15 @@ def render_reel(
     fps: int = 30
 ) -> str:
     """
-    Renders high-quality 1080x1920 vertical Reel with smooth, dynamic Ken Burns camera zoom-in animation
-    towards Jesus' face, burned ASS dynamic subtitles, and ambient worship background music.
+    FALLBACK: Renders 1080x1920 vertical Reel using a static image with Ken Burns zoom.
+    WARNING: Facebook may classify this as 'low quality content' due to low motion score.
+    Use render_reel_broll() with real video clips whenever possible.
     """
     duration = get_audio_duration(audio_path)
     total_frames = int((duration + 0.5) * fps)
-    
-    # Velocidad de zoom dinámico: acercamiento progresivo y fluido del 1.0 hasta 1.25 durante todo el audio
     zoom_speed = 0.22 / max(total_frames, 1)
-
-    # Windows path formatting for FFmpeg ass filter
     norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
-    
-    # Check if background music is requested and exists
-    music_file = None
-    if music_track and music_track != "none":
-        candidate = os.path.join(AUDIO_DIR, f"{music_track}.mp3")
-        if os.path.exists(candidate):
-            music_file = candidate
+    music_file = _resolve_music_file(music_track)
 
     fade_out_start = max(0.0, duration - 2.0)
 
@@ -64,18 +142,11 @@ def render_reel(
         cmd = [
             "ffmpeg", "-y",
             "-threads", "2",
-            "-i", image_path,
-            "-i", audio_path,
-            "-i", music_file,
+            "-i", image_path, "-i", audio_path, "-i", music_file,
             "-filter_complex", filter_complex,
-            "-map", "[v]",
-            "-map", "[a]",
-            "-c:v", "libx264",
-            "-preset", "ultrafast",
-            "-crf", "23",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "aac",
-            "-b:a", "192k",
+            "-map", "[v]", "-map", "[a]",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "192k",
             "-shortest",
             output_mp4_path
         ]
@@ -88,26 +159,20 @@ def render_reel(
         cmd = [
             "ffmpeg", "-y",
             "-threads", "2",
-            "-i", image_path,
-            "-i", audio_path,
+            "-i", image_path, "-i", audio_path,
             "-filter_complex", filter_complex,
-            "-map", "[v]",
-            "-map", "1:a",
-            "-c:v", "libx264",
-            "-preset", "ultrafast",
-            "-crf", "23",
-            "-pix_fmt", "yuv420p",
-            "-c:a", "aac",
-            "-b:a", "192k",
+            "-map", "[v]", "-map", "1:a",
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "192k",
             "-shortest",
             output_mp4_path
         ]
 
-    print(f"Running FFmpeg render (BGM: {music_track if music_file else 'none'}, {total_frames} frames)...")
+    print(f"[Render] Image fallback mode (BGM: {music_track if music_file else 'none'}, {total_frames} frames)...")
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         print("FFmpeg Error:", result.stderr)
         raise RuntimeError(f"FFmpeg rendering failed: {result.stderr[-500:]}")
-        
-    print(f"Render complete: {output_mp4_path} ({os.path.getsize(output_mp4_path)} bytes)")
+
+    print(f"[Render] Complete: {output_mp4_path} ({os.path.getsize(output_mp4_path)} bytes)")
     return output_mp4_path

@@ -83,9 +83,10 @@ SUBTITLE_STYLES = {
     }
 }
 
-def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 750) -> str:
+def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 750, hook_text: str = "") -> str:
     """
     Genera subtítulos ASS dinámicos con amplia variedad de estilos para vídeos 9:16.
+    Includes optional bold hook_text overlay in the first 2 seconds for scroll-stopping impact.
     """
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["gold_highlight"])
     font = style_cfg["font"]
@@ -98,6 +99,11 @@ def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "
     border_style = style_cfg.get("border_style", 1)
     back_color = style_cfg.get("back_color", "&H80000000&")
 
+    # HookBold: large centered text for the visual hook (first 2 seconds, stops scroll)
+    hook_style_line = ""
+    if hook_text:
+        hook_style_line = f"\nStyle: HookBold,{font},95,&H00FFFFFF&,&H0000FFFF&,&H00000000&,&HC0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,60,60,480,1"
+
     header = f"""[Script Info]
 Title: Christian Viral Subtitles
 ScriptType: v4.00+
@@ -107,12 +113,17 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},2,40,40,{margin_v},1
+Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},2,40,40,{margin_v},1{hook_style_line}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     events = []
+
+    # Hook text overlay: large bold text in center of screen for first 2 seconds
+    if hook_text:
+        events.append(f"Dialogue: 1,0:00:00.00,0:00:02.20,HookBold,,0,0,0,,{{\\fad(150,500)\\an5}}{hook_text.upper()}")
+
     for cue in cues:
         raw_words = cue.text.strip().split()
         if not raw_words:

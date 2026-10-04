@@ -45,8 +45,8 @@
           <div class="card-header">
             <span class="step-num">1</span>
             <div>
-              <h2>Tema Viral y Generador de Guion (18-24s)</h2>
-              <p>Guiones con ancla bíblica, alta retención y cero penalización de Meta (Sin Engagement Bait)</p>
+              <h2>Tema Viral y Generador de Guion (7-15s)</h2>
+              <p>Guiones compactos de alta retención con CTAs de compartir (sin engagement bait). Optimizado para el algoritmo de Meta 2026.</p>
             </div>
           </div>
           
@@ -85,10 +85,10 @@
 
             <div class="script-field cta-field">
               <div class="field-label">
-                <span>🙏 Muro de Oración Comunitario (Engagement Real)</span>
-                <small>Genera peticiones de oración reales que disparan el alcance</small>
+                <span>🔗 Llamada a la Acción (Share-Oriented CTA)</span>
+                <small>Invita a compartir, no a comentar. Los shares privados tienen 10x más peso algorítmico.</small>
               </div>
-              <textarea id="scriptCta" rows="2" class="form-control" placeholder="Drop a heart or leave your prayer request below. Our community is praying for you tonight..."></textarea>
+              <textarea id="scriptCta" rows="2" class="form-control" placeholder="Share this prayer with someone who needs to hear this tonight..."></textarea>
             </div>
           </div>
 
@@ -143,46 +143,66 @@
           <audio id="audioPreviewPlayer" controls style="display:none; width: 100%; margin-top: 10px;"></audio>
         </div>
 
-        <!-- Paso 3: Selección de Escenas Bíblicas y Generador IA -->
+        <!-- Paso 3: Fondo del Video (B-Roll vs Imagen) -->
         <div class="card card-step">
           <div class="card-header">
             <span class="step-num">3</span>
             <div>
-              <h2>Escena Bíblica e Imagen Relacionada</h2>
-              <p>Elige escenas maestras de alta emoción o genera nuevas que ilustren la oración</p>
+              <h2>Fondo del Video</h2>
+              <p>Elige el tipo de fondo visual para tu Reel</p>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Galería de Escenas Bíblicas (Toca para seleccionar)</label>
-            <div class="image-gallery-picker" id="imageGallery">
-              <!-- Inyectado dinámicamente -->
-            </div>
+            <label for="videoModeSelect">Modo de Video</label>
+            <select id="videoModeSelect" class="form-control">
+              <option value="broll" selected>🎬 Video Cinematográfico B-Roll (Recomendado — Pasa el Motion Score de Meta)</option>
+              <option value="image">🖼️ Imagen Bíblica con Zoom (Modo Legado — Riesgo de baja distribución)</option>
+            </select>
+            <small class="text-muted block mt-5" id="videoModeHint">
+              Los clips de video reales (nubes, naturaleza, atardeceres) pasan el clasificador de calidad de Facebook. Las imágenes estáticas con zoom son penalizadas.
+            </small>
           </div>
 
-          <!-- Generador de Nuevas Imágenes con IA -->
-          <div class="ai-generator-box">
-            <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span>🎨 Generador de Imágenes IA en Base al Guion</span>
-              <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra escena que también coincide con tu guion">
-                🎲 Otra Variación de Escena
+          <!-- B-Roll Info (shown when broll mode) -->
+          <div id="brollInfo" class="broll-status-box" style="padding: 12px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 8px; margin-top: 10px;">
+            <p style="margin: 0; font-size: 13px;">🎥 <strong>Video B-Roll automático:</strong> Se descargará un clip de video real de Pexels que coincida con el tema de tu guion. Incluye nubes, atardeceres, naturaleza, velas y más.</p>
+            <p id="brollApiStatus" style="margin: 5px 0 0; font-size: 12px; opacity: 0.8;">Verificando conexión con Pexels...</p>
+          </div>
+
+          <!-- Image Gallery (shown when image mode) -->
+          <div id="imageGallerySection" style="display: none;">
+            <div class="form-group" style="margin-top: 15px;">
+              <label>Galería de Escenas Bíblicas (Toca para seleccionar)</label>
+              <div class="image-gallery-picker" id="imageGallery">
+                <!-- Inyectado dinámicamente -->
+              </div>
+            </div>
+
+            <!-- Generador de Nuevas Imágenes con IA -->
+            <div class="ai-generator-box">
+              <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span>🎨 Generador de Imágenes IA en Base al Guion</span>
+                <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra escena que también coincide con tu guion">
+                  🎲 Otra Variación de Escena
+                </button>
+              </div>
+              <div class="form-group">
+                <label for="aiImagePrompt" class="sub-label">Prompt Visual (En inglés para la IA):</label>
+                <textarea id="aiImagePrompt" rows="3" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, 9:16 vertical..."></textarea>
+              </div>
+              <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
+                🎨 Crear Imagen con IA (Puter / Navegador)
               </button>
+              <small class="text-muted block mt-5">Genera una imagen cinematográfica vertical 9:16 que se añade a tu galería automáticamente.</small>
             </div>
-            <div class="form-group">
-              <label for="aiImagePrompt" class="sub-label">Prompt Visual (En inglés para la IA):</label>
-              <textarea id="aiImagePrompt" rows="3" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, 9:16 vertical..."></textarea>
-            </div>
-            <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
-              🎨 Crear Imagen con IA (Puter / Navegador)
-            </button>
-            <small class="text-muted block mt-5">Genera una imagen cinematográfica vertical 9:16 que se añade a tu galería automáticamente.</small>
-          </div>
 
-          <div class="upload-wrapper mt-15">
-            <label class="btn-upload" for="imageUpload">
-              📁 O Subir Mi Propia Imagen desde la Computadora / Celular
-            </label>
-            <input type="file" id="imageUpload" accept="image/*" style="display:none;">
+            <div class="upload-wrapper mt-15">
+              <label class="btn-upload" for="imageUpload">
+                📁 O Subir Mi Propia Imagen desde la Computadora / Celular
+              </label>
+              <input type="file" id="imageUpload" accept="image/*" style="display:none;">
+            </div>
           </div>
         </div>
 
@@ -239,7 +259,7 @@
                 <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
                 <div class="stage-overlay">
                   <div class="live-subtitle-preview" id="liveSubPreview">
-                    <span class="sub-word">DO</span> <span class="sub-word highlight">NOT</span> <span class="sub-word">SCROLL</span>
+                    <span class="sub-word">GOD IS</span> <span class="sub-word highlight">WITH YOU</span>
                   </div>
                 </div>
               </div>

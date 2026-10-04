@@ -15,7 +15,8 @@ if BASE_DIR not in sys.path:
 from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, VIRAL_THEMES
 from engine.tts import synthesize_speech, get_available_voices, VOICES
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
-from engine.video import render_reel, WORSHIP_TRACKS
+from engine.video import render_reel, render_reel_broll, WORSHIP_TRACKS
+from engine.broll import get_broll_clip, get_broll_status
 
 ASSETS_DIR = os.path.join(BASE_DIR, "assets", "images")
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
@@ -27,7 +28,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="JesusReels Studio", version="2.0.0")
+app = FastAPI(title="JesusReels Studio", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -75,6 +76,21 @@ class RenderRequest(BaseModel):
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
     music_track: str = "worship_piano_peace"
+    video_mode: str = "broll"       # "broll" (real video) or "image" (static fallback)
+    theme_key: str = ""             # needed for B-roll query selection
+    hook_text: str = ""             # bold visual text for first 2 seconds
+
+
+# ─── B-Roll Status ───────────────────────────────────────────────────────────
+
+@app.get("/api/broll-status")
+@app.get("/studio/api/broll-status")
+def api_broll_status():
+    """Check if Pexels API is configured for B-roll video backgrounds."""
+    return get_broll_status()
+
+
+# ─── Worship Tracks ──────────────────────────────────────────────────────────
 
 @app.get("/api/worship-tracks")
 @app.get("/studio/api/worship-tracks")
@@ -84,14 +100,26 @@ def list_worship_tracks():
         for k, v in WORSHIP_TRACKS.items()
     ]
 
+
+# ─── Health & Index ──────────────────────────────────────────────────────────
+
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "app": "JesusReels Studio", "version": "2.0.0"}
+    broll = get_broll_status()
+    return {
+        "status": "ok",
+        "app": "JesusReels Studio",
+        "version": "3.0.0",
+        "broll_available": broll["available"]
+    }
 
 @app.get("/")
 @app.get("/app-view")
 def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+
+# ─── Themes & Scripts ────────────────────────────────────────────────────────
 
 @app.get("/api/themes")
 @app.get("/studio/api/themes")
@@ -108,6 +136,9 @@ def api_generate_script(req: ScriptRequest):
 def api_generate_image_prompt(req: ImagePromptRequest):
     prompt = generate_image_prompt_for_script(req.theme_key, req.script_text, req.custom_topic)
     return {"prompt": prompt}
+
+
+# ─── Voices & Subtitles ─────────────────────────────────────────────────────
 
 @app.get("/api/voices")
 @app.get("/studio/api/voices")
@@ -127,6 +158,9 @@ def list_subtitle_styles():
         {"key": k, "name": v["name"], "font": v["font"]}
         for k, v in SUBTITLE_STYLES.items()
     ]
+
+
+# ─── Images ─────────────────────────────────────────────────────────────────
 
 @app.get("/api/images")
 @app.get("/studio/api/images")
@@ -154,18 +188,24 @@ async def upload_image(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida"}
 
+
+# ─── Audio Preview ──────────────────────────────────────────────────────────
+
 @app.post("/api/preview-audio")
 @app.post("/studio/api/preview-audio")
 async def preview_audio(req: AudioPreviewRequest):
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="El texto no puede estar vacío.")
-        
+
     voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
     audio_id = f"preview_{uuid.uuid4().hex[:8]}.mp3"
     audio_path = os.path.join(OUTPUTS_DIR, audio_id)
-    
+
     await synthesize_speech(req.text, voice_info["id"], audio_path, rate=req.rate)
     return {"audio_url": f"/outputs/{audio_id}"}
+
+
+# ─── VIDEO RENDER (Main Endpoint) ───────────────────────────────────────────
 
 @app.post("/api/render-video")
 @app.post("/studio/api/render-video")
@@ -173,32 +213,70 @@ async def api_render_video(req: RenderRequest):
     full_text = f"{req.hook.strip()} {req.body.strip()} {req.cta.strip()}"
     if not full_text.strip():
         raise HTTPException(status_code=400, detail="El guion no puede estar vacío.")
-        
+
     session_id = uuid.uuid4().hex[:8]
     audio_file = os.path.join(OUTPUTS_DIR, f"{session_id}_audio.mp3")
     ass_file = os.path.join(OUTPUTS_DIR, f"{session_id}_subs.ass")
     output_video = os.path.join(OUTPUTS_DIR, f"reel_{session_id}.mp4")
-    
-    image_file = os.path.join(ASSETS_DIR, req.image_name)
+
+    # 1. Synthesize TTS audio
+    voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
+    cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
+
+    # 2. Generate ASS subtitles (with hook_text bold overlay if provided)
+    margin_v = 700 if req.subtitle_size == "large" else 750
+    generate_viral_ass(
+        cues, ass_file,
+        style_key=req.subtitle_style,
+        margin_v=margin_v,
+        hook_text=req.hook_text
+    )
+
+    # 3. Render video — B-roll mode (real video) or Image fallback
+    if req.video_mode == "broll":
+        # Try to get a B-roll clip from Pexels
+        broll_clip = get_broll_clip(req.theme_key or "silent_battles")
+        if broll_clip:
+            render_reel_broll(
+                broll_clip, audio_file, ass_file, output_video,
+                music_track=req.music_track
+            )
+        else:
+            # Pexels unavailable — fall back to image mode with warning
+            print("[Server] B-roll unavailable, falling back to image mode.")
+            image_file = _resolve_image(req.image_name)
+            render_reel(
+                image_file, audio_file, ass_file, output_video,
+                music_track=req.music_track
+            )
+    else:
+        # Explicit image mode (legacy)
+        image_file = _resolve_image(req.image_name)
+        render_reel(
+            image_file, audio_file, ass_file, output_video,
+            music_track=req.music_track
+        )
+
+    return {
+        "status": "success",
+        "video_url": f"/outputs/reel_{session_id}.mp4",
+        "filename": f"reel_{session_id}.mp4"
+    }
+
+
+def _resolve_image(image_name: str) -> str:
+    """Resolve image name to absolute path, with fallback."""
+    image_file = os.path.join(ASSETS_DIR, image_name)
     if not os.path.exists(image_file):
         avail = [f for f in os.listdir(ASSETS_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
         if avail:
             image_file = os.path.join(ASSETS_DIR, avail[0])
         else:
             raise HTTPException(status_code=400, detail="No hay imágenes disponibles.")
+    return image_file
 
-    voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
-    
-    cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
-    margin_v = 700 if req.subtitle_size == "large" else 750
-    generate_viral_ass(cues, ass_file, style_key=req.subtitle_style, margin_v=margin_v)
-    render_reel(image_file, audio_file, ass_file, output_video, music_track=req.music_track)
-    
-    return {
-        "status": "success",
-        "video_url": f"/outputs/reel_{session_id}.mp4",
-        "filename": f"reel_{session_id}.mp4"
-    }
+
+# ─── Outputs ────────────────────────────────────────────────────────────────
 
 @app.get("/api/outputs")
 @app.get("/studio/api/outputs")
@@ -210,11 +288,14 @@ def list_outputs():
     files.sort(key=lambda f: os.path.getmtime(os.path.join(OUTPUTS_DIR, f)), reverse=True)
     return [{"filename": f, "url": f"/outputs/{f}"} for f in files]
 
+
+# ─── Main ───────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     import uvicorn
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "8050"))
     print("\n=======================================================")
-    print(f"  JESUS REELS STUDIO - Ejecutando en http://{host}:{port}")
+    print(f"  JESUS REELS STUDIO v3.0 — http://{host}:{port}")
     print("=======================================================\n")
     uvicorn.run("server:app", host=host, port=port, reload=False)

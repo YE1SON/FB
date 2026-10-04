@@ -83,9 +83,9 @@ SUBTITLE_STYLES = {
     }
 }
 
-def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 750, hook_text: str = "", animation_type: str = "pop") -> str:
+def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 450, hook_text: str = "", animation_type: str = "pop", position: str = "bottom") -> str:
     """
-    Genera subtítulos ASS dinámicos con amplia variedad de estilos y animaciones.
+    Genera subtítulos ASS dinámicos con amplia variedad de estilos, posiciones y animaciones.
     Includes optional bold hook_text overlay in the first 2 seconds for scroll-stopping impact.
     """
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["gold_highlight"])
@@ -99,9 +99,20 @@ def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "
     border_style = style_cfg.get("border_style", 1)
     back_color = style_cfg.get("back_color", "&H80000000&")
 
+    # Configure alignment and margins based on user choice
+    if position == "center":
+        alignment = 5 # Middle-center
+        margin_v_calc = 0
+    elif position == "top":
+        alignment = 8 # Top-center
+        margin_v_calc = 220
+    else: # bottom
+        alignment = 2 # Bottom-center
+        margin_v_calc = margin_v
+
     # HookBold: large centered text for the visual hook
     hook_style_line = ""
-    if hook_text:
+    if hook_text and position != "center":
         hook_style_line = f"\nStyle: HookBold,{font},95,&H00FFFFFF&,&H0000FFFF&,&H00000000&,&HC0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,60,60,480,1"
 
     header = f"""[Script Info]
@@ -113,14 +124,14 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},2,40,40,{margin_v},1{hook_style_line}
+Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},{alignment},40,40,{margin_v_calc},1{hook_style_line}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     events = []
 
-    if hook_text:
+    if hook_text and position != "center":
         events.append(f"Dialogue: 1,0:00:00.00,0:00:02.20,HookBold,,0,0,0,,{{\\fad(150,500)\\an5}}{hook_text.upper()}")
 
     for cue in cues:

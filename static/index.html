@@ -167,21 +167,29 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group col-6">
-              <label for="aspectRatioSelect">Formato del Video</label>
+            <div class="form-group col-4">
+              <label for="aspectRatioSelect">Formato de Video</label>
               <select id="aspectRatioSelect" class="form-control">
-                <option value="9:16" selected>📱 9:16 (Reels/Shorts/TikTok)</option>
-                <option value="1:1">⬛ 1:1 (Instagram Post/Cuadrado)</option>
+                <option value="9:16" selected>📱 9:16 (Reels/Shorts)</option>
+                <option value="1:1">⬛ 1:1 (Post Cuadrado)</option>
                 <option value="16:9">📺 16:9 (YouTube/TV)</option>
               </select>
             </div>
-            <div class="form-group col-6">
-              <label for="effectTypeSelect">Efecto Visual (Micro-Movimiento)</label>
+            <div class="form-group col-4">
+              <label for="cameraMotionSelect">Movimiento Cámara</label>
+              <select id="cameraMotionSelect" class="form-control">
+                <option value="none" selected>⏹️ Estático (Sin Zoom)</option>
+                <option value="zoom_in">🔍 Zoom Lento Suave</option>
+                <option value="zoom_out">🔎 Zoom Alejamiento</option>
+              </select>
+            </div>
+            <div class="form-group col-4">
+              <label for="effectTypeSelect">Efecto Visual</label>
               <select id="effectTypeSelect" class="form-control">
-                <option value="cinematic_dust" selected>✨ Polvo Cinematográfico (Recomendado)</option>
-                <option value="divine_light">☀️ Rayos de Luz y Pulso</option>
-                <option value="dramatic_grain">🌧️ Grano Dramático (Lluvia Ligera)</option>
-                <option value="none">🖼️ Ninguno (Solo Zoom, Estático)</option>
+                <option value="cinematic_dust" selected>✨ Polvo de Oro</option>
+                <option value="divine_light">☀️ Rayos de Luz Divina</option>
+                <option value="dramatic_grain">🌧️ Grano Dramático</option>
+                <option value="none">🖼️ Limpio (Sin efecto)</option>
               </select>
             </div>
           </div>
@@ -227,13 +235,13 @@
           <div class="card-header">
             <span class="step-num">4</span>
             <div>
-              <h2>Estilos de Subtítulos Virales</h2>
-              <p>Elige el diseño visual que mejor combine con tu video</p>
+              <h2>Estilos y Ubicación de Subtítulos</h2>
+              <p>Personaliza color, tamaño, posición exacta y animación en vivo</p>
             </div>
           </div>
 
           <div class="form-row">
-            <div class="form-group col-12">
+            <div class="form-group col-7">
               <label for="subtitleStyleSelect">Diseño y Colores de Subtítulo</label>
               <select id="subtitleStyleSelect" class="form-control">
                 <option value="gold_highlight" selected>🌟 Oro Viral (Blanco con Resalte Dorado)</option>
@@ -244,10 +252,18 @@
                 <option value="pure_minimal">⚪ Blanco Puro Minimalista (Cinematográfico)</option>
               </select>
             </div>
+            <div class="form-group col-5">
+              <label for="subtitlePositionSelect">Posición en Pantalla</label>
+              <select id="subtitlePositionSelect" class="form-control">
+                <option value="bottom" selected>⬇️ Abajo (Recomendado)</option>
+                <option value="center">🎯 Centro (Impacto)</option>
+                <option value="top">⬆️ Arriba (Encabezado)</option>
+              </select>
+            </div>
           </div>
           
           <div class="form-row mt-10">
-            <div class="form-group col-6">
+            <div class="form-group col-7">
               <label for="subtitleAnimationSelect">Animación de Palabras</label>
               <select id="subtitleAnimationSelect" class="form-control">
                 <option value="pop" selected>💥 Rebote Dinámico (Estilo TikTok)</option>
@@ -256,7 +272,7 @@
                 <option value="none">⏹️ Estático (Sin animación)</option>
               </select>
             </div>
-            <div class="form-group col-6">
+            <div class="form-group col-5">
               <label for="subtitleSizeSelect">Tamaño de Texto</label>
               <select id="subtitleSizeSelect" class="form-control">
                 <option value="normal" selected>Normal</option>
@@ -268,7 +284,7 @@
 
         <!-- Botón de Render Final -->
         <button id="btnRenderVideo" class="btn btn-primary btn-large btn-block">
-          🎬 GENERAR REEL VIRAL (MP4 EN 1080x1920)
+          🎬 GENERAR REEL VIRAL (MP4)
         </button>
 
       </section>
@@ -284,10 +300,11 @@
             <div class="phone-screen">
               <!-- Escenario Idle -->
               <div class="stage-placeholder" id="stagePlaceholder">
+                <div class="stage-blur-bg" id="stageBlurBg"></div>
                 <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
-                <div class="visual-effect-overlay effect-cinematic_dust" id="effectOverlayDiv"></div>
-                <div class="stage-overlay">
-                  <div class="live-subtitle-preview" id="liveSubPreview">
+                <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
+                <div class="stage-overlay" id="stageOverlay">
+                  <div class="live-subtitle-preview pos-bottom" id="liveSubPreview">
                     <span class="sub-word">GOD IS</span> <span class="sub-word highlight">WITH YOU</span>
                   </div>
                 </div>

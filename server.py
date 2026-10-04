@@ -75,10 +75,12 @@ class RenderRequest(BaseModel):
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
     subtitle_animation: str = "pop"
+    subtitle_position: str = "bottom"
     music_track: str = "worship_piano_peace"
     music_volume: float = 0.20
     aspect_ratio: str = "9:16"
     effect_type: str = "cinematic_dust"
+    camera_motion: str = "none"
     hook_text: str = ""
 
 
@@ -214,7 +216,7 @@ async def api_render_video(req: RenderRequest):
     cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
 
     # 2. Generate ASS subtitles
-    margin_v = 700 if req.subtitle_size == "large" else 750
+    margin_v = 400 if req.subtitle_size == "large" else 450
     # Adjust margin for 1:1 and 16:9
     if req.aspect_ratio == "1:1":
         margin_v = 150
@@ -226,15 +228,17 @@ async def api_render_video(req: RenderRequest):
         style_key=req.subtitle_style,
         margin_v=margin_v,
         hook_text=req.hook_text,
-        animation_type=req.subtitle_animation
+        animation_type=req.subtitle_animation,
+        position=req.subtitle_position
     )
 
-    # 3. Render video (Micro-Motion Engine)
+    # 3. Render video (Micro-Motion Engine with smart fit and camera choice)
     image_file = _resolve_image(req.image_name)
     render_reel(
         image_file, audio_file, ass_file, output_video,
         aspect_ratio=req.aspect_ratio,
         effect_type=req.effect_type,
+        camera_motion=req.camera_motion,
         music_track=req.music_track,
         music_volume=req.music_volume
     )

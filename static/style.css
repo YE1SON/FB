@@ -246,6 +246,8 @@ textarea.form-control {
 }
 
 .col-8 { flex: 8; }
+.col-7 { flex: 7; }
+.col-5 { flex: 5; }
 .col-4 { flex: 4; }
 
 /* Script Fields */
@@ -549,60 +551,101 @@ textarea.form-control {
   position: relative;
 }
 
-.stage-placeholder img {
+.stage-placeholder {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+.stage-blur-bg {
+  position: absolute;
+  inset: -20px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(25px) brightness(0.65);
+  z-index: 1;
+  display: none;
+}
+
+.stage-placeholder.fit-contain .stage-blur-bg {
+  display: block;
+}
+
+.stage-placeholder img#stageSelectedImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.4s ease, object-fit 0.2s ease;
 }
 
-.stage-overlay {
+.stage-placeholder.fit-contain img#stageSelectedImage {
+  object-fit: contain;
+}
+
+/* Simulación de Movimiento de Cámara en Vista Previa */
+.stage-placeholder.camera-zoom_in img#stageSelectedImage {
+  animation: liveCameraZoomIn 10s infinite alternate ease-in-out;
+}
+@keyframes liveCameraZoomIn {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+
+.stage-placeholder.camera-zoom_out img#stageSelectedImage {
+  animation: liveCameraZoomOut 10s infinite alternate ease-in-out;
+}
+@keyframes liveCameraZoomOut {
+  from { transform: scale(1.15); }
+  to { transform: scale(1); }
+}
+
+.stage-placeholder.camera-none img#stageSelectedImage {
+  animation: none !important;
+  transform: scale(1) !important;
+}
+
+/* Canvas y Overlays de Efectos Visuales */
+.visual-effect-canvas {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
-  height: 50%;
-  background: linear-gradient(transparent, rgba(0,0,0,0.8) 60%);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 25%;
-  z-index: 2;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
 }
 
 .visual-effect-overlay {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
 }
 
-/* EFECTOS VISUALES EN VIVO (CSS) */
-.effect-cinematic_dust {
-  background-image: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 100%), url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
-  opacity: 0.25;
-  animation: moveDust 10s infinite linear;
-}
-@keyframes moveDust {
-  0% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.1) translate(-10px, -10px); }
-  100% { transform: scale(1) translate(0, 0); }
-}
-
-.effect-divine_light {
-  background: radial-gradient(circle at 50% 30%, rgba(255,215,0,0.4) 0%, transparent 60%);
-  animation: pulseLight 4s infinite alternate;
-  mix-blend-mode: screen;
-}
-@keyframes pulseLight {
-  0% { opacity: 0.5; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1.1); }
+.stage-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  z-index: 4;
+  pointer-events: none;
+  transition: justify-content 0.3s ease;
 }
 
-.effect-dramatic_grain {
-  background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
-  opacity: 0.35;
-  mix-blend-mode: overlay;
+/* Ubicación Dinámica de Subtítulos */
+.stage-overlay.pos-bottom {
+  justify-content: flex-end;
+}
+.stage-overlay.pos-center {
+  justify-content: center;
+}
+.stage-overlay.pos-top {
+  justify-content: flex-start;
 }
 
 .live-subtitle-preview {
@@ -611,13 +654,45 @@ textarea.form-control {
   font-size: clamp(18px, 4vw, 24px);
   color: #fff;
   text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 3px 6px rgba(0,0,0,0.9);
-  margin-bottom: 50px;
   transition: all 0.3s;
   word-break: break-word;
 }
 
+.live-subtitle-preview .sub-word {
+  display: inline-block;
+}
+
 .live-subtitle-preview .highlight {
   color: var(--gold);
+}
+
+/* Animaciones en Vivo para la Previa de Subtítulos */
+.anim-pop .highlight {
+  animation: livePop 1.1s infinite ease-in-out;
+}
+@keyframes livePop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.32); }
+}
+
+.anim-fade .highlight {
+  animation: liveFade 1.1s infinite ease-in-out;
+}
+@keyframes liveFade {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.anim-scale_slow .highlight {
+  animation: liveScaleSlow 1.8s infinite ease-in-out;
+}
+@keyframes liveScaleSlow {
+  0% { transform: scale(0.92); }
+  100% { transform: scale(1.22); }
+}
+
+.anim-none .highlight {
+  animation: none !important;
 }
 
 .phone-screen video {

@@ -141,6 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
           thumb.classList.add("selected");
           selectedImageName = thumb.dataset.filename;
           stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+          const stageBlurBg = document.getElementById("stageBlurBg");
+          if (stageBlurBg) {
+            stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
+          }
         });
       });
     } catch (e) {
@@ -377,44 +381,167 @@ document.addEventListener("DOMContentLoaded", () => {
 
   subtitleStyleSelect.addEventListener("change", updateSubtitlePreview);
   subtitleSizeSelect.addEventListener("change", updateSubtitlePreview);
-  
-  // Update Visual Effect Preview
-  function updateEffectPreview() {
-    const overlay = document.getElementById("effectOverlayDiv");
-    const effectSelect = document.getElementById("effectTypeSelect");
-    if(overlay && effectSelect) {
-      overlay.className = "visual-effect-overlay";
-      if(effectSelect.value !== "none") {
-        overlay.classList.add(`effect-${effectSelect.value}`);
-      }
-    }
-  }
-  
-  const effectTypeSelect = document.getElementById("effectTypeSelect");
-  if(effectTypeSelect) {
-    effectTypeSelect.addEventListener("change", updateEffectPreview);
-  }
-  
-  // Update Aspect Ratio Preview
-  function updateAspectRatioPreview() {
-    const aspectSelect = document.getElementById("aspectRatioSelect");
-    const phoneMockup = document.querySelector(".phone-mockup");
-    if(aspectSelect && phoneMockup) {
-      if(aspectSelect.value === "9:16") {
-        phoneMockup.style.aspectRatio = "9/16";
-        phoneMockup.style.maxWidth = "320px";
-      } else if (aspectSelect.value === "1:1") {
-        phoneMockup.style.aspectRatio = "1/1";
-        phoneMockup.style.maxWidth = "400px";
-      } else if (aspectSelect.value === "16:9") {
-        phoneMockup.style.aspectRatio = "16/9";
-        phoneMockup.style.maxWidth = "500px";
-      }
+
+  // ─── Canvas Particle & Visual Effects Engine ────────────────────────────────
+  const fxCanvas = document.getElementById("fxCanvas");
+  let fxCtx = fxCanvas ? fxCanvas.getContext("2d") : null;
+  let fxAnimationId = null;
+  let particles = [];
+
+  function initParticles(count = 35) {
+    particles = [];
+    if (!fxCanvas) return;
+    const w = fxCanvas.width = fxCanvas.offsetWidth || 320;
+    const h = fxCanvas.height = fxCanvas.offsetHeight || 568;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        radius: Math.random() * 3.5 + 1.2,
+        speedY: Math.random() * 0.8 + 0.35,
+        speedX: (Math.random() - 0.5) * 0.5,
+        alpha: Math.random() * 0.7 + 0.3,
+        pulseSpeed: Math.random() * 0.04 + 0.02,
+        pulseVal: Math.random() * Math.PI
+      });
     }
   }
 
+  function renderFx() {
+    if (!fxCanvas || !fxCtx) return;
+    const effectSelect = document.getElementById("effectTypeSelect");
+    const effect = effectSelect ? effectSelect.value : "cinematic_dust";
+    const w = fxCanvas.width;
+    const h = fxCanvas.height;
+
+    fxCtx.clearRect(0, 0, w, h);
+
+    if (effect === "cinematic_dust") {
+      // Golden Dust Motes floating up with sparkling glow
+      particles.forEach(p => {
+        p.y -= p.speedY;
+        p.x += p.speedX;
+        p.pulseVal += p.pulseSpeed;
+        const currentAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulseVal));
+
+        if (p.y < -10) {
+          p.y = h + 10;
+          p.x = Math.random() * w;
+        }
+
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 215, 0, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ffd700";
+        fxCtx.shadowBlur = 10;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "divine_light") {
+      // Radiant golden divine sunbeams pulsing from top
+      const time = Date.now() * 0.0018;
+      const gradient = fxCtx.createRadialGradient(w / 2, 0, 15, w / 2, 0, h * 0.85);
+      const intensity = 0.32 + 0.12 * Math.sin(time);
+      gradient.addColorStop(0, `rgba(255, 235, 140, ${intensity})`);
+      gradient.addColorStop(0.45, `rgba(255, 190, 40, ${intensity * 0.55})`);
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+    } else if (effect === "dramatic_grain") {
+      // Dynamic high-contrast film grain simulation
+      const imgData = fxCtx.createImageData(w, h);
+      const buffer = new Uint32Array(imgData.data.buffer);
+      const len = buffer.length;
+      for (let i = 0; i < len; i += 2) {
+        if (Math.random() < 0.15) {
+          const v = Math.random() > 0.5 ? 255 : 0;
+          buffer[i] = (60 << 24) | (v << 16) | (v << 8) | v;
+        }
+      }
+      fxCtx.putImageData(imgData, 0, 0);
+    }
+
+    fxAnimationId = requestAnimationFrame(renderFx);
+  }
+
+  function startFxLoop() {
+    if (fxAnimationId) cancelAnimationFrame(fxAnimationId);
+    initParticles(35);
+    renderFx();
+  }
+
+  const effectTypeSelect = document.getElementById("effectTypeSelect");
+  if (effectTypeSelect) {
+    effectTypeSelect.addEventListener("change", () => {
+      startFxLoop();
+    });
+  }
+
+  // ─── Live Previews: Subtitle Position & Animation ─────────────────────────
+  const subtitlePositionSelect = document.getElementById("subtitlePositionSelect");
+  const subtitleAnimationSelect = document.getElementById("subtitleAnimationSelect");
+  const stageOverlay = document.getElementById("stageOverlay");
+
+  function updateSubtitlePosition() {
+    if (!stageOverlay || !subtitlePositionSelect) return;
+    stageOverlay.classList.remove("pos-bottom", "pos-center", "pos-top");
+    stageOverlay.classList.add(`pos-${subtitlePositionSelect.value}`);
+  }
+
+  function updateSubtitleAnimation() {
+    if (!stagePlaceholder || !subtitleAnimationSelect) return;
+    stagePlaceholder.classList.remove("anim-pop", "anim-fade", "anim-scale_slow", "anim-none");
+    stagePlaceholder.classList.add(`anim-${subtitleAnimationSelect.value}`);
+  }
+
+  if (subtitlePositionSelect) {
+    subtitlePositionSelect.addEventListener("change", updateSubtitlePosition);
+  }
+  if (subtitleAnimationSelect) {
+    subtitleAnimationSelect.addEventListener("change", updateSubtitleAnimation);
+  }
+
+  // ─── Live Preview: Camera Motion ──────────────────────────────────────────
+  const cameraMotionSelect = document.getElementById("cameraMotionSelect");
+  function updateCameraMotionPreview() {
+    if (!stagePlaceholder || !cameraMotionSelect) return;
+    stagePlaceholder.classList.remove("camera-none", "camera-zoom_in", "camera-zoom_out");
+    stagePlaceholder.classList.add(`camera-${cameraMotionSelect.value}`);
+  }
+  if (cameraMotionSelect) {
+    cameraMotionSelect.addEventListener("change", updateCameraMotionPreview);
+  }
+
+  // ─── Live Preview: Aspect Ratio & Smart Fitting ───────────────────────────
+  function updateAspectRatioPreview() {
+    const aspectSelect = document.getElementById("aspectRatioSelect");
+    const phoneMockup = document.querySelector(".phone-mockup");
+    const stageBlurBg = document.getElementById("stageBlurBg");
+    if (!aspectSelect || !phoneMockup) return;
+
+    if (stageBlurBg) {
+      stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
+    }
+
+    if (aspectSelect.value === "9:16") {
+      phoneMockup.style.aspectRatio = "9/16";
+      phoneMockup.style.maxWidth = "320px";
+      stagePlaceholder.classList.remove("fit-contain");
+    } else if (aspectSelect.value === "1:1") {
+      phoneMockup.style.aspectRatio = "1/1";
+      phoneMockup.style.maxWidth = "380px";
+      stagePlaceholder.classList.add("fit-contain");
+    } else if (aspectSelect.value === "16:9") {
+      phoneMockup.style.aspectRatio = "16/9";
+      phoneMockup.style.maxWidth = "480px";
+      stagePlaceholder.classList.add("fit-contain");
+    }
+
+    setTimeout(initParticles, 150);
+  }
+
   const aspectRatioSelect = document.getElementById("aspectRatioSelect");
-  if(aspectRatioSelect) {
+  if (aspectRatioSelect) {
     aspectRatioSelect.addEventListener("change", updateAspectRatioPreview);
   }
 
@@ -446,12 +573,14 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const effectSelect = document.getElementById("effectTypeSelect");
       const aspectSelect = document.getElementById("aspectRatioSelect");
-      const volumeInput = document.getElementById("musicVolume");
+      const camSelect = document.getElementById("cameraMotionSelect");
+      const subPosSelect = document.getElementById("subtitlePositionSelect");
       const animSelect = document.getElementById("subtitleAnimationSelect");
+      const volumeInput = document.getElementById("musicVolume");
 
       const progressTimer = setTimeout(() => {
-        renderStatusText.textContent = "Aplicando Motor Visual de Micro-Movimiento...";
-        renderStatusSub.textContent = "Agregando animaciones, partículas y subtítulos dinámicos...";
+        renderStatusText.textContent = "Aplicando Motor Visual y Subtítulos...";
+        renderStatusSub.textContent = "Componiendo video, encuadre y efectos sin distorsión...";
       }, 3000);
 
       const res = await fetch("/studio/api/render-video", {
@@ -467,6 +596,8 @@ document.addEventListener("DOMContentLoaded", () => {
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
           subtitle_animation: animSelect ? animSelect.value : "pop",
+          subtitle_position: subPosSelect ? subPosSelect.value : "bottom",
+          camera_motion: camSelect ? camSelect.value : "none",
           music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
           music_volume: volumeInput ? parseFloat(volumeInput.value) / 100.0 : 0.20,
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
@@ -568,6 +699,11 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadRecentOutputs();
     await triggerGenerateScript();
     updateSubtitlePreview();
+    updateSubtitlePosition();
+    updateSubtitleAnimation();
+    updateCameraMotionPreview();
+    updateAspectRatioPreview();
+    startFxLoop();
     toggleVideoMode();
   }
 

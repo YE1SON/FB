@@ -92,6 +92,13 @@
             </div>
           </div>
 
+          <!-- Pinned Comment display box -->
+          <div class="form-group mt-15" style="background: rgba(255, 215, 0, 0.05); border-left: 3px solid #f1c40f; padding: 10px;">
+            <label class="sub-label" style="color: #f1c40f;">📌 Comentario Fijado (IA Estratégica):</label>
+            <p id="scriptPinnedComment" style="font-size: 13px; margin: 0; color: #ddd;">El comentario generado aparecerá aquí...</p>
+            <small class="text-muted block mt-5">Fija este comentario en tu Reel para provocar que la gente interactúe.</small>
+          </div>
+
           <!-- Botón de Sincronización Guion -> Imagen -->
           <div class="script-to-image-sync">
             <button id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block mt-10">
@@ -226,7 +233,7 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group col-8">
+            <div class="form-group col-12">
               <label for="subtitleStyleSelect">Diseño y Colores de Subtítulo</label>
               <select id="subtitleStyleSelect" class="form-control">
                 <option value="gold_highlight" selected>🌟 Oro Viral (Blanco con Resalte Dorado)</option>
@@ -237,8 +244,20 @@
                 <option value="pure_minimal">⚪ Blanco Puro Minimalista (Cinematográfico)</option>
               </select>
             </div>
-            <div class="form-group col-4">
-              <label for="subtitleSizeSelect">Tamaño</label>
+          </div>
+          
+          <div class="form-row mt-10">
+            <div class="form-group col-6">
+              <label for="subtitleAnimationSelect">Animación de Palabras</label>
+              <select id="subtitleAnimationSelect" class="form-control">
+                <option value="pop" selected>💥 Rebote Dinámico (Estilo TikTok)</option>
+                <option value="fade">🌫️ Aparición Suave (Fade in)</option>
+                <option value="scale_slow">🔍 Escala Lenta (Cinematográfico)</option>
+                <option value="none">⏹️ Estático (Sin animación)</option>
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label for="subtitleSizeSelect">Tamaño de Texto</label>
               <select id="subtitleSizeSelect" class="form-control">
                 <option value="normal" selected>Normal</option>
                 <option value="large">Grande</option>
@@ -266,6 +285,7 @@
               <!-- Escenario Idle -->
               <div class="stage-placeholder" id="stagePlaceholder">
                 <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
+                <div class="visual-effect-overlay effect-cinematic_dust" id="effectOverlayDiv"></div>
                 <div class="stage-overlay">
                   <div class="live-subtitle-preview" id="liveSubPreview">
                     <span class="sub-word">GOD IS</span> <span class="sub-word highlight">WITH YOU</span>

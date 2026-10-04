@@ -558,12 +558,51 @@ textarea.form-control {
 
 .stage-overlay {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 40%, rgba(0,0,0,0.3) 100%);
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8) 60%);
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 18px;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 25%;
+  z-index: 2;
+}
+
+.visual-effect-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* EFECTOS VISUALES EN VIVO (CSS) */
+.effect-cinematic_dust {
+  background-image: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 100%), url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+  opacity: 0.25;
+  animation: moveDust 10s infinite linear;
+}
+@keyframes moveDust {
+  0% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.1) translate(-10px, -10px); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+
+.effect-divine_light {
+  background: radial-gradient(circle at 50% 30%, rgba(255,215,0,0.4) 0%, transparent 60%);
+  animation: pulseLight 4s infinite alternate;
+  mix-blend-mode: screen;
+}
+@keyframes pulseLight {
+  0% { opacity: 0.5; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1.1); }
+}
+
+.effect-dramatic_grain {
+  background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+  opacity: 0.35;
+  mix-blend-mode: overlay;
 }
 
 .live-subtitle-preview {

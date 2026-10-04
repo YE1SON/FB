@@ -10,7 +10,11 @@ VIRAL_THEMES = {
         "title": "💸 Milagro Financiero (Facturas / $0 en el banco)",
         "description": "Pánico financiero inmediato y necesidad de un milagro de provisión urgente.",
         "scripture": "Philippians 4:19 — And my God will supply every need of yours according to his riches in glory.",
-        "hashtags": ["#FinancialMiracle", "#TrustGod", "#GodProvides", "#FaithOverFear"],
+        "hashtags": ["#prayer", "#christian", "#jesus", "#faith", "#blessed"],
+        "pinned_comments": [
+            "👇 God sees your exact situation right now. If you believe He will provide, say 'I receive it' below.",
+            "👇 Don't let financial anxiety steal your peace today. Where do you need a miracle? Let's pray together in the comments."
+        ],
         "hook_texts": [
             "WHEN YOUR BANK IS AT $0",
             "GOD SEES YOUR BILLS",
@@ -35,7 +39,11 @@ VIRAL_THEMES = {
         "title": "🚶‍♂️ Por el hijo/hija que se alejó de Dios",
         "description": "Dolor de un padre/madre por un hijo en rebeldía, adicción o lejos de la fe.",
         "scripture": "Luke 15:20 — But while he was still a long way off, his father saw him and was filled with compassion.",
-        "hashtags": ["#PrayingMom", "#ProdigalSon", "#FamilyRestoration", "#JesusSaves"],
+        "hashtags": ["#family", "#jesus", "#prayer", "#christian", "#god"],
+        "pinned_comments": [
+            "👇 A parent's prayer is powerful. Drop the first initial of the child you are praying for so we can stand in agreement with you.",
+            "👇 God is already working on their heart. Do you believe they will come back? Share your faith below."
+        ],
         "hook_texts": [
             "FOR YOUR WANDERING CHILD",
             "GOD IS CHASING THEM",
@@ -60,7 +68,11 @@ VIRAL_THEMES = {
         "title": "🌌 Cuando la ansiedad no te deja dormir (3 AM)",
         "description": "Paz de emergencia para mentes aceleradas, ataques de pánico y miedo nocturno.",
         "scripture": "Psalm 4:8 — In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.",
-        "hashtags": ["#AnxietyRelief", "#NightPrayer", "#PeaceOfMind", "#ChristianReels"],
+        "hashtags": ["#peace", "#prayer", "#anxiety", "#jesus", "#faith"],
+        "pinned_comments": [
+            "👇 If your mind is racing tonight, take a deep breath. You are safe. Drop a '🙏' if you are receiving God's peace right now.",
+            "👇 Leave your worries in the comments and let this community pray over your sleep tonight. God is with you."
+        ],
         "hook_texts": [
             "TO THE RACING MIND AT 3AM",
             "BREATHE IN GOD'S PEACE",
@@ -85,7 +97,11 @@ VIRAL_THEMES = {
         "title": "🩺 Un diagnóstico médico que aterroriza",
         "description": "Sanidad desesperada frente a enfermedades graves, cáncer o dolor crónico.",
         "scripture": "Jeremiah 17:14 — Heal me, Lord, and I will be healed; save me and I will be saved.",
-        "hashtags": ["#HealingMiracle", "#GodIsTheHealer", "#JesusHeals", "#FaithJourney"],
+        "hashtags": ["#healing", "#miracle", "#prayer", "#jesus", "#god"],
+        "pinned_comments": [
+            "👇 We believe in a God who heals. If you or a loved one needs physical healing, tell us their name below so we can pray.",
+            "👇 The doctor has information, but God has the final word. Claim your healing in the comments below!"
+        ],
         "hook_texts": [
             "GOD HAS THE FINAL WORD",
             "HEALING IS IN YOUR BLOOD",
@@ -110,7 +126,11 @@ VIRAL_THEMES = {
         "title": "💔 Traición de alguien en quien confiabas",
         "description": "Corazón roto, perdón difícil y justicia divina ante la deslealtad humana.",
         "scripture": "Psalm 147:3 — He heals the brokenhearted and binds up their wounds.",
-        "hashtags": ["#BrokenHeart", "#GodIsMyDefender", "#HealingJourney", "#ChristianReels"],
+        "hashtags": ["#healing", "#faith", "#jesus", "#prayer", "#god"],
+        "pinned_comments": [
+            "👇 It hurts when people walk away, but God never will. How has God comforted you in times of heartbreak? Share below.",
+            "👇 Forgiveness is hard, but it sets you free. If you are choosing to let go and let God heal you today, drop a '❤️'."
+        ],
         "hook_texts": [
             "GOD SAW THE BETRAYAL",
             "HE WILL VINDICATE YOU",
@@ -135,7 +155,11 @@ VIRAL_THEMES = {
         "title": "🌅 Bendición y Favor de la Mañana",
         "description": "Ideal para empezar el día. Oración de puertas abiertas, protección y favor.",
         "scripture": "Lamentations 3:22-23 — His compassions never fail. They are new every morning.",
-        "hashtags": ["#MorningPrayer", "#BlessedDay", "#FavorOfGod", "#ChristianReels"],
+        "hashtags": ["#morning", "#prayer", "#blessed", "#jesus", "#faith"],
+        "pinned_comments": [
+            "👇 God is opening doors for you today! What are you believing God for this week? Let us know below.",
+            "👇 Step out in faith today! Drop a '🙏' if you receive this morning blessing over your life and family."
+        ],
         "hook_texts": [
             "BEFORE YOU START YOUR DAY",
             "TODAY IS BLESSED",
@@ -241,6 +265,8 @@ def generate_script(theme_key: Optional[str] = None, custom_topic: Optional[str]
     full_text = f"{hook} {body} {cta}"
     image_prompt = generate_image_prompt_for_script(chosen_key, full_text, custom_topic)
     seo_caption = generate_seo_caption(chosen_key, hook, body, cta)
+    
+    pinned_comment = random.choice(theme.get("pinned_comments", ["👇 Let's pray together. How can we pray for you today? Drop your request below."]))
 
     return {
         "theme": theme["title"],
@@ -252,7 +278,8 @@ def generate_script(theme_key: Optional[str] = None, custom_topic: Optional[str]
         "full_text": full_text,
         "image_prompt": image_prompt,
         "seo_caption": seo_caption,
-        "scripture": theme["scripture"]
+        "scripture": theme["scripture"],
+        "pinned_comment": pinned_comment
     }
 
 def get_themes_list():

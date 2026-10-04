@@ -83,9 +83,9 @@ SUBTITLE_STYLES = {
     }
 }
 
-def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 750, hook_text: str = "") -> str:
+def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 750, hook_text: str = "", animation_type: str = "pop") -> str:
     """
-    Genera subtítulos ASS dinámicos con amplia variedad de estilos para vídeos 9:16.
+    Genera subtítulos ASS dinámicos con amplia variedad de estilos y animaciones.
     Includes optional bold hook_text overlay in the first 2 seconds for scroll-stopping impact.
     """
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["gold_highlight"])
@@ -99,7 +99,7 @@ def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "
     border_style = style_cfg.get("border_style", 1)
     back_color = style_cfg.get("back_color", "&H80000000&")
 
-    # HookBold: large centered text for the visual hook (first 2 seconds, stops scroll)
+    # HookBold: large centered text for the visual hook
     hook_style_line = ""
     if hook_text:
         hook_style_line = f"\nStyle: HookBold,{font},95,&H00FFFFFF&,&H0000FFFF&,&H00000000&,&HC0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,60,60,480,1"
@@ -120,7 +120,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     events = []
 
-    # Hook text overlay: large bold text in center of screen for first 2 seconds
     if hook_text:
         events.append(f"Dialogue: 1,0:00:00.00,0:00:02.20,HookBold,,0,0,0,,{{\\fad(150,500)\\an5}}{hook_text.upper()}")
 
@@ -134,7 +133,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         duration = max(end_sec - start_sec, 0.4)
         total_chars = sum(len(w) for w in raw_words)
 
-        # Dividir en grupos dinámicos de 2 a 3 palabras
         chunk_size = 2 if len(raw_words) <= 6 else 3
         chunks = [raw_words[i:i + chunk_size] for i in range(0, len(raw_words), chunk_size)]
 
@@ -150,13 +148,22 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             t_start_str = format_ass_time(cur_time)
             t_end_str = format_ass_time(chunk_end)
 
+            # Build Animation Tag
+            if animation_type == "pop":
+                anim_tag = "\\fscx130\\fscy130\\t(0,120,\\fscx100\\fscy100)"
+            elif animation_type == "fade":
+                anim_tag = "\\alpha&HFF&\\t(0,250,\\alpha&H00&)"
+            elif animation_type == "scale_slow":
+                anim_tag = "\\fscx85\\fscy85\\t(0,400,\\fscx110\\fscy110)"
+            else:
+                anim_tag = "" # estático
+
             if len(chunk) > 1 and highlight_bgr != primary:
                 normal_part = " ".join(chunk[:-1]).upper()
                 highlight_word = chunk[-1].upper()
-                # Dynamic pop animation: scale up to 125%, then shrink back to 100% over 120ms
-                text_formatted = f"{normal_part} {{\\c{highlight_bgr}&\\fscx125\\fscy125\\t(0,120,\\fscx100\\fscy100)}}{highlight_word}{{\\r}}"
+                text_formatted = f"{normal_part} {{\\c{highlight_bgr}&{anim_tag}}}{highlight_word}{{\\r}}"
             else:
-                text_formatted = f"{{\\c{highlight_bgr}&\\fscx125\\fscy125\\t(0,120,\\fscx100\\fscy100)}}{' '.join(chunk).upper()}{{\\r}}"
+                text_formatted = f"{{{\\c{highlight_bgr}&}{anim_tag}}}{' '.join(chunk).upper()}{{\\r}}"
 
             events.append(f"Dialogue: 0,{t_start_str},{t_end_str},ViralMain,,0,0,0,,{text_formatted}")
             cur_time = chunk_end

@@ -173,6 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
       }
+      
+      const pinnedCommentEl = document.getElementById("scriptPinnedComment");
+      if (pinnedCommentEl && data.pinned_comment) {
+        pinnedCommentEl.textContent = data.pinned_comment;
+      }
 
       // Sincronizar automáticamente el prompt para la IA
       if (data.image_prompt) {
@@ -372,6 +377,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
   subtitleStyleSelect.addEventListener("change", updateSubtitlePreview);
   subtitleSizeSelect.addEventListener("change", updateSubtitlePreview);
+  
+  // Update Visual Effect Preview
+  function updateEffectPreview() {
+    const overlay = document.getElementById("effectOverlayDiv");
+    const effectSelect = document.getElementById("effectTypeSelect");
+    if(overlay && effectSelect) {
+      overlay.className = "visual-effect-overlay";
+      if(effectSelect.value !== "none") {
+        overlay.classList.add(`effect-${effectSelect.value}`);
+      }
+    }
+  }
+  
+  const effectTypeSelect = document.getElementById("effectTypeSelect");
+  if(effectTypeSelect) {
+    effectTypeSelect.addEventListener("change", updateEffectPreview);
+  }
+  
+  // Update Aspect Ratio Preview
+  function updateAspectRatioPreview() {
+    const aspectSelect = document.getElementById("aspectRatioSelect");
+    const phoneMockup = document.querySelector(".phone-mockup");
+    if(aspectSelect && phoneMockup) {
+      if(aspectSelect.value === "9:16") {
+        phoneMockup.style.aspectRatio = "9/16";
+        phoneMockup.style.maxWidth = "320px";
+      } else if (aspectSelect.value === "1:1") {
+        phoneMockup.style.aspectRatio = "1/1";
+        phoneMockup.style.maxWidth = "400px";
+      } else if (aspectSelect.value === "16:9") {
+        phoneMockup.style.aspectRatio = "16/9";
+        phoneMockup.style.maxWidth = "500px";
+      }
+    }
+  }
+
+  const aspectRatioSelect = document.getElementById("aspectRatioSelect");
+  if(aspectRatioSelect) {
+    aspectRatioSelect.addEventListener("change", updateAspectRatioPreview);
+  }
 
   // 10. Renderizar Video Completo (MP4)
   async function triggerRenderVideo() {
@@ -402,6 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const effectSelect = document.getElementById("effectTypeSelect");
       const aspectSelect = document.getElementById("aspectRatioSelect");
       const volumeInput = document.getElementById("musicVolume");
+      const animSelect = document.getElementById("subtitleAnimationSelect");
 
       const progressTimer = setTimeout(() => {
         renderStatusText.textContent = "Aplicando Motor Visual de Micro-Movimiento...";
@@ -420,6 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
           image_name: selectedImageName,
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
+          subtitle_animation: animSelect ? animSelect.value : "pop",
           music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
           music_volume: volumeInput ? parseFloat(volumeInput.value) / 100.0 : 0.20,
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",

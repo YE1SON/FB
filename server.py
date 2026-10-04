@@ -74,6 +74,7 @@ class RenderRequest(BaseModel):
     image_name: str = "jesus_healing_miracle.jpg"
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
+    subtitle_animation: str = "pop"
     music_track: str = "worship_piano_peace"
     music_volume: float = 0.20
     aspect_ratio: str = "9:16"
@@ -224,7 +225,8 @@ async def api_render_video(req: RenderRequest):
         cues, ass_file,
         style_key=req.subtitle_style,
         margin_v=margin_v,
-        hook_text=req.hook_text
+        hook_text=req.hook_text,
+        animation_type=req.subtitle_animation
     )
 
     # 3. Render video (Micro-Motion Engine)

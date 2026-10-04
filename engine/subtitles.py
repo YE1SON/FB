@@ -158,12 +158,16 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             else:
                 anim_tag = "" # estático
 
+            chunk_text = " ".join(chunk).upper()
+            color_prefix = "{\\c" + highlight_bgr + "&" + anim_tag + "}"
+            reset_suffix = "{\\r}"
+
             if len(chunk) > 1 and highlight_bgr != primary:
                 normal_part = " ".join(chunk[:-1]).upper()
                 highlight_word = chunk[-1].upper()
-                text_formatted = f"{normal_part} {{\\c{highlight_bgr}&{anim_tag}}}{highlight_word}{{\\r}}"
+                text_formatted = f"{normal_part} {color_prefix}{highlight_word}{reset_suffix}"
             else:
-                text_formatted = f"{{{\\c{highlight_bgr}&}{anim_tag}}}{' '.join(chunk).upper()}{{\\r}}"
+                text_formatted = f"{color_prefix}{chunk_text}{reset_suffix}"
 
             events.append(f"Dialogue: 0,{t_start_str},{t_end_str},ViralMain,,0,0,0,,{text_formatted}")
             cur_time = chunk_end

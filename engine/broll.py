@@ -1,68 +1,69 @@
 """
-B-Roll Video Engine — Downloads real video clips from Pexels API
+B-Roll Video Engine — Downloads real video clips from Pixabay API
 to replace static images and pass Facebook's Motion Score classifier.
 """
 import os
 import random
 import requests
 from typing import Optional, List, Dict
+import urllib.parse
 
-PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
+PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY", "")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(BASE_DIR, "broll_cache")
 
 # Thematic search queries for each content theme — portrait-friendly nature/faith visuals
 THEME_BROLL_QUERIES = {
     "silent_battles": [
-        "rain drops window peaceful",
-        "candle flame darkness calm",
-        "sunset clouds dramatic sky",
-        "ocean waves calm shore",
-        "person walking alone nature"
+        "rain window",
+        "candle dark",
+        "ocean calm",
+        "sad lonely",
+        "sunset clouds"
     ],
     "financial_breakthrough": [
-        "sunrise golden light clouds",
-        "wheat field golden hour wind",
-        "light rays through clouds",
-        "river flowing peaceful morning",
-        "sunflower field sunshine"
+        "sunrise light",
+        "wheat field",
+        "river morning",
+        "sunflower",
+        "open door"
     ],
     "bedtime_blessing": [
-        "night sky stars peaceful",
-        "candle flame cozy evening",
-        "moonlight clouds timelapse",
-        "calm lake night reflection",
-        "fireplace warm flame"
+        "night sky",
+        "moon clouds",
+        "calm lake",
+        "fireplace",
+        "sleeping peaceful"
     ],
     "family_healing": [
-        "sunset warm golden nature",
-        "tree sunlight forest peaceful",
-        "flowers garden morning dew",
-        "birds flying sunset freedom",
-        "warm light window morning"
+        "sunset nature",
+        "forest light",
+        "flowers field",
+        "birds flying",
+        "family silhouette"
     ],
     "divine_protection": [
-        "storm clouds dramatic lightning",
-        "lighthouse ocean waves power",
-        "sunrise mountain peak glory",
-        "sunlight breaking dark clouds",
-        "eagle soaring sky majestic"
+        "storm lightning",
+        "lighthouse ocean",
+        "mountain peak",
+        "eagle soaring",
+        "shield light"
     ],
     "miracle_healing": [
-        "sunlight through forest trees",
-        "water stream nature peaceful",
-        "flower blooming close up",
-        "morning dew grass nature",
-        "dove bird flying sky"
+        "sunlight trees",
+        "water stream",
+        "flower blooming",
+        "morning dew",
+        "dove bird"
     ]
 }
 
 UNIVERSAL_QUERIES = [
-    "sunset sky clouds cinematic",
-    "peaceful nature light water",
-    "candle flame peaceful calm",
-    "sunlight rays clouds heaven",
-    "ocean waves sunset peaceful"
+    "sunset sky",
+    "peaceful nature",
+    "candle flame",
+    "sunlight rays",
+    "ocean waves"
 ]
 
 
@@ -71,54 +72,58 @@ def ensure_cache_dir():
     os.makedirs(CACHE_DIR, exist_ok=True)
 
 
-def search_pexels_videos(
-    query: str,
-    orientation: str = "portrait",
-    per_page: int = 10
-) -> List[Dict]:
-    """Search Pexels API for videos matching the query."""
-    if not PEXELS_API_KEY:
+def search_pixabay_videos(query: str, per_page: int = 15) -> List[Dict]:
+    """Search Pixabay API for videos matching the query."""
+    if not PIXABAY_API_KEY:
         return []
 
-    url = "https://api.pexels.com/videos/search"
-    headers = {"Authorization": PEXELS_API_KEY}
+    url = "https://pixabay.com/api/videos/"
+    # Encode the query properly
+    encoded_query = urllib.parse.quote(query)
+    
     params = {
-        "query": query,
-        "orientation": orientation,
-        "per_page": per_page,
-        "size": "medium"
+        "key": PIXABAY_API_KEY,
+        "q": encoded_query,
+        "video_type": "all",
+        "safesearch": "true",
+        "per_page": per_page
     }
 
     try:
-        resp = requests.get(url, headers=headers, params=params, timeout=15)
+        resp = requests.get(url, params=params, timeout=15)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("videos", [])
+        return data.get("hits", [])
     except Exception as e:
-        print(f"[B-Roll] Pexels API error: {e}")
+        print(f"[B-Roll] Pixabay API error: {e}")
         return []
 
 
 def get_best_video_file(video_data: Dict, max_width: int = 1920) -> Optional[str]:
-    """Extract the best HD video file URL from Pexels response data.
-    Prefers portrait-oriented files with good resolution."""
-    files = video_data.get("video_files", [])
-    if not files:
+    """Extract the best video file URL from Pixabay response data.
+    Tries to find portrait or high-quality landscape videos."""
+    videos_obj = video_data.get("videos", {})
+    if not videos_obj:
         return None
 
-    # Prefer portrait files (height > width)
-    portrait = [f for f in files if f.get("height", 0) > f.get("width", 0)]
-    candidates = portrait if portrait else files
+    # Pixabay usually provides sizes like: large, medium, small, tiny
+    # We prefer 'large' or 'medium'
+    candidates = []
+    for size_key in ["large", "medium", "small"]:
+        if size_key in videos_obj and videos_obj[size_key].get("url"):
+            candidates.append(videos_obj[size_key])
 
-    # Filter to reasonable resolution (not too huge for fast download)
-    suitable = [f for f in candidates if f.get("width", 0) <= max_width]
+    if not candidates:
+        return None
+
+    # Filter by width constraint
+    suitable = [f for f in candidates if f.get("width", 9999) <= max_width]
     if not suitable:
         suitable = candidates
 
-    # Sort by height descending — pick highest quality
+    # Pick the highest quality one available
     suitable.sort(key=lambda f: f.get("height", 0), reverse=True)
-
-    return suitable[0].get("link") if suitable else None
+    return suitable[0].get("url")
 
 
 def download_video(url: str, output_path: str) -> str:
@@ -136,19 +141,19 @@ def download_video(url: str, output_path: str) -> str:
 def get_broll_clip(theme_key: str) -> Optional[str]:
     """
     Get a B-roll video clip for the given theme.
-    Searches Pexels API, downloads, and caches locally.
+    Searches Pixabay API, downloads, and caches locally.
     Returns the path to the video file, or None if unavailable.
     """
     ensure_cache_dir()
 
-    if not PEXELS_API_KEY:
-        print("[B-Roll] No PEXELS_API_KEY set. Cannot download B-roll video.")
+    if not PIXABAY_API_KEY:
+        print("[B-Roll] No PIXABAY_API_KEY set. Cannot download B-roll video.")
         return None
 
     # Choose a random query for variety across renders
     queries = THEME_BROLL_QUERIES.get(theme_key, UNIVERSAL_QUERIES)
     query = random.choice(queries)
-    cache_key = query.replace(" ", "_")[:50]
+    cache_key = query.replace(" ", "_")[:30]
 
     # Check cache — reuse if we already downloaded a clip for this query
     if os.path.exists(CACHE_DIR):
@@ -158,33 +163,33 @@ def get_broll_clip(theme_key: str) -> Optional[str]:
             print(f"[B-Roll] Using cached clip: {chosen}")
             return chosen
 
-    # Search Pexels
-    print(f"[B-Roll] Searching Pexels for: '{query}' ...")
-    videos = search_pexels_videos(query, orientation="portrait", per_page=10)
+    # Search Pixabay
+    print(f"[B-Roll] Searching Pixabay for: '{query}' ...")
+    videos = search_pixabay_videos(query, per_page=15)
 
     # Fallback to universal queries if theme search fails
     if not videos:
         fallback_query = random.choice(UNIVERSAL_QUERIES)
         print(f"[B-Roll] Theme search empty, trying fallback: '{fallback_query}'")
-        videos = search_pexels_videos(fallback_query, orientation="portrait", per_page=10)
+        videos = search_pixabay_videos(fallback_query, per_page=15)
 
     if not videos:
-        print("[B-Roll] No videos found on Pexels.")
+        print("[B-Roll] No videos found on Pixabay.")
         return None
 
     # Pick from top results randomly for visual variety
-    video = random.choice(videos[:min(5, len(videos))])
+    video = random.choice(videos[:min(8, len(videos))])
     video_url = get_best_video_file(video)
 
     if not video_url:
-        print("[B-Roll] No suitable video file in Pexels response.")
+        print("[B-Roll] No suitable video file in Pixabay response.")
         return None
 
     # Download the clip
     video_id = video.get("id", random.randint(10000, 99999))
     output_path = os.path.join(CACHE_DIR, f"{cache_key}_{video_id}.mp4")
 
-    print(f"[B-Roll] Downloading Pexels clip #{video_id}...")
+    print(f"[B-Roll] Downloading Pixabay clip #{video_id}...")
     try:
         download_video(video_url, output_path)
         size_mb = os.path.getsize(output_path) / (1024 * 1024)
@@ -204,7 +209,8 @@ def get_broll_status() -> Dict:
         cached_count = len([f for f in os.listdir(CACHE_DIR) if f.endswith(".mp4")])
 
     return {
-        "available": bool(PEXELS_API_KEY),
-        "api_configured": bool(PEXELS_API_KEY),
-        "cached_clips": cached_count
+        "available": bool(PIXABAY_API_KEY),
+        "api_configured": bool(PIXABAY_API_KEY),
+        "cached_clips": cached_count,
+        "provider": "pixabay"
     }

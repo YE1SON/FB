@@ -86,23 +86,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 2c. Verificar estado de B-Roll (Pexels API)
+  // 2c. Verificar estado de B-Roll (Pixabay API)
   async function loadBrollStatus() {
     try {
       const res = await fetch("/studio/api/broll-status");
       const status = await res.json();
       if (brollApiStatus) {
         if (status.available) {
-          brollApiStatus.textContent = `✅ Pexels API conectada. ${status.cached_clips} clips en caché.`;
+          brollApiStatus.textContent = `✅ Pixabay API conectada. ${status.cached_clips} clips en caché.`;
           brollApiStatus.style.color = "#2ecc71";
         } else {
-          brollApiStatus.textContent = "⚠️ PEXELS_API_KEY no configurada. Configúrala en los Secrets del Space para usar B-Roll.";
+          brollApiStatus.textContent = "⚠️ PIXABAY_API_KEY no configurada. Configúrala en los Secrets del Space para usar B-Roll.";
           brollApiStatus.style.color = "#e74c3c";
         }
       }
     } catch (e) {
       if (brollApiStatus) {
-        brollApiStatus.textContent = "⚠️ No se pudo verificar la conexión con Pexels.";
+        brollApiStatus.textContent = "⚠️ No se pudo verificar la conexión con Pixabay.";
       }
     }
   }
@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const progressTimer = setTimeout(() => {
         if (isBroll) {
-          renderStatusText.textContent = "Descargando Video B-Roll de Pexels...";
+          renderStatusText.textContent = "Descargando Video B-Roll de Pixabay...";
           renderStatusSub.textContent = "Componiendo video cinematográfico con subtítulos (1080x1920)...";
         } else {
           renderStatusText.textContent = "Quemando Subtítulos Dinámicos...";

@@ -340,7 +340,7 @@ function bootstrapJesusStudio() {
     }
   });
 
-  // 8. Generación de Imagen con IA (Motor FLUX en Servidor)
+  // 8. Generación de Imagen con IA (Puter.js - Máxima Calidad sin Marcas de Agua)
   btnGenerateAiImage.addEventListener("click", async () => {
     const promptText = aiImagePrompt.value.trim();
     if (!promptText) {
@@ -348,74 +348,74 @@ function bootstrapJesusStudio() {
       return;
     }
 
-    const aspectSelect = document.getElementById("aspectRatioSelect");
-    const aspect = aspectSelect ? aspectSelect.value : "9:16";
-
     btnGenerateAiImage.disabled = true;
-    btnGenerateAiImage.textContent = "🎨 Creando Imagen Vertical 9:16 con IA (FLUX)...";
+    btnGenerateAiImage.textContent = "🎨 Conectando con IA de Alta Resolución...";
 
     try {
-      // 1. Intento principal: Servidor Oracle (rápido, directo, sin restricciones de navegador)
-      const res = await fetch("/api/generate-ai-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: promptText,
-          aspect_ratio: aspect
-        })
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || "Error en el servidor de IA");
+      if (typeof puter === "undefined" || !puter.ai || !puter.ai.txt2img) {
+        throw new Error("El motor Puter no está cargado en el navegador. Recarga la página.");
       }
 
-      const data = await res.json();
-      selectedImageName = data.filename;
-      stageSelectedImage.src = data.url;
-      const stageBlurBg = document.getElementById("stageBlurBg");
-      if (stageBlurBg) {
-        stageBlurBg.style.backgroundImage = `url('${data.url}')`;
-      }
-      await loadImages();
-      showStageView();
-      alert("¡Imagen creada en formato vertical 9:16 (1080x1920) y lista para tu Reel!");
-    } catch (err) {
-      console.warn("Fallo en generador del servidor, intentando fallback Puter:", err);
-      let handled = false;
-      if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2img) {
+      // Asegurar sesión en Puter (inicia sesión como usuario temporal automáticamente)
+      if (puter.auth && !puter.auth.isSignedIn()) {
+        btnGenerateAiImage.textContent = "🔐 Iniciando sesión segura en Puter...";
         try {
-          btnGenerateAiImage.textContent = "🎨 Generando vía navegador...";
-          const enhancedPrompt = `Ultra-realistic cinematic 8k vertical 9:16 portrait of ${promptText}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic`;
-          const imgElement = await puter.ai.txt2img(enhancedPrompt);
-          const response = await fetch(imgElement.src);
-          const blob = await response.blob();
-          const file = new File([blob], `ai_${Date.now()}.png`, { type: "image/png" });
-
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const uploadRes = await fetch("/api/upload-image", {
-            method: "POST",
-            body: formData
-          });
-          const uploadData = await uploadRes.json();
-          selectedImageName = uploadData.filename;
-          stageSelectedImage.src = uploadData.url;
-          await loadImages();
-          showStageView();
-          alert("¡Imagen creada con IA y añadida a la galería!");
-          handled = true;
-        } catch (puterErr) {
-          console.error("Error en Puter fallback:", puterErr);
+          await puter.auth.signIn({ attempt_temp_user_creation: true });
+        } catch (authErr) {
+          console.warn("Aviso de autenticación:", authErr);
         }
       }
-      if (!handled) {
-        alert("No se pudo generar la imagen automáticamente (" + (err.message || "Error desconocido") + "). Puedes seleccionar una escena de la galería o subir tu propia imagen.");
+
+      btnGenerateAiImage.textContent = "🎨 Generando imagen en alta resolución... (Puter)";
+
+      let enhancedPrompt = promptText;
+      if (!enhancedPrompt.toLowerCase().includes("cinematic") && !enhancedPrompt.toLowerCase().includes("masterpiece")) {
+        enhancedPrompt = `Ultra-realistic cinematic 8k portrait of ${enhancedPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus`;
       }
+
+      const imgElement = await puter.ai.txt2img(enhancedPrompt);
+
+      if (!imgElement || !imgElement.src) {
+        throw new Error("Puter no devolvió una imagen válida.");
+      }
+
+      btnGenerateAiImage.textContent = "💾 Guardando imagen en tu galería...";
+
+      // Convertir imagen a Blob y subirla al backend en el VPS
+      const response = await fetch(imgElement.src);
+      const blob = await response.blob();
+      const file = new File([blob], `ai_${Date.now()}.png`, { type: "image/png" });
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Error al guardar la imagen en el servidor.");
+      }
+
+      const uploadData = await uploadRes.json();
+      selectedImageName = uploadData.filename;
+      stageSelectedImage.src = uploadData.url;
+      const stageBlurBg = document.getElementById("stageBlurBg");
+      if (stageBlurBg) {
+        stageBlurBg.style.backgroundImage = `url('${uploadData.url}')`;
+      }
+
+      await loadImages();
+      showStageView();
+      alert("¡Imagen creada en alta resolución con IA y añadida a tu galería!");
+    } catch (err) {
+      console.error("Error en generación con Puter:", err);
+      const errMsg = (err && (err.message || err.error || err.description || (typeof err === "string" ? err : JSON.stringify(err)))) || "Fallo de conexión";
+      alert("No se pudo generar la imagen con Puter: " + errMsg + "\n\nTip: Si tu navegador bloqueó una ventana emergente (popup) de Puter, haz clic en el icono de bloqueo en la barra de direcciones de tu navegador y selecciona 'Permitir siempre ventanas emergentes'.");
     } finally {
       btnGenerateAiImage.disabled = false;
-      btnGenerateAiImage.textContent = "🎨 Crear Imagen Vertical 9:16 con IA (Motor FLUX)";
+      btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (Puter - Alta Resolución)";
     }
   });
 

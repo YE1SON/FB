@@ -51,6 +51,9 @@ function bootstrapJesusStudio() {
   const btnCopyFinalPinnedComment = document.getElementById("btnCopyFinalPinnedComment");
   const btnViewStage = document.getElementById("btnViewStage");
   const btnViewVideo = document.getElementById("btnViewVideo");
+  const puterStatusDot = document.getElementById("puterStatusDot");
+  const puterStatusText = document.getElementById("puterStatusText");
+  const btnPuterConnect = document.getElementById("btnPuterConnect");
   const recentList = document.getElementById("recentList");
 
   let currentPinnedComment = "";
@@ -340,6 +343,68 @@ function bootstrapJesusStudio() {
     }
   });
 
+  // ─── Utilidad para extraer mensajes de error limpios ───────────────────────
+  function extractError(err) {
+    if (!err) return "Error desconocido";
+    if (typeof err === "string") return err;
+    if (err.message && typeof err.message === "string") return err.message;
+    if (err.error) {
+      if (typeof err.error === "string") return err.error;
+      if (err.error.message && typeof err.error.message === "string") return err.error.message;
+      try { return JSON.stringify(err.error); } catch (_) {}
+    }
+    try { return JSON.stringify(err); } catch (_) { return String(err); }
+  }
+
+  // ─── Estado y Conexión de Puter AI ─────────────────────────────────────────
+  function updatePuterStatus() {
+    if (!puterStatusDot || !puterStatusText) return;
+    try {
+      if (typeof puter !== "undefined" && puter.auth && puter.auth.isSignedIn()) {
+        puterStatusDot.style.background = "#22c55e";
+        puterStatusText.textContent = "Puter AI: Conectado (Listo para crear en HD)";
+        if (btnPuterConnect) btnPuterConnect.style.display = "none";
+        return true;
+      }
+    } catch (_) {}
+    puterStatusDot.style.background = "#f59e0b";
+    puterStatusText.textContent = "Puter AI: Pendiente de activar";
+    if (btnPuterConnect) {
+      btnPuterConnect.style.display = "inline-block";
+      btnPuterConnect.textContent = "🔑 Conectar con 1 Clic";
+      btnPuterConnect.disabled = false;
+    }
+    return false;
+  }
+
+  if (btnPuterConnect) {
+    btnPuterConnect.addEventListener("click", () => {
+      btnPuterConnect.disabled = true;
+      btnPuterConnect.textContent = "Abriendo ventana...";
+
+      // Llamada directa en el evento de clic del usuario (el navegador permite la ventana emergente)
+      try {
+        puter.auth.signIn({ attempt_temp_user_creation: true })
+          .then(() => {
+            updatePuterStatus();
+            alert("¡Conexión exitosa con Puter AI! Ya puedes generar imágenes con máxima resolución y sin marcas de agua.");
+          })
+          .catch(err => {
+            console.error("Error al conectar con Puter:", err);
+            updatePuterStatus();
+            const errStr = extractError(err);
+            alert("Aviso de conexión: " + errStr + "\n\nTip: Si tu navegador bloqueó la ventana emergente, mira en la barra de direcciones de tu navegador (arriba a la derecha) y dale a 'Permitir ventanas emergentes de 132.145.202.1'.");
+          })
+          .finally(() => {
+            updatePuterStatus();
+          });
+      } catch (e) {
+        alert("Error al iniciar conexión: " + extractError(e));
+        updatePuterStatus();
+      }
+    });
+  }
+
   // 8. Generación de Imagen con IA (Puter.js - Máxima Calidad sin Marcas de Agua)
   btnGenerateAiImage.addEventListener("click", async () => {
     const promptText = aiImagePrompt.value.trim();
@@ -348,26 +413,25 @@ function bootstrapJesusStudio() {
       return;
     }
 
+    if (typeof puter === "undefined" || !puter.ai || !puter.ai.txt2img) {
+      alert("El motor Puter no está cargado en el navegador. Por favor recarga la página.");
+      return;
+    }
+
+    // Si aún no está conectado, solicitar conexión con el botón
+    if (puter.auth && !puter.auth.isSignedIn()) {
+      alert("Primero activa Puter con el botón azul '🔑 Conectar con 1 Clic' que está arriba.");
+      if (btnPuterConnect) {
+        btnPuterConnect.scrollIntoView({ behavior: "smooth", block: "center" });
+        btnPuterConnect.focus();
+      }
+      return;
+    }
+
     btnGenerateAiImage.disabled = true;
-    btnGenerateAiImage.textContent = "🎨 Conectando con IA de Alta Resolución...";
+    btnGenerateAiImage.textContent = "🎨 Generando imagen en alta resolución... (Puter)";
 
     try {
-      if (typeof puter === "undefined" || !puter.ai || !puter.ai.txt2img) {
-        throw new Error("El motor Puter no está cargado en el navegador. Recarga la página.");
-      }
-
-      // Asegurar sesión en Puter (inicia sesión como usuario temporal automáticamente)
-      if (puter.auth && !puter.auth.isSignedIn()) {
-        btnGenerateAiImage.textContent = "🔐 Iniciando sesión segura en Puter...";
-        try {
-          await puter.auth.signIn({ attempt_temp_user_creation: true });
-        } catch (authErr) {
-          console.warn("Aviso de autenticación:", authErr);
-        }
-      }
-
-      btnGenerateAiImage.textContent = "🎨 Generando imagen en alta resolución... (Puter)";
-
       let enhancedPrompt = promptText;
       if (!enhancedPrompt.toLowerCase().includes("cinematic") && !enhancedPrompt.toLowerCase().includes("masterpiece")) {
         enhancedPrompt = `Ultra-realistic cinematic 8k portrait of ${enhancedPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus`;
@@ -411,8 +475,7 @@ function bootstrapJesusStudio() {
       alert("¡Imagen creada en alta resolución con IA y añadida a tu galería!");
     } catch (err) {
       console.error("Error en generación con Puter:", err);
-      const errMsg = (err && (err.message || err.error || err.description || (typeof err === "string" ? err : JSON.stringify(err)))) || "Fallo de conexión";
-      alert("No se pudo generar la imagen con Puter: " + errMsg + "\n\nTip: Si tu navegador bloqueó una ventana emergente (popup) de Puter, haz clic en el icono de bloqueo en la barra de direcciones de tu navegador y selecciona 'Permitir siempre ventanas emergentes'.");
+      alert("No se pudo generar la imagen: " + extractError(err));
     } finally {
       btnGenerateAiImage.disabled = false;
       btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (Puter - Alta Resolución)";
@@ -804,6 +867,9 @@ function bootstrapJesusStudio() {
     updateAspectRatioPreview();
     startFxLoop();
     toggleVideoMode();
+    updatePuterStatus();
+    setTimeout(updatePuterStatus, 1000);
+    setTimeout(updatePuterStatus, 3000);
   }
 
   init();

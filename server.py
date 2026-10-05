@@ -2,6 +2,11 @@ import os
 import sys
 import uuid
 import shutil
+import io
+import random
+import urllib.request
+import urllib.parse
+from PIL import Image
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -59,6 +64,10 @@ class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
     script_text: str = ""
     custom_topic: Optional[str] = None
+
+class GenerateAiImageRequest(BaseModel):
+    prompt: str
+    aspect_ratio: str = "9:16"
 
 class AudioPreviewRequest(BaseModel):
     text: str
@@ -179,6 +188,72 @@ async def upload_image(file: UploadFile = File(...)):
     with open(filepath, "wb") as f:
         shutil.copyfileobj(file.file, f)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida"}
+
+@app.post("/api/generate-ai-image")
+@app.post("/studio/api/generate-ai-image")
+async def generate_ai_image(req: GenerateAiImageRequest):
+    prompt_text = req.prompt.strip()
+    if not prompt_text:
+        raise HTTPException(status_code=400, detail="El prompt no puede estar vacío.")
+
+    # Enriquecer prompt para calidad cinematográfica 9:16
+    enhanced_prompt = prompt_text
+    if "8k" not in enhanced_prompt.lower() and "cinematic" not in enhanced_prompt.lower():
+        enhanced_prompt = f"Ultra-realistic cinematic 8k vertical 9:16 portrait of {enhanced_prompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece"
+
+    # Dimensiones
+    target_w, target_h = 1080, 1920
+    if req.aspect_ratio == "1:1":
+        target_w, target_h = 1080, 1080
+    elif req.aspect_ratio == "16:9":
+        target_w, target_h = 1920, 1080
+
+    seed = random.randint(10000, 99999999)
+    encoded = urllib.parse.quote(enhanced_prompt)
+
+    models_to_try = ["flux", "turbo"]
+    img_bytes = None
+
+    for model in models_to_try:
+        try:
+            url = f"https://image.pollinations.ai/prompt/{encoded}?width={target_w}&height={target_h}&model={model}&nologo=true&seed={seed}"
+            request_obj = urllib.request.Request(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+            )
+            with urllib.request.urlopen(request_obj, timeout=35) as response:
+                if response.status == 200:
+                    data = response.read()
+                    if len(data) > 5000:
+                        img_bytes = data
+                        break
+        except Exception as e:
+            print(f"[AI Image Gen] Intento con {model} falló: {e}")
+            continue
+
+    if not img_bytes:
+        raise HTTPException(status_code=502, detail="El servicio de generación de imágenes IA tardó demasiado. Por favor intenta de nuevo en unos segundos.")
+
+    try:
+        img = Image.open(io.BytesIO(img_bytes))
+        if img.size != (target_w, target_h):
+            img = img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+
+        filename = f"custom_ai_{uuid.uuid4().hex[:8]}.jpg"
+        filepath = os.path.join(ASSETS_DIR, filename)
+        img.convert("RGB").save(filepath, "JPEG", quality=95, optimize=True)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error procesando la imagen generada: {str(e)}")
+
+    clean_label = f"🎨 IA: {prompt_text[:28]}..."
+    IMAGE_METADATA[filename] = clean_label
+
+    return {
+        "status": "success",
+        "filename": filename,
+        "url": f"/assets/images/{filename}",
+        "label": clean_label
+    }
 
 
 # ─── Audio Preview ──────────────────────────────────────────────────────────

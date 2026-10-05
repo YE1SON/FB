@@ -28,5 +28,5 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8050
 
-# Comando de arranque compatible con Render, Railway, Fly.io y Hugging Face Spaces
+# Comando de arranque del servidor
 CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8050}"]

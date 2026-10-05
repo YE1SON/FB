@@ -870,3 +870,70 @@ textarea.form-control {
     padding: 12px;
   }
 }
+
+/* ==========================================================================
+   PINNED COMMENT & PREVIEW MODE CONTROLS
+   ========================================================================== */
+.pinned-comment-box {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.pinned-comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pinned-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #fbbf24;
+}
+
+.preview-mode-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.preview-tab {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #2a3346;
+  background: #141b26;
+  color: #94a3b8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.preview-tab:hover:not(:disabled) {
+  background: #1c2636;
+  color: #f8fafc;
+}
+
+.preview-tab.active {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+}
+
+.preview-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

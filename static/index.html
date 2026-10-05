@@ -93,10 +93,15 @@
           </div>
 
           <!-- Pinned Comment display box -->
-          <div class="form-group mt-15" style="background: rgba(255, 215, 0, 0.05); border-left: 3px solid #f1c40f; padding: 10px;">
-            <label class="sub-label" style="color: #f1c40f;">📌 Comentario Fijado (IA Estratégica):</label>
-            <p id="scriptPinnedComment" style="font-size: 13px; margin: 0; color: #ddd;">El comentario generado aparecerá aquí...</p>
-            <small class="text-muted block mt-5">Fija este comentario en tu Reel para provocar que la gente interactúe.</small>
+          <div class="pinned-comment-box mt-15">
+            <div class="pinned-comment-header">
+              <span class="pinned-badge">📌 COMENTARIO FIJADO (ENGAGEMENT VIRAL)</span>
+              <button type="button" id="btnCopyPinnedComment" class="btn btn-sm btn-gold-outline" style="font-size: 11px; padding: 4px 8px;">
+                📋 Copiar Comentario
+              </button>
+            </div>
+            <textarea id="scriptPinnedComment" rows="2" class="form-control" readonly placeholder="El comentario fijado personalizado para este video aparecerá aquí..."></textarea>
+            <small class="text-muted block mt-5">💡 <strong>Meta 2026 Tip:</strong> Pega y fija este comentario apenas subas tu Reel a Facebook. Multiplica por 5 los comentarios de oración.</small>
           </div>
 
           <!-- Botón de Sincronización Guion -> Imagen -->
@@ -216,9 +221,9 @@
                 <textarea id="aiImagePrompt" rows="4" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, hyper-realistic, dynamic..."></textarea>
               </div>
               <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
-                🎨 Crear Imagen con IA (100% Gratis - Puter)
+                🎨 Crear Imagen Vertical 9:16 con IA (Motor FLUX)
               </button>
-              <small class="text-muted block mt-5">Se creará con iluminación dramática y detalles realistas para que no luzca "llana".</small>
+              <small class="text-muted block mt-5">Generación en ultra alta resolución (1080x1920) con iluminación divina y atmósfera sagrada.</small>
             </div>
 
             <div class="upload-wrapper mt-15">
@@ -296,6 +301,16 @@
             <h3>📱 Vista Previa en Tiempo Real</h3>
           </div>
 
+          <!-- Selector de Modo de Vista Previa -->
+          <div class="preview-mode-bar">
+            <button type="button" id="btnViewStage" class="preview-tab active">
+              👁️ Previa Diseño
+            </button>
+            <button type="button" id="btnViewVideo" class="preview-tab" disabled>
+              🎬 Video Renderizado
+            </button>
+          </div>
+
           <div class="phone-mockup">
             <div class="phone-screen">
               <!-- Escenario Idle -->
@@ -329,6 +344,9 @@
             </a>
             <button id="btnCopyCaption" class="btn btn-outline btn-block mt-10">
               📋 Copiar Texto del Post y Hashtags para Facebook
+            </button>
+            <button id="btnCopyFinalPinnedComment" class="btn btn-gold-outline btn-block mt-10">
+              📌 Copiar Comentario Fijado del Video
             </button>
           </div>
 

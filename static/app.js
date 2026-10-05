@@ -46,14 +46,20 @@ function bootstrapJesusStudio() {
   const videoActions = document.getElementById("videoActions");
   const btnDownloadVideo = document.getElementById("btnDownloadVideo");
   const btnCopyCaption = document.getElementById("btnCopyCaption");
+  const scriptPinnedComment = document.getElementById("scriptPinnedComment");
+  const btnCopyPinnedComment = document.getElementById("btnCopyPinnedComment");
+  const btnCopyFinalPinnedComment = document.getElementById("btnCopyFinalPinnedComment");
+  const btnViewStage = document.getElementById("btnViewStage");
+  const btnViewVideo = document.getElementById("btnViewVideo");
   const recentList = document.getElementById("recentList");
 
+  let currentPinnedComment = "";
   let selectedImageName = "jesus_healing_miracle.jpg";
 
   // 1. Cargar Temas Virales
   async function loadThemes() {
     try {
-      const res = await fetch("/studio/api/themes");
+      const res = await fetch("/api/themes");
       const themes = await res.json();
       themeSelect.innerHTML = themes
         .map(t => `<option value="${t.key}">${t.title}</option>`)
@@ -66,7 +72,7 @@ function bootstrapJesusStudio() {
   // 2. Cargar Voces en Inglés
   async function loadVoices() {
     try {
-      const res = await fetch("/studio/api/voices");
+      const res = await fetch("/api/voices");
       const voices = await res.json();
       voiceSelect.innerHTML = voices
         .map(v => `<option value="${v.key}" ${v.key === "christopher" ? "selected" : ""}>${v.name}</option>`)
@@ -79,7 +85,7 @@ function bootstrapJesusStudio() {
   // 2b. Cargar Música de Fondo de Adoración
   async function loadWorshipTracks() {
     try {
-      const res = await fetch("/studio/api/worship-tracks");
+      const res = await fetch("/api/worship-tracks");
       const tracks = await res.json();
       if (musicSelect) {
         musicSelect.innerHTML = tracks
@@ -94,7 +100,7 @@ function bootstrapJesusStudio() {
   // 2c. Verificar estado de B-Roll (Pixabay API)
   async function loadBrollStatus() {
     try {
-      const res = await fetch("/studio/api/broll-status");
+      const res = await fetch("/api/broll-status");
       const status = await res.json();
       if (brollApiStatus) {
         if (status.available) {
@@ -128,7 +134,7 @@ function bootstrapJesusStudio() {
   // 3. Cargar Imágenes y Escenas Bíblicas
   async function loadImages() {
     try {
-      const res = await fetch("/studio/api/images");
+      const res = await fetch("/api/images");
       const images = await res.json();
       imageGallery.innerHTML = images
         .map(img => `
@@ -150,6 +156,7 @@ function bootstrapJesusStudio() {
           if (stageBlurBg) {
             stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
           }
+          showStageView();
         });
       });
     } catch (e) {
@@ -162,7 +169,7 @@ function bootstrapJesusStudio() {
     btnGenerateScript.disabled = true;
     btnGenerateScript.textContent = "⏳ Generando Guion en Inglés...";
     try {
-      const res = await fetch("/studio/api/generate-script", {
+      const res = await fetch("/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,10 +189,12 @@ function bootstrapJesusStudio() {
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
       }
-      
-      const pinnedCommentEl = document.getElementById("scriptPinnedComment");
-      if (pinnedCommentEl && data.pinned_comment) {
-        pinnedCommentEl.textContent = data.pinned_comment;
+
+      if (data.pinned_comment) {
+        currentPinnedComment = data.pinned_comment;
+        if (scriptPinnedComment) {
+          scriptPinnedComment.value = data.pinned_comment;
+        }
       }
 
       // Sincronizar automáticamente el prompt para la IA
@@ -199,6 +208,34 @@ function bootstrapJesusStudio() {
       btnGenerateScript.textContent = "✨ Generar Guion de Alta Retención (en Inglés)";
     }
   }
+
+  // Copiar Comentario Fijado al Portapapeles
+  function copyPinnedComment() {
+    const text = currentPinnedComment || (scriptPinnedComment ? scriptPinnedComment.value : "");
+    if (!text) {
+      alert("Genera primero un guion para obtener el comentario fijado.");
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      if (btnCopyPinnedComment) {
+        btnCopyPinnedComment.textContent = "✅ ¡Copiado!";
+        setTimeout(() => {
+          btnCopyPinnedComment.textContent = "📋 Copiar Comentario";
+        }, 2500);
+      }
+      if (btnCopyFinalPinnedComment) {
+        btnCopyFinalPinnedComment.textContent = "✅ ¡Comentario Copiado!";
+        setTimeout(() => {
+          btnCopyFinalPinnedComment.textContent = "📌 Copiar Comentario Fijado del Video";
+        }, 2500);
+      }
+    }).catch(err => {
+      alert("No se pudo copiar automáticamente: " + err);
+    });
+  }
+
+  if (btnCopyPinnedComment) btnCopyPinnedComment.addEventListener("click", copyPinnedComment);
+  if (btnCopyFinalPinnedComment) btnCopyFinalPinnedComment.addEventListener("click", copyPinnedComment);
 
   const btnRerollPrompt = document.getElementById("btnRerollPrompt");
   if (btnRerollPrompt) {
@@ -223,7 +260,7 @@ function bootstrapJesusStudio() {
     btnSyncScriptToImage.textContent = "⏳ Creando Escena que Coincida con la Oración...";
 
     try {
-      const res = await fetch("/studio/api/generate-image-prompt", {
+      const res = await fetch("/api/generate-image-prompt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,7 +297,7 @@ function bootstrapJesusStudio() {
     btnPreviewAudio.disabled = true;
     btnPreviewAudio.textContent = "⏳ Sintetizando Voz...";
     try {
-      const res = await fetch("/studio/api/preview-audio", {
+      const res = await fetch("/api/preview-audio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -290,7 +327,7 @@ function bootstrapJesusStudio() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/studio/api/upload-image", {
+      const res = await fetch("/api/upload-image", {
         method: "POST",
         body: formData
       });
@@ -303,7 +340,7 @@ function bootstrapJesusStudio() {
     }
   });
 
-  // 8. Generación de Imagen con IA (Puter.js)
+  // 8. Generación de Imagen con IA (Motor FLUX en Servidor)
   btnGenerateAiImage.addEventListener("click", async () => {
     const promptText = aiImagePrompt.value.trim();
     if (!promptText) {
@@ -311,44 +348,74 @@ function bootstrapJesusStudio() {
       return;
     }
 
+    const aspectSelect = document.getElementById("aspectRatioSelect");
+    const aspect = aspectSelect ? aspectSelect.value : "9:16";
+
     btnGenerateAiImage.disabled = true;
-    btnGenerateAiImage.textContent = "🎨 Generando con IA... (Espera unos segundos)";
+    btnGenerateAiImage.textContent = "🎨 Creando Imagen Vertical 9:16 con IA (FLUX)...";
 
     try {
-      let enhancedPrompt = promptText;
-      if (!enhancedPrompt.toLowerCase().includes("8k") && !enhancedPrompt.toLowerCase().includes("vertical")) {
-        enhancedPrompt = `Ultra-realistic cinematic 8k vertical 9:16 portrait of ${enhancedPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic`;
+      // 1. Intento principal: Servidor Oracle (rápido, directo, sin restricciones de navegador)
+      const res = await fetch("/api/generate-ai-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: promptText,
+          aspect_ratio: aspect
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Error en el servidor de IA");
       }
 
-      if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2img) {
-        const imgElement = await puter.ai.txt2img(enhancedPrompt);
-        
-        // Convertir imagen a Blob y subirla al backend
-        const response = await fetch(imgElement.src);
-        const blob = await response.blob();
-        const file = new File([blob], `ai_${Date.now()}.png`, { type: "image/png" });
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const uploadRes = await fetch("/studio/api/upload-image", {
-          method: "POST",
-          body: formData
-        });
-        const uploadData = await uploadRes.json();
-        selectedImageName = uploadData.filename;
-        stageSelectedImage.src = uploadData.url;
-        await loadImages();
-        alert("¡Imagen creada en base a tu guion y añadida a la galería!");
-      } else {
-        alert("El generador Puter en el navegador no está listo. Puedes usar las imágenes maestras o subir una imagen propia.");
+      const data = await res.json();
+      selectedImageName = data.filename;
+      stageSelectedImage.src = data.url;
+      const stageBlurBg = document.getElementById("stageBlurBg");
+      if (stageBlurBg) {
+        stageBlurBg.style.backgroundImage = `url('${data.url}')`;
       }
+      await loadImages();
+      showStageView();
+      alert("¡Imagen creada en formato vertical 9:16 (1080x1920) y lista para tu Reel!");
     } catch (err) {
-      console.error("Error en generación con IA:", err);
-      alert("No se pudo generar la imagen automáticamente (" + err.message + "). Puedes seleccionar una escena de la galería o subir tu imagen.");
+      console.warn("Fallo en generador del servidor, intentando fallback Puter:", err);
+      let handled = false;
+      if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2img) {
+        try {
+          btnGenerateAiImage.textContent = "🎨 Generando vía navegador...";
+          const enhancedPrompt = `Ultra-realistic cinematic 8k vertical 9:16 portrait of ${promptText}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic`;
+          const imgElement = await puter.ai.txt2img(enhancedPrompt);
+          const response = await fetch(imgElement.src);
+          const blob = await response.blob();
+          const file = new File([blob], `ai_${Date.now()}.png`, { type: "image/png" });
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const uploadRes = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData
+          });
+          const uploadData = await uploadRes.json();
+          selectedImageName = uploadData.filename;
+          stageSelectedImage.src = uploadData.url;
+          await loadImages();
+          showStageView();
+          alert("¡Imagen creada con IA y añadida a la galería!");
+          handled = true;
+        } catch (puterErr) {
+          console.error("Error en Puter fallback:", puterErr);
+        }
+      }
+      if (!handled) {
+        alert("No se pudo generar la imagen automáticamente (" + (err.message || "Error desconocido") + "). Puedes seleccionar una escena de la galería o subir tu propia imagen.");
+      }
     } finally {
       btnGenerateAiImage.disabled = false;
-      btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (Puter / Navegador)";
+      btnGenerateAiImage.textContent = "🎨 Crear Imagen Vertical 9:16 con IA (Motor FLUX)";
     }
   });
 
@@ -547,7 +614,39 @@ function bootstrapJesusStudio() {
 
   const aspectRatioSelect = document.getElementById("aspectRatioSelect");
   if (aspectRatioSelect) {
-    aspectRatioSelect.addEventListener("change", updateAspectRatioPreview);
+    aspectRatioSelect.addEventListener("change", () => {
+      updateAspectRatioPreview();
+      showStageView();
+    });
+  }
+
+  // ─── Control de Modo de Vista Previa (Diseño vs Video) ─────────────────────
+  function showStageView() {
+    stagePlaceholder.style.display = "block";
+    finalVideoPlayer.style.display = "none";
+    finalVideoPlayer.pause();
+    if (btnViewStage) btnViewStage.classList.add("active");
+    if (btnViewVideo) btnViewVideo.classList.remove("active");
+  }
+
+  function showVideoView() {
+    stagePlaceholder.style.display = "none";
+    finalVideoPlayer.style.display = "block";
+    if (btnViewVideo) {
+      btnViewVideo.classList.add("active");
+      btnViewVideo.disabled = false;
+    }
+    if (btnViewStage) btnViewStage.classList.remove("active");
+    finalVideoPlayer.play().catch(() => {});
+  }
+
+  if (btnViewStage) {
+    btnViewStage.addEventListener("click", showStageView);
+  }
+  if (btnViewVideo) {
+    btnViewVideo.addEventListener("click", () => {
+      if (!btnViewVideo.disabled) showVideoView();
+    });
   }
 
   // 10. Renderizar Video Completo (MP4)
@@ -588,7 +687,7 @@ function bootstrapJesusStudio() {
         renderStatusSub.textContent = "Componiendo video, encuadre y efectos sin distorsión...";
       }, 3000);
 
-      const res = await fetch("/studio/api/render-video", {
+      const res = await fetch("/api/render-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -621,14 +720,11 @@ function bootstrapJesusStudio() {
 
       const data = await res.json();
 
-      stagePlaceholder.style.display = "none";
       finalVideoPlayer.src = data.video_url;
-      finalVideoPlayer.style.display = "block";
-      finalVideoPlayer.play();
-
       btnDownloadVideo.href = data.video_url;
       btnDownloadVideo.download = data.filename;
       videoActions.style.display = "block";
+      showVideoView();
 
       loadRecentOutputs();
     } catch (e) {
@@ -656,7 +752,7 @@ function bootstrapJesusStudio() {
   // 12. Cargar Biblioteca de Videos Recientes
   async function loadRecentOutputs() {
     try {
-      const res = await fetch("/studio/api/outputs");
+      const res = await fetch("/api/outputs");
       const outputs = await res.json();
       if (outputs.length === 0) {
         recentList.innerHTML = `<p class="text-muted">Aún no hay videos generados.</p>`;
@@ -671,13 +767,11 @@ function bootstrapJesusStudio() {
 
       document.querySelectorAll(".recent-item").forEach(item => {
         item.addEventListener("click", () => {
-          stagePlaceholder.style.display = "none";
           finalVideoPlayer.src = item.dataset.url;
-          finalVideoPlayer.style.display = "block";
-          finalVideoPlayer.play();
           btnDownloadVideo.href = item.dataset.url;
           btnDownloadVideo.download = item.querySelector("span").textContent.replace("📹 ", "");
           videoActions.style.display = "block";
+          showVideoView();
         });
       });
     } catch (e) {

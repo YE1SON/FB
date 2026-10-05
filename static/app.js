@@ -573,6 +573,69 @@ function bootstrapJesusStudio() {
         fxCtx.fill();
       });
       fxCtx.shadowBlur = 0;
+    } else if (effect === "holy_fire") {
+      // Fuego del Espíritu Santo (Chispas rubí, ámbar y oro)
+      particles.forEach(p => {
+        p.y -= p.speedY * 1.6;
+        p.x += p.speedX * 1.2;
+        p.pulseVal += p.pulseSpeed * 1.5;
+        const currentAlpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulseVal));
+
+        if (p.y < -10) {
+          p.y = h + 10;
+          p.x = Math.random() * w;
+        }
+
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius * 0.9, 0, Math.PI * 2);
+        fxCtx.fillStyle = p.radius > 2.5 ? `rgba(255, 60, 20, ${currentAlpha})` : `rgba(255, 190, 0, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ff4500";
+        fxCtx.shadowBlur = 12;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "celestial_glow") {
+      // Resplandor de Gloria (Motes angelicales blancos y suaves)
+      particles.forEach(p => {
+        p.y -= p.speedY * 0.6;
+        p.x += p.speedX * 0.5;
+        p.pulseVal += p.pulseSpeed;
+        const currentAlpha = p.alpha * (0.5 + 0.5 * Math.sin(p.pulseVal));
+
+        if (p.y < -10) {
+          p.y = h + 10;
+          p.x = Math.random() * w;
+        }
+
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius * 1.3, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 255, 255, ${currentAlpha * 0.85})`;
+        fxCtx.shadowColor = "#ffffff";
+        fxCtx.shadowBlur = 15;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "golden_hour") {
+      // Hora Dorada Sagrada (Luz cálida de atardecer)
+      const gradient = fxCtx.createLinearGradient(0, 0, 0, h);
+      gradient.addColorStop(0, "rgba(255, 180, 50, 0.15)");
+      gradient.addColorStop(1, "rgba(255, 120, 0, 0.22)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.y -= p.speedY * 0.8;
+        p.pulseVal += p.pulseSpeed;
+        const currentAlpha = p.alpha * 0.7;
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 200, 80, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ffa500";
+        fxCtx.shadowBlur = 8;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
     } else if (effect === "divine_light") {
       // Radiant golden divine sunbeams pulsing from top
       const time = Date.now() * 0.0018;
@@ -641,7 +704,10 @@ function bootstrapJesusStudio() {
   const cameraMotionSelect = document.getElementById("cameraMotionSelect");
   function updateCameraMotionPreview() {
     if (!stagePlaceholder || !cameraMotionSelect) return;
-    stagePlaceholder.classList.remove("camera-none", "camera-zoom_in", "camera-zoom_out");
+    stagePlaceholder.classList.remove(
+      "camera-none", "camera-zoom_in", "camera-zoom_out",
+      "camera-pan_up", "camera-pan_down", "camera-pan_right", "camera-pan_left", "camera-zoom_in_pan_up"
+    );
     stagePlaceholder.classList.add(`camera-${cameraMotionSelect.value}`);
   }
   if (cameraMotionSelect) {

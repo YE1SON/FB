@@ -67,33 +67,34 @@ def build_video_filter(
 ) -> str:
     """
     Builds an optimized, high-performance FFmpeg filter graph:
-    1. Camera Motion: When motion is requested, zoompan runs on the single image frame,
-       generating exactly total_frames without compounding overhead.
+    1. Continuous Camera Motion: zoompan runs across the ENTIRE duration of the video
+       using dynamic 'on / total_frames' so motion NEVER freezes prematurely.
     2. Smart Framing: For 1:1 or 16:9 on vertical reels, blurred background preserves full image.
     3. Noticeable Visual Effects: Color-balanced, LUT-accelerated shaders for instant visible impact.
-    4. Burned-in ASS subtitles.
+    4. Burned-in ASS subtitles and floating particle elements.
     """
     filters = []
     has_motion = camera_motion and camera_motion != "none"
 
     if has_motion:
-        # Camera motion generated directly from single image input [0:v]
+        # Camera motion generated smoothly across the entire video duration
+        tf = max(total_frames, 1)
         if camera_motion == "zoom_in":
-            motion_filter = f"[0:v]zoompan=z='min(zoom+0.0008,1.15)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z='1.0+(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
         elif camera_motion == "zoom_out":
-            motion_filter = f"[0:v]zoompan=z='if(eq(on,1),1.15,max(1.0,zoom-0.0008))':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z='1.22-(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
         elif camera_motion == "pan_up":
-            motion_filter = f"[0:v]zoompan=z=1.12:d={total_frames}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1-on/{total_frames})':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
         elif camera_motion == "pan_down":
-            motion_filter = f"[0:v]zoompan=z=1.12:d={total_frames}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(on/{total_frames})':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(on/{tf})':s={w}x{h}:fps={fps}[motion]"
         elif camera_motion == "pan_right":
-            motion_filter = f"[0:v]zoompan=z=1.12:d={total_frames}:x='(iw-(iw/zoom))*(on/{total_frames})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
         elif camera_motion == "pan_left":
-            motion_filter = f"[0:v]zoompan=z=1.12:d={total_frames}:x='(iw-(iw/zoom))*(1-on/{total_frames})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(1.0-on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
         elif camera_motion == "zoom_in_pan_up":
-            motion_filter = f"[0:v]zoompan=z='min(zoom+0.0008,1.16)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1-on/{total_frames})':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z='1.0+(0.24*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
         else:
-            motion_filter = f"[0:v]zoompan=z='min(zoom+0.0008,1.15)':d={total_frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            motion_filter = f"[0:v]zoompan=z='1.0+(0.20*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
 
         filters.append(motion_filter)
     else:
@@ -110,40 +111,39 @@ def build_video_filter(
 
         filters.append(base_setup)
 
-    # Visual Effects
+    # Visual Effects Grading
     fx_parts = []
     if effect_type == "cinematic_dust":
-        # 1. Polvo de Oro Divino (Intacto, tal como le gusta al usuario)
-        fx_parts.append("noise=alls=26:allf=t+u")
-        fx_parts.append("colorchannelmixer=rr=1.05:gg=1.02:bb=0.96")
+        # Polvo de oro: tinte dorado cálido y viñeta de cine suave
+        fx_parts.append("colorchannelmixer=rr=1.06:gg=1.03:bb=0.95")
         fx_parts.append("vignette=PI/3.5")
     elif effect_type == "divine_light":
-        # 2. Rayos de Luz Celestial (Aura resplandeciente, cálida y muy visible)
+        # Rayos de Luz Celestial: aura resplandeciente, cálida y de gran impacto visual
         fx_parts.append("eq=brightness=0.09:contrast=1.30:saturation=1.35")
         fx_parts.append("colorbalance=rs=0.22:gs=0.10:bs=-0.14:rm=0.15:gm=0.08:bm=-0.10")
         fx_parts.append("vignette=PI/4")
     elif effect_type == "dramatic_grain":
-        # 3. Grano de Cine Épico (Auténtica textura de 35mm Hollywood, sombras profundas)
+        # Grano de cine dramático 35mm Hollywood, alto contraste y sombras profundas
         fx_parts.append("noise=alls=45:allf=t+u")
         fx_parts.append("eq=contrast=1.38:saturation=0.78")
         fx_parts.append("vignette=PI/3.0")
     elif effect_type == "celestial_glow":
-        # 4. Resplandor de Gloria (Niebla mística, difusión angelical de paz)
+        # Resplandor Celestial / Niebla de Gloria
         fx_parts.append("eq=brightness=0.12:contrast=1.22:saturation=1.25")
         fx_parts.append("colorbalance=rs=0.14:gs=0.12:bs=0.02")
         fx_parts.append("vignette=PI/4.2")
     elif effect_type == "golden_hour":
-        # 5. Hora Dorada Sagrada (Luz rica de atardecer/amanecer de oración)
+        # Hora Dorada Sagrada
         fx_parts.append("colorbalance=rs=0.28:gs=0.14:bs=-0.22:rh=0.22:gh=0.10:bh=-0.25")
         fx_parts.append("eq=saturation=1.40:contrast=1.22")
         fx_parts.append("vignette=PI/3.8")
     elif effect_type == "holy_fire":
-        # 6. Fuego del Espíritu Santo (Tonos rubí, ámbar y oro de victoria y poder)
+        # Fuego del Espíritu Santo
         fx_parts.append("colorbalance=rs=0.32:gs=-0.02:bs=-0.26:rm=0.22:gm=-0.02:bm=-0.20")
         fx_parts.append("eq=contrast=1.34:saturation=1.45")
         fx_parts.append("vignette=PI/3.2")
 
-    # Burn in Subtitles
+    # Burn in Subtitles & Embedded Floating Particles
     fx_parts.append(f"ass='{norm_ass}'")
 
     fx_str = f"[motion]{','.join(fx_parts)}[v]"

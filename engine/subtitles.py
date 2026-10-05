@@ -1,4 +1,5 @@
 from typing import List
+import random
 from .tts import CueItem
 
 def format_ass_time(seconds: float) -> str:
@@ -83,10 +84,21 @@ SUBTITLE_STYLES = {
     }
 }
 
-def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "gold_highlight", margin_v: int = 450, hook_text: str = "", animation_type: str = "pop", position: str = "bottom") -> str:
+def generate_viral_ass(
+    cues: List[CueItem],
+    output_path: str,
+    style_key: str = "gold_highlight",
+    margin_v: int = 450,
+    hook_text: str = "",
+    animation_type: str = "pop",
+    position: str = "bottom",
+    effect_type: str = "cinematic_dust",
+    play_res_x: int = 1080,
+    play_res_y: int = 1920
+) -> str:
     """
     Genera subtítulos ASS dinámicos con amplia variedad de estilos, posiciones y animaciones.
-    Includes optional bold hook_text overlay in the first 2 seconds for scroll-stopping impact.
+    Además, inyecta partículas visuales de polvo de oro, destellos sagrados y fuegos en alta fidelidad.
     """
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["gold_highlight"])
     font = style_cfg["font"]
@@ -99,13 +111,17 @@ def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "
     border_style = style_cfg.get("border_style", 1)
     back_color = style_cfg.get("back_color", "&H80000000&")
 
+    # Adaptar tamaño de fuente si el formato es 1:1 o 16:9
+    if play_res_y <= 1080:
+        fontsize = int(fontsize * 0.85)
+
     # Configure alignment and margins based on user choice
     if position == "center":
         alignment = 5 # Middle-center
         margin_v_calc = 0
     elif position == "top":
         alignment = 8 # Top-center
-        margin_v_calc = 220
+        margin_v_calc = int(play_res_y * 0.12)
     else: # bottom
         alignment = 2 # Bottom-center
         margin_v_calc = margin_v
@@ -113,32 +129,86 @@ def generate_viral_ass(cues: List[CueItem], output_path: str, style_key: str = "
     # HookBold: large centered text for the visual hook
     hook_style_line = ""
     if hook_text and position != "center":
-        hook_style_line = f"\nStyle: HookBold,{font},95,&H00FFFFFF&,&H0000FFFF&,&H00000000&,&HC0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,60,60,480,1"
+        hook_fontsize = 95 if play_res_y > 1080 else 75
+        hook_margin_v = int(play_res_y * 0.25)
+        hook_style_line = f"\nStyle: HookBold,{font},{hook_fontsize},&H00FFFFFF&,&H0000FFFF&,&H00000000&,&HC0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,60,60,{hook_margin_v},1"
+
+    # Style para partículas cinemáticas
+    particle_style_line = f"\nStyle: FXParticle,Arial,32,&H00D7FF&,&H00D7FF&,&H00D7FF&,&H000000&,1,0,0,0,100,100,0,0,1,0,0,5,10,10,10,1"
 
     header = f"""[Script Info]
-Title: Christian Viral Subtitles
+Title: Christian Viral Subtitles & Effects
 ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
+PlayResX: {play_res_x}
+PlayResY: {play_res_y}
 ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},{alignment},40,40,{margin_v_calc},1{hook_style_line}
+Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},{alignment},40,40,{margin_v_calc},1{hook_style_line}{particle_style_line}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     events = []
 
-    if hook_text and position != "center":
-        events.append(f"Dialogue: 1,0:00:00.00,0:00:02.20,HookBold,,0,0,0,,{{\\fad(150,500)\\an5}}{hook_text.upper()}")
+    # 1. Partículas Cinemáticas Flotantes (Polvo de Oro, Resplandor de Gloria, Fuego Santo)
+    total_dur = cues[-1].end_sec if cues else 20.0
+    if effect_type in ["cinematic_dust", "golden_hour", "holy_fire", "celestial_glow"]:
+        num_particles = 45
+        for i in range(num_particles):
+            t_start = round((i * (total_dur / float(num_particles))) * 0.9, 2)
+            t_dur = random.uniform(4.0, 7.5)
+            t_end = min(round(t_start + t_dur, 2), total_dur + 0.5)
+            if t_end <= t_start:
+                continue
 
+            x1 = random.randint(int(play_res_x * 0.05), int(play_res_x * 0.95))
+            x2 = x1 + random.randint(-60, 60)
+            y1 = random.randint(int(play_res_y * 0.55), int(play_res_y * 1.05))
+            y2 = y1 - random.randint(int(play_res_y * 0.45), int(play_res_y * 0.85))
+
+            size = random.randint(20, 52)
+            blur = random.randint(4, 14)
+
+            if effect_type == "cinematic_dust":
+                char = "●"
+                color = "00D7FF" # Oro puro
+                alpha = random.choice(["00", "15", "2A", "40"])
+            elif effect_type == "holy_fire":
+                char = random.choice(["✦", "●"])
+                color = random.choice(["0022FF", "0055FF", "0088FF", "00D7FF"]) # Fuego y brasas
+                alpha = random.choice(["00", "10", "25"])
+            elif effect_type == "celestial_glow":
+                char = "●"
+                color = random.choice(["FFFFFF", "E0F7FF", "C0FFFF"]) # Blanco/Cyan angelical
+                alpha = random.choice(["10", "25", "40"])
+                blur = random.randint(8, 20)
+            elif effect_type == "golden_hour":
+                char = "●"
+                color = random.choice(["00B4FF", "00C8FF", "00D7FF"]) # Ámbar cálido
+                alpha = random.choice(["05", "18", "30"])
+            else:
+                char = "●"
+                color = "00D7FF"
+                alpha = "00"
+
+            s_str = format_ass_time(t_start)
+            e_str = format_ass_time(t_end)
+            events.append(
+                f"Dialogue: 1,{s_str},{e_str},FXParticle,,0,0,0,,{{\\an5\\move({x1},{y1},{x2},{y2})\\1c&H{alpha}{color}&\\3c&H{alpha}{color}&\\blur{blur}\\fad(400,400)\\fs{size}}}{char}"
+            )
+
+    # 2. Hook Visual Inicial
+    if hook_text and position != "center":
+        events.append(f"Dialogue: 2,0:00:00.00,0:00:02.20,HookBold,,0,0,0,,{{\\fad(150,500)\\an5}}{hook_text.upper()}")
+
+    # 3. Subtítulos Sincronizados
     for cue in cues:
         raw_words = cue.text.strip().split()
         if not raw_words:
             continue
-            
+
         start_sec = cue.start_sec
         end_sec = cue.end_sec
         duration = max(end_sec - start_sec, 0.4)
@@ -151,7 +221,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         for idx, chunk in enumerate(chunks):
             chunk_chars = sum(len(w) for w in chunk)
             chunk_dur = duration * (chunk_chars / max(total_chars, 1))
-            
+
             chunk_end = min(cur_time + chunk_dur, end_sec)
             if idx == len(chunks) - 1:
                 chunk_end = end_sec
@@ -159,7 +229,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             t_start_str = format_ass_time(cur_time)
             t_end_str = format_ass_time(chunk_end)
 
-            # Build Animation Tag
             if animation_type == "pop":
                 anim_tag = "\\fscx130\\fscy130\\t(0,120,\\fscx100\\fscy100)"
             elif animation_type == "fade":
@@ -167,7 +236,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             elif animation_type == "scale_slow":
                 anim_tag = "\\fscx85\\fscy85\\t(0,400,\\fscx110\\fscy110)"
             else:
-                anim_tag = "" # estático
+                anim_tag = ""
 
             chunk_text = " ".join(chunk).upper()
             color_prefix = "{\\c" + highlight_bgr + "&" + anim_tag + "}"
@@ -180,10 +249,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             else:
                 text_formatted = f"{color_prefix}{chunk_text}{reset_suffix}"
 
-            events.append(f"Dialogue: 0,{t_start_str},{t_end_str},ViralMain,,0,0,0,,{text_formatted}")
+            events.append(f"Dialogue: 2,{t_start_str},{t_end_str},ViralMain,,0,0,0,,{text_formatted}")
             cur_time = chunk_end
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(header + "\n".join(events) + "\n")
-        
+
     return output_path

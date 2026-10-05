@@ -589,19 +589,59 @@ textarea.form-control {
 
 /* Simulación de Movimiento de Cámara en Vista Previa */
 .stage-placeholder.camera-zoom_in img#stageSelectedImage {
-  animation: liveCameraZoomIn 10s infinite alternate ease-in-out;
+  animation: liveCameraZoomIn 8s infinite alternate ease-in-out;
 }
 @keyframes liveCameraZoomIn {
   from { transform: scale(1); }
-  to { transform: scale(1.15); }
+  to { transform: scale(1.22); }
 }
 
 .stage-placeholder.camera-zoom_out img#stageSelectedImage {
-  animation: liveCameraZoomOut 10s infinite alternate ease-in-out;
+  animation: liveCameraZoomOut 8s infinite alternate ease-in-out;
 }
 @keyframes liveCameraZoomOut {
-  from { transform: scale(1.15); }
+  from { transform: scale(1.22); }
   to { transform: scale(1); }
+}
+
+.stage-placeholder.camera-pan_up img#stageSelectedImage {
+  animation: liveCameraPanUp 8s infinite alternate ease-in-out;
+}
+@keyframes liveCameraPanUp {
+  from { transform: scale(1.18) translateY(8%); }
+  to { transform: scale(1.18) translateY(-8%); }
+}
+
+.stage-placeholder.camera-pan_down img#stageSelectedImage {
+  animation: liveCameraPanDown 8s infinite alternate ease-in-out;
+}
+@keyframes liveCameraPanDown {
+  from { transform: scale(1.18) translateY(-8%); }
+  to { transform: scale(1.18) translateY(8%); }
+}
+
+.stage-placeholder.camera-pan_right img#stageSelectedImage {
+  animation: liveCameraPanRight 8s infinite alternate ease-in-out;
+}
+@keyframes liveCameraPanRight {
+  from { transform: scale(1.18) translateX(-8%); }
+  to { transform: scale(1.18) translateX(8%); }
+}
+
+.stage-placeholder.camera-pan_left img#stageSelectedImage {
+  animation: liveCameraPanLeft 8s infinite alternate ease-in-out;
+}
+@keyframes liveCameraPanLeft {
+  from { transform: scale(1.18) translateX(8%); }
+  to { transform: scale(1.18) translateX(-8%); }
+}
+
+.stage-placeholder.camera-zoom_in_pan_up img#stageSelectedImage {
+  animation: liveCameraZoomPanUp 8s infinite alternate ease-in-out;
+}
+@keyframes liveCameraZoomPanUp {
+  from { transform: scale(1) translateY(6%); }
+  to { transform: scale(1.24) translateY(-6%); }
 }
 
 .stage-placeholder.camera-none img#stageSelectedImage {

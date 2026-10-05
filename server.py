@@ -220,13 +220,16 @@ async def api_render_video(req: RenderRequest):
     voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
     cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
 
-    # 2. Generate ASS subtitles
+    # 2. Generate ASS subtitles & Embedded Particles
     margin_v = 400 if req.subtitle_size == "large" else 450
-    # Adjust margin for 1:1 and 16:9
+    play_w = 1080
+    play_h = 1920
     if req.aspect_ratio == "1:1":
         margin_v = 150
+        play_w, play_h = 1080, 1080
     elif req.aspect_ratio == "16:9":
         margin_v = 100
+        play_w, play_h = 1920, 1080
 
     generate_viral_ass(
         cues, ass_file,
@@ -234,7 +237,10 @@ async def api_render_video(req: RenderRequest):
         margin_v=margin_v,
         hook_text=req.hook_text,
         animation_type=req.subtitle_animation,
-        position=req.subtitle_position
+        position=req.subtitle_position,
+        effect_type=req.effect_type,
+        play_res_x=play_w,
+        play_res_y=play_h
     )
 
     # 3. Render video (Micro-Motion Engine with smart fit and camera choice)

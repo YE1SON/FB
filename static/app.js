@@ -746,10 +746,26 @@ function bootstrapJesusStudio() {
       const animSelect = document.getElementById("subtitleAnimationSelect");
       const volumeInput = document.getElementById("musicVolume");
 
-      const progressTimer = setTimeout(() => {
-        renderStatusText.textContent = "Aplicando Motor Visual y Subtítulos...";
-        renderStatusSub.textContent = "Componiendo video, encuadre y efectos sin distorsión...";
-      }, 3000);
+      let elapsed = 0;
+      const progressInterval = setInterval(() => {
+        elapsed += 5;
+        if (elapsed === 5) {
+          renderStatusText.textContent = "🎙️ Sintetizando voz y sincronizando audio...";
+          renderStatusSub.textContent = "Generando locución con entonación natural...";
+        } else if (elapsed === 10) {
+          renderStatusText.textContent = "📝 Diseñando subtítulos dinámicos...";
+          renderStatusSub.textContent = "Estilizando tipografía de alta retención viral...";
+        } else if (elapsed === 18) {
+          renderStatusText.textContent = "🎬 Componiendo movimiento de cámara y encuadre...";
+          renderStatusSub.textContent = "Aplicando cinemática suave en 1080x1920 HD...";
+        } else if (elapsed === 30) {
+          renderStatusText.textContent = "✨ Renderizando efectos visuales y música...";
+          renderStatusSub.textContent = "Mezclando piano de adoración y partículas sagradas...";
+        } else if (elapsed >= 45) {
+          renderStatusText.textContent = "⚡ Codificando video final (H.264 Ultrafast)...";
+          renderStatusSub.textContent = "Casi listo, afinando calidad para Facebook Reels...";
+        }
+      }, 5000);
 
       const res = await fetch("/api/render-video", {
         method: "POST",
@@ -775,14 +791,30 @@ function bootstrapJesusStudio() {
         })
       });
 
-      clearTimeout(progressTimer);
+      clearInterval(progressInterval);
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Error en el renderizado");
+      let data;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.detail || json.message || "Error en el renderizado");
+        }
+        data = json;
+      } else {
+        const text = await res.text();
+        if (!res.ok) {
+          if (res.status === 504) {
+            throw new Error("El renderizado tardó más de lo esperado. Por favor intenta de nuevo con un guion un poco más breve.");
+          }
+          throw new Error("Error del servidor (" + res.status + ")");
+        }
+        try {
+          data = JSON.parse(text);
+        } catch (_) {
+          throw new Error("Respuesta no válida del servidor.");
+        }
       }
-
-      const data = await res.json();
 
       finalVideoPlayer.src = data.video_url;
       btnDownloadVideo.href = data.video_url;

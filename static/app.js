@@ -378,28 +378,20 @@ function bootstrapJesusStudio() {
   }
 
   if (btnPuterConnect) {
-    btnPuterConnect.addEventListener("click", () => {
+    btnPuterConnect.addEventListener("click", async () => {
       btnPuterConnect.disabled = true;
       btnPuterConnect.textContent = "Abriendo ventana...";
 
-      // Llamada directa en el evento de clic del usuario (el navegador permite la ventana emergente)
       try {
-        puter.auth.signIn({ attempt_temp_user_creation: true })
-          .then(() => {
-            updatePuterStatus();
-            alert("¡Conexión exitosa con Puter AI! Ya puedes generar imágenes con máxima resolución y sin marcas de agua.");
-          })
-          .catch(err => {
-            console.error("Error al conectar con Puter:", err);
-            updatePuterStatus();
-            const errStr = extractError(err);
-            alert("Aviso de conexión: " + errStr + "\n\nTip: Si tu navegador bloqueó la ventana emergente, mira en la barra de direcciones de tu navegador (arriba a la derecha) y dale a 'Permitir ventanas emergentes de 132.145.202.1'.");
-          })
-          .finally(() => {
-            updatePuterStatus();
-          });
-      } catch (e) {
-        alert("Error al iniciar conexión: " + extractError(e));
+        await puter.auth.signIn({ attempt_temp_user_creation: true });
+        updatePuterStatus();
+        alert("¡Conexión exitosa con Puter AI! Ya puedes generar imágenes con máxima resolución y sin marcas de agua.");
+      } catch (err) {
+        console.error("Error al conectar con Puter:", err);
+        updatePuterStatus();
+        const errStr = extractError(err);
+        alert("Aviso de conexión: " + errStr + "\n\nTip: Si tu navegador bloqueó la ventana emergente, mira en la barra de direcciones de tu navegador (arriba a la derecha) y dale a 'Permitir ventanas emergentes'.");
+      } finally {
         updatePuterStatus();
       }
     });
@@ -418,14 +410,20 @@ function bootstrapJesusStudio() {
       return;
     }
 
-    // Si aún no está conectado, solicitar conexión con el botón
+    // Si aún no está conectado, abrir la ventana de autorización con este clic
     if (puter.auth && !puter.auth.isSignedIn()) {
-      alert("Primero activa Puter con el botón azul '🔑 Conectar con 1 Clic' que está arriba.");
-      if (btnPuterConnect) {
-        btnPuterConnect.scrollIntoView({ behavior: "smooth", block: "center" });
-        btnPuterConnect.focus();
+      btnGenerateAiImage.disabled = true;
+      btnGenerateAiImage.textContent = "🔑 Abriendo ventana de conexión Puter...";
+      try {
+        await puter.auth.signIn({ attempt_temp_user_creation: true });
+        updatePuterStatus();
+      } catch (authErr) {
+        btnGenerateAiImage.disabled = false;
+        btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (Puter - Alta Resolución)";
+        updatePuterStatus();
+        alert("Se requiere autorizar Puter para crear imágenes:\n" + extractError(authErr) + "\n\nTip: Asegúrate de permitir ventanas emergentes si tu navegador te lo solicita.");
+        return;
       }
-      return;
     }
 
     btnGenerateAiImage.disabled = true;
@@ -439,15 +437,18 @@ function bootstrapJesusStudio() {
 
       const imgElement = await puter.ai.txt2img(enhancedPrompt);
 
-      if (!imgElement || !imgElement.src) {
+      let blob;
+      if (imgElement instanceof HTMLImageElement || (imgElement && imgElement.src)) {
+        btnGenerateAiImage.textContent = "💾 Guardando imagen en tu galería...";
+        const response = await fetch(imgElement.src);
+        blob = await response.blob();
+      } else if (imgElement instanceof Blob) {
+        btnGenerateAiImage.textContent = "💾 Guardando imagen en tu galería...";
+        blob = imgElement;
+      } else {
         throw new Error("Puter no devolvió una imagen válida.");
       }
 
-      btnGenerateAiImage.textContent = "💾 Guardando imagen en tu galería...";
-
-      // Convertir imagen a Blob y subirla al backend en el VPS
-      const response = await fetch(imgElement.src);
-      const blob = await response.blob();
       const file = new File([blob], `ai_${Date.now()}.png`, { type: "image/png" });
 
       const formData = new FormData();

@@ -8,6 +8,56 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
+  <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
+  <script>
+    (function() {
+      function generateUUID() {
+        if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+          try {
+            var buf = new Uint8Array(16);
+            crypto.getRandomValues(buf);
+            buf[6] = (buf[6] & 0x0f) | 0x40;
+            buf[8] = (buf[8] & 0x3f) | 0x80;
+            var hex = [];
+            for (var i = 0; i < 16; i++) {
+              hex.push((buf[i] < 16 ? '0' : '') + buf[i].toString(16));
+            }
+            return hex.slice(0, 4).join('') + '-' +
+                   hex.slice(4, 6).join('') + '-' +
+                   hex.slice(6, 8).join('') + '-' +
+                   hex.slice(8, 10).join('') + '-' +
+                   hex.slice(10, 16).join('');
+          } catch (_) {}
+        }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      }
+
+      if (typeof window !== 'undefined') {
+        if (!window.crypto) {
+          window.crypto = {};
+        }
+        if (!window.crypto.randomUUID) {
+          try {
+            Object.defineProperty(window.crypto, 'randomUUID', {
+              value: generateUUID,
+              writable: true,
+              configurable: true
+            });
+          } catch (_) {
+            window.crypto.randomUUID = generateUUID;
+          }
+        }
+        try {
+          if (typeof Crypto !== 'undefined' && Crypto.prototype && !Crypto.prototype.randomUUID) {
+            Crypto.prototype.randomUUID = generateUUID;
+          }
+        } catch (_) {}
+      }
+    })();
+  </script>
   <!-- Puter.js para generación de imágenes por IA en el navegador (100% Gratuito) -->
   <script src="https://js.puter.com/v2/"></script>
 </head>

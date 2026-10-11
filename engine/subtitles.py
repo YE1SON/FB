@@ -126,12 +126,12 @@ def generate_viral_ass(
         alignment = 2 # Bottom-center
         margin_v_calc = margin_v
 
-    # HookBold: large centered text for the visual hook
+    # HookBold: large centered text for the visual hook (High contrast yellow & black border)
     hook_style_line = ""
-    if hook_text and position != "center":
-        hook_fontsize = 95 if play_res_y > 1080 else 75
-        hook_margin_v = int(play_res_y * 0.25)
-        hook_style_line = f"\nStyle: HookBold,{font},{hook_fontsize},&H00FFFFFF&,&H0000FFFF&,&H00000000&,&HC0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,60,60,{hook_margin_v},1"
+    if hook_text:
+        hook_fontsize = 92 if play_res_y > 1080 else 72
+        hook_margin_v = int(play_res_y * 0.24) if position != "top" else int(play_res_y * 0.40)
+        hook_style_line = f"\nStyle: HookBold,{font},{hook_fontsize},&H0000FFFF&,&H00FFFFFF&,&H00000000&,&HD0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,50,50,{hook_margin_v},1"
 
     # Style para partículas cinemáticas
     particle_style_line = f"\nStyle: FXParticle,Arial,32,&H00D7FF&,&H00D7FF&,&H00D7FF&,&H000000&,1,0,0,0,100,100,0,0,1,0,0,5,10,10,10,1"
@@ -199,9 +199,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 f"Dialogue: 1,{s_str},{e_str},FXParticle,,0,0,0,,{{\\an5\\move({x1},{y1},{x2},{y2})\\1c&H{alpha}{color}&\\3c&H{alpha}{color}&\\blur{blur}\\fad(400,400)\\fs{size}}}{char}"
             )
 
-    # 2. Hook Visual Inicial
-    if hook_text and position != "center":
-        events.append(f"Dialogue: 2,0:00:00.00,0:00:02.20,HookBold,,0,0,0,,{{\\fad(150,500)\\an5}}{hook_text.upper()}")
+    # 2. Hook Visual Inicial (Pattern Interrupt en el segundo 0 a 2.5)
+    if hook_text:
+        events.append(f"Dialogue: 2,0:00:00.00,0:00:02.50,HookBold,,0,0,0,,{{\\fscx115\\fscy115\\t(0,180,\\fscx100\\fscy100)\\fad(100,450)\\an5}}{hook_text.upper()}")
 
     # 3. Subtítulos Sincronizados
     for cue in cues:

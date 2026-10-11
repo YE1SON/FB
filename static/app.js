@@ -7,6 +7,7 @@ function bootstrapJesusStudio() {
 
   // Elementos de la interfaz
   const customTopic = document.getElementById("customTopic");
+  const scriptDurationMode = document.getElementById("scriptDurationMode");
   const btnGenerateScript = document.getElementById("btnGenerateScript");
   const scriptHook = document.getElementById("scriptHook");
   const scriptBody = document.getElementById("scriptBody");
@@ -172,12 +173,14 @@ function bootstrapJesusStudio() {
     btnGenerateScript.disabled = true;
     btnGenerateScript.textContent = "⏳ Generando Guion en Inglés...";
     try {
+      const durationMode = scriptDurationMode ? scriptDurationMode.value : "deep";
       const res = await fetch("/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme_key: themeSelect.value,
-          custom_topic: customTopic.value
+          custom_topic: customTopic.value,
+          mode: durationMode
         })
       });
       const data = await res.json();

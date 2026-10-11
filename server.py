@@ -59,6 +59,7 @@ IMAGE_METADATA = {
 class ScriptRequest(BaseModel):
     theme_key: Optional[str] = None
     custom_topic: Optional[str] = None
+    mode: str = "deep"
 
 class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
@@ -126,7 +127,7 @@ def list_themes():
 @app.post("/api/generate-script")
 @app.post("/studio/api/generate-script")
 def api_generate_script(req: ScriptRequest):
-    return generate_script(req.theme_key, req.custom_topic)
+    return generate_script(req.theme_key, req.custom_topic, mode=req.mode)
 
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")

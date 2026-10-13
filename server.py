@@ -217,43 +217,52 @@ async def api_render_video(req: RenderRequest):
     ass_file = os.path.join(OUTPUTS_DIR, f"{session_id}_subs.ass")
     output_video = os.path.join(OUTPUTS_DIR, f"reel_{session_id}.mp4")
 
-    # 1. Synthesize TTS audio
-    voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
-    cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
+    try:
+        # 1. Synthesize TTS audio
+        voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
+        cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
 
-    # 2. Generate ASS subtitles & Embedded Particles
-    margin_v = 400 if req.subtitle_size == "large" else 450
-    play_w = 1080
-    play_h = 1920
-    if req.aspect_ratio == "1:1":
-        margin_v = 150
-        play_w, play_h = 1080, 1080
-    elif req.aspect_ratio == "16:9":
-        margin_v = 100
-        play_w, play_h = 1920, 1080
+        # 2. Generate ASS subtitles & Embedded Particles
+        margin_v = 400 if req.subtitle_size == "large" else 450
+        play_w = 1080
+        play_h = 1920
+        if req.aspect_ratio == "1:1":
+            margin_v = 150
+            play_w, play_h = 1080, 1080
+        elif req.aspect_ratio == "16:9":
+            margin_v = 100
+            play_w, play_h = 1920, 1080
 
-    generate_viral_ass(
-        cues, ass_file,
-        style_key=req.subtitle_style,
-        margin_v=margin_v,
-        hook_text=req.hook_text,
-        animation_type=req.subtitle_animation,
-        position=req.subtitle_position,
-        effect_type=req.effect_type,
-        play_res_x=play_w,
-        play_res_y=play_h
-    )
+        generate_viral_ass(
+            cues, ass_file,
+            style_key=req.subtitle_style,
+            margin_v=margin_v,
+            hook_text=req.hook_text,
+            animation_type=req.subtitle_animation,
+            position=req.subtitle_position,
+            effect_type=req.effect_type,
+            play_res_x=play_w,
+            play_res_y=play_h
+        )
 
-    # 3. Render video (Micro-Motion Engine with smart fit and camera choice)
-    image_file = _resolve_image(req.image_name)
-    render_reel(
-        image_file, audio_file, ass_file, output_video,
-        aspect_ratio=req.aspect_ratio,
-        effect_type=req.effect_type,
-        camera_motion=req.camera_motion,
-        music_track=req.music_track,
-        music_volume=req.music_volume
-    )
+        # 3. Render video (Micro-Motion Engine with smart fit and camera choice)
+        image_file = _resolve_image(req.image_name)
+        render_reel(
+            image_file, audio_file, ass_file, output_video,
+            aspect_ratio=req.aspect_ratio,
+            effect_type=req.effect_type,
+            camera_motion=req.camera_motion,
+            music_track=req.music_track,
+            music_volume=req.music_volume
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = str(e) or "Error desconocido en el servidor."
+        print(f"[RENDER ERROR] session={session_id}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Fallo al renderizar: {error_detail}")
 
     return {
         "status": "success",

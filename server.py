@@ -172,10 +172,26 @@ def list_images():
         {
             "filename": f,
             "url": f"/assets/images/{f}",
-            "label": IMAGE_METADATA.get(f, f"Personalizada ({f[:15]}...)")
+            "label": IMAGE_METADATA.get(f, f"Personalizada ({f[:15]}...)"),
+            "deletable": f not in IMAGE_METADATA
         }
         for f in files
     ]
+
+@app.delete("/api/images/{filename}")
+@app.delete("/studio/api/images/{filename}")
+def delete_image(filename: str):
+    filename = os.path.basename(filename)
+    filepath = os.path.join(ASSETS_DIR, filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Imagen no encontrada.")
+    if filename in IMAGE_METADATA:
+        raise HTTPException(status_code=400, detail="No se pueden eliminar las 6 imágenes plantilla predeterminadas.")
+    try:
+        os.remove(filepath)
+        return {"status": "success", "deleted": filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"No se pudo eliminar la imagen: {str(e)}")
 
 @app.post("/api/upload-image")
 @app.post("/studio/api/upload-image")
@@ -184,7 +200,7 @@ async def upload_image(file: UploadFile = File(...)):
     filepath = os.path.join(ASSETS_DIR, filename)
     with open(filepath, "wb") as f:
         shutil.copyfileobj(file.file, f)
-    return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida"}
+    return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida", "deletable": True}
 
 
 # ─── Audio Preview ──────────────────────────────────────────────────────────

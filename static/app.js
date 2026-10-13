@@ -143,6 +143,7 @@ function bootstrapJesusStudio() {
       imageGallery.innerHTML = images
         .map(img => `
           <div class="image-thumb ${img.filename === selectedImageName ? "selected" : ""}" data-filename="${img.filename}">
+            ${img.deletable ? `<button class="thumb-delete-btn" title="Eliminar foto de la galería" data-del="${img.filename}">🗑️</button>` : ''}
             <img src="${img.url}" alt="${img.label}">
             <div class="thumb-title">${img.label}</div>
           </div>
@@ -161,6 +162,30 @@ function bootstrapJesusStudio() {
             stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
           }
           showStageView();
+        });
+      });
+
+      // Eventos de eliminación de imagen
+      document.querySelectorAll(".thumb-delete-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const fname = btn.dataset.del;
+          if (!confirm("¿Deseas eliminar esta imagen de tu galería?")) return;
+          try {
+            const delRes = await fetch(`/api/images/${fname}`, { method: "DELETE" });
+            if (delRes.ok) {
+              if (selectedImageName === fname) {
+                selectedImageName = "jesus_healing_miracle.jpg";
+                stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+              }
+              await loadImages();
+            } else {
+              const errData = await delRes.json();
+              alert(errData.detail || "No se pudo eliminar la imagen.");
+            }
+          } catch (err) {
+            alert("Error al eliminar la imagen: " + err.message);
+          }
         });
       });
     } catch (e) {
@@ -494,25 +519,27 @@ function bootstrapJesusStudio() {
     liveSubPreview.style.fontSize = isLarge ? "28px" : "22px";
 
     if (style === "gold_highlight") {
-      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #ffd700;">WITH YOU</span>`;
+      liveSubPreview.innerHTML = `<span style="font-family: Impact, Anton, sans-serif; letter-spacing: 0.5px;">GOD IS <span class="highlight" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4);">WITH YOU</span></span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "neon_cyan") {
-      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #00ffcc;">WITH YOU</span>`;
+      liveSubPreview.innerHTML = `<span style="font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 1.5px; font-size: 1.15em;">GOD IS <span class="highlight" style="color: #00ffcc;">WITH YOU</span></span>`;
+      liveSubPreview.style.background = "transparent";
+      liveSubPreview.style.padding = "0";
+    } else if (style === "holy_scripture") {
+      liveSubPreview.innerHTML = `<span style="font-family: 'Liberation Serif', Georgia, serif; font-style: italic; color: #f0f8ff;">THE LORD <span style="color: #ffd700; text-shadow: 0 2px 8px rgba(0,0,0,0.8);">IS WITH YOU</span></span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "fire_coral") {
-      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #ff5722;">WITH YOU</span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
-    } else if (style === "royal_purple") {
-      liveSubPreview.innerHTML = `<span class="sub-word">GOD IS</span> <span class="sub-word highlight" style="color: #e040fb;">WITH YOU</span>`;
+      liveSubPreview.innerHTML = `<span style="font-family: Impact, Anton, sans-serif;">GOD IS <span class="highlight" style="color: #ff3b10;">WITH YOU</span></span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     } else if (style === "black_box") {
-      liveSubPreview.innerHTML = `<span style="background: rgba(0,0,0,0.85); color: #ffff00; padding: 4px 10px; border-radius: 4px;">GOD IS WITH YOU</span>`;
+      liveSubPreview.innerHTML = `<span style="font-family: Roboto, sans-serif; background: rgba(0,0,0,0.88); color: #ffff00; padding: 4px 12px; border-radius: 4px; font-weight: 800;">GOD IS WITH YOU</span>`;
+      liveSubPreview.style.background = "transparent";
+      liveSubPreview.style.padding = "0";
     } else if (style === "pure_minimal") {
-      liveSubPreview.innerHTML = `<span style="color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">GOD IS WITH YOU</span>`;
+      liveSubPreview.innerHTML = `<span style="font-family: Roboto, sans-serif; color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.9); font-weight: 500;">GOD IS WITH YOU</span>`;
       liveSubPreview.style.background = "transparent";
       liveSubPreview.style.padding = "0";
     }

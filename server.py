@@ -66,6 +66,10 @@ class ImagePromptRequest(BaseModel):
     script_text: str = ""
     custom_topic: Optional[str] = None
 
+class GenerateAiImageRequest(BaseModel):
+    prompt: str
+    aspect_ratio: str = "9:16"
+
 class AudioPreviewRequest(BaseModel):
     text: str
     voice_key: str = "christopher"
@@ -201,6 +205,54 @@ async def upload_image(file: UploadFile = File(...)):
     with open(filepath, "wb") as f:
         shutil.copyfileobj(file.file, f)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida", "deletable": True}
+
+@app.post("/api/generate-ai-image")
+@app.post("/studio/api/generate-ai-image")
+def api_generate_ai_image(req: GenerateAiImageRequest):
+    prompt = req.prompt.strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="El prompt no puede estar vacío.")
+
+    enhanced_prompt = prompt
+    if "cinematic" not in enhanced_prompt.lower() and "masterpiece" not in enhanced_prompt.lower():
+        enhanced_prompt = f"Ultra-realistic cinematic 8k portrait of {prompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus"
+
+    # Map aspect ratio to dimensions
+    width, height = 768, 1344
+    if req.aspect_ratio == "1:1":
+        width, height = 1024, 1024
+    elif req.aspect_ratio == "16:9":
+        width, height = 1344, 768
+
+    seed = random.randint(100000, 999999)
+    encoded_prompt = urllib.parse.quote(enhanced_prompt)
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model=flux&nologo=true&seed={seed}"
+
+    filename = f"custom_flux_{uuid.uuid4().hex[:8]}.jpg"
+    filepath = os.path.join(ASSETS_DIR, filename)
+
+    try:
+        req_obj = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        with urllib.request.urlopen(req_obj, timeout=60) as resp:
+            content_type = resp.headers.get("Content-Type", "")
+            data = resp.read()
+            if "image" not in content_type and len(data) < 2000:
+                raise RuntimeError(f"Respuesta no válida del proveedor: {data.decode(errors='replace')[:200]}")
+            with open(filepath, "wb") as f:
+                f.write(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con Flux AI: {str(e)}")
+
+    return {
+        "status": "success",
+        "filename": filename,
+        "url": f"/assets/images/{filename}",
+        "label": "IA Flux HD",
+        "deletable": True
+    }
 
 
 # ─── Audio Preview ──────────────────────────────────────────────────────────

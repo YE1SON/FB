@@ -280,21 +280,35 @@
             <!-- Generador de Nuevas Imágenes con IA -->
             <div class="ai-generator-box">
               <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span>🎨 Generador de Imágenes IA (Unreal Engine 5 Style)</span>
+                <span>🎨 Generador de Imágenes IA</span>
                 <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra escena que también coincide con tu guion">
                   🎲 Otra Variante Visual
                 </button>
               </div>
 
-              <!-- Barra de Estado y Conexión Directa de Puter -->
-              <div id="puterStatusBox" class="puter-status-box" style="display: flex; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
+              <!-- Selector de Motor IA -->
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="aiEngineSelect" class="sub-label">Motor de Generación IA:</label>
+                <select id="aiEngineSelect" class="form-control" style="font-weight: 600;">
+                  <option value="flux" selected>🚀 Flux AI (Ilimitado y Gratis — Sin Créditos ni Cuentas)</option>
+                  <option value="puter">💎 DALL-E 3 (Puter AI — Requiere Créditos Puter)</option>
+                </select>
+              </div>
+
+              <!-- Barra de Estado y Conexión Directa de Puter (Visible solo si se elige Puter) -->
+              <div id="puterStatusBox" class="puter-status-box" style="display: none; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span id="puterStatusDot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></span>
                   <span id="puterStatusText" style="font-size: 13px; font-weight: 600; color: #cbd5e1;">Puter AI: Verificando conexión...</span>
                 </div>
-                <button type="button" id="btnPuterConnect" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 5px 14px; cursor: pointer;">
-                  🔑 Conectar con 1 Clic
-                </button>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" id="btnPuterConnect" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 5px 12px; cursor: pointer;">
+                    🔑 Conectar
+                  </button>
+                  <button type="button" id="btnPuterReset" class="btn btn-sm btn-outline" style="font-size: 12px; padding: 5px 10px; cursor: pointer;" title="Cerrar sesión actual para renovar créditos">
+                    🔄 Cambiar Cuenta
+                  </button>
+                </div>
               </div>
 
               <div class="form-group">
@@ -302,9 +316,9 @@
                 <textarea id="aiImagePrompt" rows="4" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, hyper-realistic, dynamic..."></textarea>
               </div>
               <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
-                🎨 Crear Imagen con IA (Puter - Alta Resolución)
+                🎨 Crear Imagen con IA (Ilimitado y Gratis)
               </button>
-              <small class="text-muted block mt-5">Generación en ultra alta resolución (DALL-E 3 / HD) sin marcas de agua con iluminación divina y detalles cinematográficos.</small>
+              <small id="aiEngineHelpText" class="text-muted block mt-5">Generación hiperrealista con iluminación divina y 0 marcas de agua. Sin límites de créditos.</small>
             </div>
 
             <div class="upload-wrapper mt-15">

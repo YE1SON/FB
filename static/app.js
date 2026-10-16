@@ -425,77 +425,49 @@ function bootstrapJesusStudio() {
     });
   }
 
-  const aiEngineSelect = document.getElementById("aiEngineSelect");
   const btnPuterReset = document.getElementById("btnPuterReset");
-  const aiEngineHelpText = document.getElementById("aiEngineHelpText");
+  const puterCreditAlert = document.getElementById("puterCreditAlert");
+  const btnSwitchAccountNow = document.getElementById("btnSwitchAccountNow");
 
-  function onAiEngineChange() {
-    if (!aiEngineSelect) return;
-    const isPuter = aiEngineSelect.value === "puter";
-    if (puterStatusBox) puterStatusBox.style.display = isPuter ? "flex" : "none";
-    if (btnGenerateAiImage) {
-      btnGenerateAiImage.textContent = isPuter
-        ? "🎨 Crear Imagen con IA (Puter DALL-E 3)"
-        : "🎨 Crear Imagen con IA (Ilimitado y Gratis)";
-    }
-    if (aiEngineHelpText) {
-      aiEngineHelpText.textContent = isPuter
-        ? "Generación DALL-E 3 con Puter. Consume créditos de tu cuenta de Puter."
-        : "Generación hiperrealista con Flux AI. 100% gratuita, sin límites de créditos y sin marcas de agua.";
-    }
-  }
+  async function resetPuterSession() {
+    try {
+      if (typeof puter !== "undefined" && puter.auth) {
+        await puter.auth.signOut();
+      }
+    } catch (_) {}
 
-  if (aiEngineSelect) {
-    aiEngineSelect.addEventListener("change", onAiEngineChange);
+    // Limpiar tokens residuales en el navegador
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && (k.toLowerCase().includes("puter") || k.includes("token"))) {
+          localStorage.removeItem(k);
+        }
+      }
+      sessionStorage.clear();
+    } catch (_) {}
+
+    updatePuterStatus();
+    if (puterCreditAlert) puterCreditAlert.style.display = "none";
+
+    try {
+      await puter.auth.signIn({ attempt_temp_user_creation: true });
+      updatePuterStatus();
+      alert("¡Sesión actualizada! Si conectaste otra cuenta o correo, ya tienes créditos nuevos para seguir generando con DALL-E 3.");
+    } catch (err) {
+      console.error("Error al conectar nueva cuenta Puter:", err);
+      updatePuterStatus();
+    }
   }
 
   if (btnPuterReset) {
-    btnPuterReset.addEventListener("click", async () => {
-      try {
-        if (typeof puter !== "undefined" && puter.auth) {
-          puter.auth.signOut();
-          updatePuterStatus();
-          alert("Sesión de Puter cerrada. Al conectar de nuevo podrás iniciar con otra cuenta para renovar créditos.");
-        }
-      } catch (err) {
-        console.error("Error al cerrar sesión Puter:", err);
-      }
-    });
+    btnPuterReset.addEventListener("click", resetPuterSession);
+  }
+  if (btnSwitchAccountNow) {
+    btnSwitchAccountNow.addEventListener("click", resetPuterSession);
   }
 
-  // Helper para generar con Flux AI en el servidor
-  async function generateWithFlux(promptText) {
-    const aspectSelect = document.getElementById("aspectRatioSelect");
-    const aspect = aspectSelect ? aspectSelect.value : "9:16";
-
-    const res = await fetch("/api/generate-ai-image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: promptText,
-        aspect_ratio: aspect
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Error al contactar con el motor Flux AI.");
-    }
-
-    const data = await res.json();
-    selectedImageName = data.filename;
-    stageSelectedImage.src = data.url;
-    const stageBlurBg = document.getElementById("stageBlurBg");
-    if (stageBlurBg) {
-      stageBlurBg.style.backgroundImage = `url('${data.url}')`;
-    }
-
-    await loadImages();
-    showStageView();
-    alert("¡Imagen creada en alta resolución con Flux AI y añadida a tu galería!");
-  }
-
-  // 8. Generación de Imagen con IA (Flux AI Ilimitado + Puter DALL-E 3 con Auto-Fallback)
+  // 8. Generación de Imagen con IA (DALL-E 3 HD — Máxima Calidad)
   btnGenerateAiImage.addEventListener("click", async () => {
     const promptText = aiImagePrompt.value.trim();
     if (!promptText) {
@@ -503,54 +475,30 @@ function bootstrapJesusStudio() {
       return;
     }
 
-    const engine = aiEngineSelect ? aiEngineSelect.value : "flux";
-
-    btnGenerateAiImage.disabled = true;
-
-    // CASO 1: Motor Flux AI (Predeterminado, 100% Gratis e Ilimitado)
-    if (engine === "flux") {
-      btnGenerateAiImage.textContent = "🎨 Creando imagen cinematográfica con Flux AI...";
-      try {
-        await generateWithFlux(promptText);
-      } catch (err) {
-        console.error("Error en Flux AI:", err);
-        alert("Aviso al crear imagen: " + extractError(err));
-      } finally {
-        btnGenerateAiImage.disabled = false;
-        onAiEngineChange();
-      }
-      return;
-    }
-
-    // CASO 2: Motor Puter AI (DALL-E 3)
     if (typeof puter === "undefined" || !puter.ai || !puter.ai.txt2img) {
-      alert("El motor Puter no está disponible. Generando con Flux AI...");
-      try {
-        await generateWithFlux(promptText);
-      } catch (err) {
-        alert(extractError(err));
-      } finally {
-        btnGenerateAiImage.disabled = false;
-        onAiEngineChange();
-      }
+      alert("El motor Puter DALL-E 3 no está cargado en el navegador. Por favor recarga la página.");
       return;
     }
 
-    // Si aún no está conectado a Puter, abrir ventana
+    // Si aún no está conectado a Puter, abrir ventana de conexión
     if (puter.auth && !puter.auth.isSignedIn()) {
+      btnGenerateAiImage.disabled = true;
       btnGenerateAiImage.textContent = "🔑 Abriendo ventana de conexión Puter...";
       try {
         await puter.auth.signIn({ attempt_temp_user_creation: true });
         updatePuterStatus();
       } catch (authErr) {
         btnGenerateAiImage.disabled = false;
-        onAiEngineChange();
-        alert("Se requiere autorizar Puter para usar DALL-E 3:\n" + extractError(authErr) + "\n\nTip: Puedes seleccionar el motor 'Flux AI' arriba para generar sin cuentas ni ventanas.");
+        btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (DALL-E 3 - Alta Resolución)";
+        updatePuterStatus();
+        alert("Se requiere autorizar Puter para crear imágenes:\n" + extractError(authErr) + "\n\nTip: Asegúrate de permitir ventanas emergentes si tu navegador te lo solicita.");
         return;
       }
     }
 
-    btnGenerateAiImage.textContent = "🎨 Generando imagen con Puter DALL-E 3...";
+    btnGenerateAiImage.disabled = true;
+    btnGenerateAiImage.textContent = "🎨 Generando imagen en máxima resolución (DALL-E 3)...";
+    if (puterCreditAlert) puterCreditAlert.style.display = "none";
 
     try {
       let enhancedPrompt = promptText;
@@ -595,28 +543,20 @@ function bootstrapJesusStudio() {
 
       await loadImages();
       showStageView();
-      alert("¡Imagen creada en alta resolución y añadida a tu galería!");
+      alert("¡Imagen creada con éxito en ultra alta resolución (DALL-E 3) y añadida a tu galería!");
     } catch (err) {
-      console.warn("Fallo en Puter:", err);
+      console.error("Error en generación con Puter:", err);
       const errMessage = extractError(err);
 
-      // AUTO-FALLBACK: Si se agotaron los créditos de Puter, usar Flux AI automáticamente
       if (errMessage.toLowerCase().includes("credits") || errMessage.toLowerCase().includes("billing") || errMessage.toLowerCase().includes("upgrade")) {
-        btnGenerateAiImage.textContent = "🚀 Créditos Puter agotados. Generando con Flux AI Gratis...";
-        try {
-          await generateWithFlux(promptText);
-          if (aiEngineSelect) aiEngineSelect.value = "flux";
-          onAiEngineChange();
-          return;
-        } catch (fluxErr) {
-          alert("Error en generación de respaldo: " + extractError(fluxErr));
-        }
+        if (puterCreditAlert) puterCreditAlert.style.display = "block";
+        alert("⚠️ Créditos de esta cuenta de Puter agotados.\n\nHaz clic en 'Cambiar Cuenta' para iniciar con otro correo y renovar tus créditos gratuitos de DALL-E 3 de inmediato.");
       } else {
-        alert("No se pudo generar con Puter: " + errMessage);
+        alert("Aviso de Puter DALL-E 3: " + errMessage);
       }
     } finally {
       btnGenerateAiImage.disabled = false;
-      onAiEngineChange();
+      btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (DALL-E 3 - Alta Resolución)";
     }
   });
 

@@ -63,53 +63,65 @@ def build_video_filter(
     total_frames: int,
     norm_ass: str,
     duration: float,
-    fps: int = 30
+    fps: int = 30,
+    has_two_images: bool = False,
+    split_time: float = 0.0
 ) -> str:
     """
     Builds an optimized, high-performance FFmpeg filter graph:
-    1. Continuous Camera Motion: zoompan runs across the ENTIRE duration of the video
-       using dynamic 'on / total_frames' so motion NEVER freezes prematurely.
+    1. Continuous Camera Motion or Dual-Scene Crossfade (xfade) between Scene 1 and Scene 2.
     2. Smart Framing: For 1:1 or 16:9 on vertical reels, blurred background preserves full image.
-    3. Noticeable Visual Effects: Color-balanced, LUT-accelerated shaders for instant visible impact.
+    3. Noticeable Visual Effects: Color-balanced shaders for instant visible impact.
     4. Burned-in ASS subtitles and floating particle elements.
     """
     filters = []
-    has_motion = camera_motion and camera_motion != "none"
 
-    if has_motion:
-        # Camera motion generated smoothly across the entire video duration
-        tf = max(total_frames, 1)
-        if camera_motion == "zoom_in":
-            motion_filter = f"[0:v]zoompan=z='1.0+(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-        elif camera_motion == "zoom_out":
-            motion_filter = f"[0:v]zoompan=z='1.22-(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-        elif camera_motion == "pan_up":
-            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
-        elif camera_motion == "pan_down":
-            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(on/{tf})':s={w}x{h}:fps={fps}[motion]"
-        elif camera_motion == "pan_right":
-            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-        elif camera_motion == "pan_left":
-            motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(1.0-on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-        elif camera_motion == "zoom_in_pan_up":
-            motion_filter = f"[0:v]zoompan=z='1.0+(0.24*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
-        else:
-            motion_filter = f"[0:v]zoompan=z='1.0+(0.20*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-
-        filters.append(motion_filter)
+    if has_two_images:
+        # Dual-Scene 2-Shot Reel: Scene 1 (The struggle/prayer) -> Scene 2 (Hope/deliverance)
+        tf1 = max(int((split_time + 1.0) * fps), 30)
+        tf2 = max(int((duration - split_time + 0.5) * fps), 30)
+        
+        motion_filter1 = f"[0:v]zoompan=z='1.0+(0.18*on/{tf1})':d={tf1}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[v1]"
+        motion_filter2 = f"[1:v]zoompan=z='1.16-(0.16*on/{tf2})':d={tf2}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[v2]"
+        blend_filter = f"[v1][v2]xfade=transition=fade:duration=1.0:offset={split_time:.2f}[motion]"
+        
+        filters.extend([motion_filter1, motion_filter2, blend_filter])
     else:
-        # Static framing (fast scale & crop on looped input)
-        if aspect_ratio in ["1:1", "16:9"]:
-            base_setup = (
-                f"[0:v]split=2[bg][fg];"
-                f"[bg]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},avgblur=20,setsar=1[bgblur];"
-                f"[fg]scale={w}:{h}:force_original_aspect_ratio=decrease,setsar=1[fgfit];"
-                f"[bgblur][fgfit]overlay=(W-w)/2:(H-h)/2[motion]"
-            )
-        else:
-            base_setup = f"[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1[motion]"
+        has_motion = camera_motion and camera_motion != "none"
+        if has_motion:
+            # Single image camera motion generated smoothly across the entire video duration
+            tf = max(total_frames, 1)
+            if camera_motion == "zoom_in":
+                motion_filter = f"[0:v]zoompan=z='1.0+(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            elif camera_motion == "zoom_out":
+                motion_filter = f"[0:v]zoompan=z='1.22-(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            elif camera_motion == "pan_up":
+                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
+            elif camera_motion == "pan_down":
+                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(on/{tf})':s={w}x{h}:fps={fps}[motion]"
+            elif camera_motion == "pan_right":
+                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            elif camera_motion == "pan_left":
+                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(1.0-on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+            elif camera_motion == "zoom_in_pan_up":
+                motion_filter = f"[0:v]zoompan=z='1.0+(0.24*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
+            else:
+                motion_filter = f"[0:v]zoompan=z='1.0+(0.20*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
 
-        filters.append(base_setup)
+            filters.append(motion_filter)
+        else:
+            # Static framing (fast scale & crop on looped input)
+            if aspect_ratio in ["1:1", "16:9"]:
+                base_setup = (
+                    f"[0:v]split=2[bg][fg];"
+                    f"[bg]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},avgblur=20,setsar=1[bgblur];"
+                    f"[fg]scale={w}:{h}:force_original_aspect_ratio=decrease,setsar=1[fgfit];"
+                    f"[bgblur][fgfit]overlay=(W-w)/2:(H-h)/2[motion]"
+                )
+            else:
+                base_setup = f"[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1[motion]"
+
+            filters.append(base_setup)
 
     # Visual Effects Grading
     fx_parts = []
@@ -171,11 +183,12 @@ def render_reel(
     camera_motion: str = "none",
     music_track: str = "worship_piano_peace",
     music_volume: float = 0.20,
-    fps: int = 30
+    fps: int = 30,
+    image_path_2: str = None
 ) -> str:
     """
     Renders the final vertical video using all 4 CPU cores, ultra-fast encoding,
-    and rock-solid memory management.
+    and rock-solid memory management. Supports single-image Ken Burns or dual-image xfade.
     """
     duration = get_audio_duration(audio_path)
     total_frames = int((duration + 0.5) * fps)
@@ -189,30 +202,44 @@ def render_reel(
     else: # default 9:16
         w, h = 1080, 1920
 
+    has_two_images = bool(image_path_2 and os.path.exists(image_path_2))
+    split_time = round(duration * 0.45, 2) if has_two_images else 0.0
+
     video_filter = build_video_filter(
-        w, h, aspect_ratio, effect_type, camera_motion, total_frames, norm_ass, duration, fps
+        w, h, aspect_ratio, effect_type, camera_motion, total_frames, norm_ass, duration, fps,
+        has_two_images=has_two_images, split_time=split_time
     )
 
-    has_motion = camera_motion and camera_motion != "none"
     cmd = ["ffmpeg", "-y", "-threads", "4"]
 
-    if has_motion:
-        # Single image input without loop: zoompan handles frame generation cleanly
-        cmd.extend(["-i", image_path])
+    if has_two_images:
+        # Two image inputs for dual-scene crossfade
+        cmd.extend(["-i", image_path, "-i", image_path_2])
+        cmd.extend(["-i", audio_path])
+        audio_input_idx = 2
     else:
-        # Looped input bounded strictly to the audio duration
-        cmd.extend(["-loop", "1", "-t", f"{duration + 0.2:.2f}", "-i", image_path])
-
-    cmd.extend(["-i", audio_path])
+        has_motion = camera_motion and camera_motion != "none"
+        if has_motion:
+            cmd.extend(["-i", image_path])
+        else:
+            cmd.extend(["-loop", "1", "-t", f"{duration + 0.2:.2f}", "-i", image_path])
+        cmd.extend(["-i", audio_path])
+        audio_input_idx = 1
 
     if music_file:
         cmd.extend(["-i", music_file])
-        audio_filter = _build_audio_filter(audio_path, music_file, music_volume, duration)
+        music_input_idx = audio_input_idx + 1
+        fade_out_start = max(0.0, duration - 2.0)
+        audio_filter = (
+            f"[{audio_input_idx}:a]volume=1.0[maina];"
+            f"[{music_input_idx}:a]volume={music_volume:.2f},afade=t=in:st=0:d=1.5,afade=t=out:st={fade_out_start:.2f}:d=2.0[musica];"
+            f"[maina][musica]amix=inputs=2:duration=first:dropout_transition=2[a]"
+        )
         filter_complex = f"{video_filter};{audio_filter}"
         cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", "[a]"])
     else:
         filter_complex = video_filter
-        cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", "1:a"])
+        cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", f"{audio_input_idx}:a"])
 
     cmd.extend([
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
@@ -221,7 +248,7 @@ def render_reel(
         output_mp4_path
     ])
 
-    print(f"[Render] Ratio: {aspect_ratio}, Motion: {camera_motion}, FX: {effect_type}, Duration: {duration:.2f}s")
+    print(f"[Render] Ratio: {aspect_ratio}, Motion: {camera_motion}, FX: {effect_type}, 2-Shot: {has_two_images}, Dur: {duration:.2f}s")
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg rendering failed: {result.stderr[-500:]}")

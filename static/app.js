@@ -58,7 +58,132 @@ function bootstrapJesusStudio() {
   const recentList = document.getElementById("recentList");
 
   let currentPinnedComment = "";
+  let currentScripture = "";
   let selectedImageName = "jesus_healing_miracle.jpg";
+  let selectedImageName2 = null;
+  let currentSceneTab = 1;
+
+  const hookBadgeInput = document.getElementById("hookBadgeInput");
+  const chkEnableHookBadge = document.getElementById("chkEnableHookBadge");
+  const btnRerollHookBadge = document.getElementById("btnRerollHookBadge");
+  const stageHookBadge = document.getElementById("stageHookBadge");
+  const btnRerollMagneticComment = document.getElementById("btnRerollMagneticComment");
+
+  const btnTabScene1 = document.getElementById("btnTabScene1");
+  const btnTabScene2 = document.getElementById("btnTabScene2");
+  const scene2StatusBanner = document.getElementById("scene2StatusBanner");
+  const scene2StatusText = document.getElementById("scene2StatusText");
+  const btnClearScene2 = document.getElementById("btnClearScene2");
+
+  function updateSceneTabsUI() {
+    if (btnTabScene1 && btnTabScene2) {
+      if (currentSceneTab === 1) {
+        btnTabScene1.classList.add("btn-primary");
+        btnTabScene1.classList.remove("btn-outline");
+        btnTabScene2.classList.add("btn-outline");
+        btnTabScene2.classList.remove("btn-primary");
+      } else {
+        btnTabScene2.classList.add("btn-primary");
+        btnTabScene2.classList.remove("btn-outline");
+        btnTabScene1.classList.add("btn-outline");
+        btnTabScene1.classList.remove("btn-primary");
+      }
+    }
+    if (scene2StatusBanner) {
+      if (selectedImageName2) {
+        scene2StatusBanner.style.display = "block";
+        if (scene2StatusText) {
+          scene2StatusText.innerHTML = `✨ <strong>Doble Escena Activa:</strong> Escena 2 asignada. El video cambiará suavemente a mitad de duración.`;
+        }
+      } else {
+        scene2StatusBanner.style.display = currentSceneTab === 2 ? "block" : "none";
+        if (scene2StatusText) {
+          scene2StatusText.innerHTML = `✨ <strong>Modo Escena 2:</strong> Toca abajo cualquier imagen para asignarla a la segunda mitad del video.`;
+        }
+      }
+    }
+  }
+
+  if (btnTabScene1) {
+    btnTabScene1.addEventListener("click", () => {
+      currentSceneTab = 1;
+      updateSceneTabsUI();
+      stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+      loadImages();
+    });
+  }
+
+  if (btnTabScene2) {
+    btnTabScene2.addEventListener("click", () => {
+      currentSceneTab = 2;
+      updateSceneTabsUI();
+      if (selectedImageName2) {
+        stageSelectedImage.src = `/assets/images/${selectedImageName2}`;
+      }
+      loadImages();
+    });
+  }
+
+  if (btnClearScene2) {
+    btnClearScene2.addEventListener("click", () => {
+      selectedImageName2 = null;
+      currentSceneTab = 1;
+      updateSceneTabsUI();
+      stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+      loadImages();
+    });
+  }
+
+  // Hook Badge Presets
+  const HOOK_BADGE_PRESETS = [
+    "⚠️ WAIT... GOD HAS A MESSAGE FOR YOU",
+    "🛑 STOP SCROLLING. GOD SEES YOUR TEARS.",
+    "🙏 DO NOT SKIP: A PRAYER FOR YOUR FAMILY",
+    "⚡ HEAR THIS PROMISE BEFORE YOU SLEEP",
+    "🕊️ PEACE TO YOUR TIRED MIND RIGHT NOW",
+    "✝️ JESUS SAYS: YOUR TESTIMONY IS COMING",
+    "🔔 GOD IS TURNING YOUR SITUATION AROUND"
+  ];
+  let hookPresetIdx = 0;
+  if (btnRerollHookBadge) {
+    btnRerollHookBadge.addEventListener("click", () => {
+      hookPresetIdx = (hookPresetIdx + 1) % HOOK_BADGE_PRESETS.length;
+      const nextBadge = HOOK_BADGE_PRESETS[hookPresetIdx];
+      if (hookBadgeInput) hookBadgeInput.value = nextBadge;
+      if (stageHookBadge) stageHookBadge.textContent = nextBadge;
+    });
+  }
+
+  if (hookBadgeInput) {
+    hookBadgeInput.addEventListener("input", () => {
+      if (stageHookBadge) {
+        const val = hookBadgeInput.value.trim().toUpperCase();
+        stageHookBadge.textContent = val ? (val.startsWith("⚠️") || val.startsWith("🛑") || val.startsWith("🙏") ? val : `⚠️ ${val}`) : "";
+      }
+    });
+  }
+
+  if (chkEnableHookBadge) {
+    chkEnableHookBadge.addEventListener("change", () => {
+      if (stageHookBadge) {
+        stageHookBadge.style.display = chkEnableHookBadge.checked ? "block" : "none";
+      }
+    });
+  }
+
+  if (btnRerollMagneticComment) {
+    btnRerollMagneticComment.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/api/magnetic-comments");
+        const comments = await res.json();
+        if (comments && comments.length > 0) {
+          const randComment = comments[Math.floor(Math.random() * comments.length)];
+          scriptPinnedComment.value = randComment;
+          currentPinnedComment = randComment;
+        }
+      } catch (_) {}
+    });
+  }
 
   // 1. Cargar Temas Virales
   async function loadThemes() {
@@ -141,26 +266,39 @@ function bootstrapJesusStudio() {
       const res = await fetch("/api/images");
       const images = await res.json();
       imageGallery.innerHTML = images
-        .map(img => `
-          <div class="image-thumb ${img.filename === selectedImageName ? "selected" : ""}" data-filename="${img.filename}">
-            ${img.deletable ? `<button class="thumb-delete-btn" title="Eliminar foto de la galería" data-del="${img.filename}">🗑️</button>` : ''}
-            <img src="${img.url}" alt="${img.label}">
-            <div class="thumb-title">${img.label}</div>
-          </div>
-        `)
+        .map(img => {
+          const isScene1 = img.filename === selectedImageName;
+          const isScene2 = img.filename === selectedImageName2;
+          const isSelected = (currentSceneTab === 1 && isScene1) || (currentSceneTab === 2 && isScene2);
+          return `
+            <div class="image-thumb ${isSelected ? "selected" : ""}" data-filename="${img.filename}">
+              ${isScene1 ? `<span class="scene-badge-indicator" title="Escena 1 (Apertura)">1</span>` : ''}
+              ${isScene2 ? `<span class="scene-badge-indicator scene-2" title="Escena 2 (Victoria)">2</span>` : ''}
+              ${img.deletable ? `<button class="thumb-delete-btn" title="Eliminar foto de la galería" data-del="${img.filename}">🗑️</button>` : ''}
+              <img src="${img.url}" alt="${img.label}">
+              <div class="thumb-title">${img.label}</div>
+            </div>
+          `;
+        })
         .join("");
 
       // Eventos de selección de imagen
       document.querySelectorAll(".image-thumb").forEach(thumb => {
         thumb.addEventListener("click", () => {
-          document.querySelectorAll(".image-thumb").forEach(t => t.classList.remove("selected"));
-          thumb.classList.add("selected");
-          selectedImageName = thumb.dataset.filename;
-          stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+          const fname = thumb.dataset.filename;
+          if (currentSceneTab === 1) {
+            selectedImageName = fname;
+            stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+          } else {
+            selectedImageName2 = fname;
+            stageSelectedImage.src = `/assets/images/${selectedImageName2}`;
+          }
           const stageBlurBg = document.getElementById("stageBlurBg");
           if (stageBlurBg) {
-            stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
+            stageBlurBg.style.backgroundImage = `url('/assets/images/${currentSceneTab === 1 ? selectedImageName : (selectedImageName2 || selectedImageName)}')`;
           }
+          updateSceneTabsUI();
+          loadImages();
           showStageView();
         });
       });
@@ -178,6 +316,10 @@ function bootstrapJesusStudio() {
                 selectedImageName = "jesus_healing_miracle.jpg";
                 stageSelectedImage.src = `/assets/images/${selectedImageName}`;
               }
+              if (selectedImageName2 === fname) {
+                selectedImageName2 = null;
+              }
+              updateSceneTabsUI();
               await loadImages();
             } else {
               const errData = await delRes.json();
@@ -215,6 +357,15 @@ function bootstrapJesusStudio() {
 
       if (data.hook_text) {
         currentHookText = data.hook_text;
+        if (hookBadgeInput) hookBadgeInput.value = data.hook_text;
+        if (stageHookBadge) {
+          const val = data.hook_text;
+          stageHookBadge.textContent = (val.startsWith("⚠️") || val.startsWith("🛑") || val.startsWith("🙏")) ? val : `⚠️ ${val}`;
+        }
+      }
+
+      if (data.scripture) {
+        currentScripture = data.scripture;
       }
 
       if (data.seo_caption) {
@@ -968,6 +1119,7 @@ function bootstrapJesusStudio() {
           voice_key: voiceSelect.value,
           rate: rateSelect.value,
           image_name: selectedImageName,
+          image_name_2: selectedImageName2 || "none",
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
           subtitle_animation: animSelect ? animSelect.value : "pop",
@@ -978,7 +1130,7 @@ function bootstrapJesusStudio() {
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
           effect_type: effectSelect ? effectSelect.value : "cinematic_dust",
           theme_key: themeSelect ? themeSelect.value : "",
-          hook_text: currentHookText || ""
+          hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : ""
         })
       });
 
@@ -1023,18 +1175,26 @@ function bootstrapJesusStudio() {
   }
 
   // 11. Copiar Texto y Hashtags para Facebook (Optimizado para SEO de Meta 2026)
-  btnCopyCaption.addEventListener("click", () => {
-    let caption = currentSeoCaption;
-    if (!caption) {
-      caption = `${scriptHook.value} 🙏✨\n\n${scriptBody.value}\n\n${scriptCta.value}\n\n#DailyPrayer #ChristianReels #FaithOverFear #JesusLovesYou`;
-    }
-    navigator.clipboard.writeText(caption).then(() => {
-      btnCopyCaption.textContent = "✅ ¡Copiado con SEO y 4 Hashtags!";
-      setTimeout(() => {
-        btnCopyCaption.textContent = "📋 Copiar Texto del Post y Hashtags para Facebook";
-      }, 2500);
+  if (btnCopyCaption) {
+    btnCopyCaption.addEventListener("click", () => {
+      const hook = scriptHook ? scriptHook.value.trim() : "";
+      const body = scriptBody ? scriptBody.value.trim() : "";
+      const cta = scriptCta ? scriptCta.value.trim() : "";
+      const pinned = currentPinnedComment || (scriptPinnedComment ? scriptPinnedComment.value.trim() : "");
+      const scriptureText = currentScripture ? `📖 SCRIPTURE TODAY:\n"${currentScripture}"\n\n` : "";
+
+      let caption = `⚡ ${hook}\n\n${body}\n\n${scriptureText}${cta}\n\n👇 COMMENT BELOW:\n${pinned ? `"${pinned}"` : "Leave your first name or write 'AMEN' to agree in faith tonight."}\n\n#DailyPrayer #ChristianReels #JesusLovesYou #FaithOverFear #MiracleWorker`;
+
+      navigator.clipboard.writeText(caption).then(() => {
+        btnCopyCaption.textContent = "✅ ¡Publicación Viral Completa Copiada!";
+        setTimeout(() => {
+          btnCopyCaption.textContent = "📋 Copiar Publicación Completa para Facebook (Copy Viral SEO)";
+        }, 2500);
+      }).catch(err => {
+        alert("No se pudo copiar automáticamente: " + err);
+      });
     });
-  });
+  }
 
   // 12. Cargar Biblioteca de Videos Recientes
   async function loadRecentOutputs() {
@@ -1064,6 +1224,112 @@ function bootstrapJesusStudio() {
     } catch (e) {
       console.error("Error al cargar historial:", e);
     }
+  }
+
+  // 13. Modal y Planificador de Lote Diario (3 Videos del Día)
+  const btnOpenDailyBatch = document.getElementById("btnOpenDailyBatch");
+  const dailyBatchModal = document.getElementById("dailyBatchModal");
+  const btnCloseDailyBatch = document.getElementById("btnCloseDailyBatch");
+  const dailyBatchContent = document.getElementById("dailyBatchContent");
+
+  async function openDailyBatchModal() {
+    if (!dailyBatchModal) return;
+    dailyBatchModal.style.display = "flex";
+    if (dailyBatchContent) {
+      dailyBatchContent.innerHTML = `<p style="color: #cbd5e1; text-align: center; padding: 25px;">⏳ Cargando planificación para hoy (3 horarios clave)...</p>`;
+    }
+    try {
+      const res = await fetch("/api/daily-batch");
+      const batch = await res.json();
+      if (!dailyBatchContent) return;
+      dailyBatchContent.innerHTML = batch.map((item, idx) => `
+        <div class="daily-batch-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 10px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+            <div>
+              <span style="font-weight: 700; color: #ffd700; font-size: 15px;">${item.time_label}</span>
+              <span style="display: block; font-size: 12px; color: #94a3b8;">${item.purpose}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-gold btn-load-batch-slot" data-slot-index="${idx}" style="font-weight: 700;">
+              ⚡ Cargar en el Estudio
+            </button>
+          </div>
+          <div style="font-size: 13px; color: #e2e8f0; margin-bottom: 6px;">
+            <strong>🎣 Gancho:</strong> <em>"${item.script.hook}"</em>
+          </div>
+          <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 6px;">
+            <strong>📖 Escritura:</strong> ${item.script.scripture || "Jeremiah 29:11"}
+          </div>
+          <div style="font-size: 11.5px; color: #a1a1aa;">
+            💬 <strong>Comentario Fijado:</strong> ${item.script.pinned_comment}
+          </div>
+        </div>
+      `).join("");
+
+      document.querySelectorAll(".btn-load-batch-slot").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const sIdx = parseInt(btn.dataset.slotIndex, 10);
+          const selectedSlot = batch[sIdx];
+          if (!selectedSlot) return;
+
+          if (themeSelect && selectedSlot.script.theme_key) {
+            themeSelect.value = selectedSlot.script.theme_key;
+          }
+          if (scriptHook) scriptHook.value = selectedSlot.script.hook;
+          if (scriptBody) scriptBody.value = selectedSlot.script.body;
+          if (scriptCta) scriptCta.value = selectedSlot.script.cta;
+          if (scriptPinnedComment) scriptPinnedComment.value = selectedSlot.script.pinned_comment;
+          currentPinnedComment = selectedSlot.script.pinned_comment;
+          currentScripture = selectedSlot.script.scripture || "";
+
+          if (selectedSlot.script.hook_text) {
+            currentHookText = selectedSlot.script.hook_text;
+            if (hookBadgeInput) hookBadgeInput.value = selectedSlot.script.hook_text;
+            if (stageHookBadge) {
+              const val = selectedSlot.script.hook_text;
+              stageHookBadge.textContent = (val.startsWith("⚠️") || val.startsWith("🛑") || val.startsWith("🙏")) ? val : `⚠️ ${val}`;
+            }
+          }
+
+          if (aiImagePrompt && selectedSlot.script.image_prompt) {
+            aiImagePrompt.value = selectedSlot.script.image_prompt;
+          }
+
+          if (selectedSlot.recommended_image) {
+            selectedImageName = selectedSlot.recommended_image;
+            if (stageSelectedImage) stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+            const stageBlurBg = document.getElementById("stageBlurBg");
+            if (stageBlurBg) stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
+          }
+
+          if (musicSelect && selectedSlot.recommended_music) {
+            musicSelect.value = selectedSlot.recommended_music;
+          }
+
+          dailyBatchModal.style.display = "none";
+          showStageView();
+          loadImages();
+          alert(`¡Reel de ${selectedSlot.time_label} cargado con éxito en el estudio! Revisa los campos y pulsa "Renderizar Reel".`);
+        });
+      });
+    } catch (e) {
+      if (dailyBatchContent) {
+        dailyBatchContent.innerHTML = `<p style="color: #ef4444; text-align: center;">Error al cargar el lote diario: ${e.message}</p>`;
+      }
+    }
+  }
+
+  if (btnOpenDailyBatch) {
+    btnOpenDailyBatch.addEventListener("click", openDailyBatchModal);
+  }
+  if (btnCloseDailyBatch) {
+    btnCloseDailyBatch.addEventListener("click", () => {
+      if (dailyBatchModal) dailyBatchModal.style.display = "none";
+    });
+  }
+  if (dailyBatchModal) {
+    dailyBatchModal.addEventListener("click", (e) => {
+      if (e.target === dailyBatchModal) dailyBatchModal.style.display = "none";
+    });
   }
 
   // Inicialización de Eventos

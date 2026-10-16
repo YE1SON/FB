@@ -82,6 +82,7 @@ class RenderRequest(BaseModel):
     voice_key: str = "christopher"
     rate: str = "+0%"
     image_name: str = "jesus_healing_miracle.jpg"
+    image_name_2: Optional[str] = None
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
     subtitle_animation: str = "pop"
@@ -309,15 +310,22 @@ async def api_render_video(req: RenderRequest):
             play_res_y=play_h
         )
 
-        # 3. Render video (Micro-Motion Engine with smart fit and camera choice)
+        # 3. Render video (Micro-Motion Engine with smart fit, camera choice & dual scene)
         image_file = _resolve_image(req.image_name)
+        image_file_2 = None
+        if req.image_name_2 and req.image_name_2 not in ["none", ""]:
+            cand2 = os.path.join(ASSETS_DIR, os.path.basename(req.image_name_2))
+            if os.path.exists(cand2):
+                image_file_2 = cand2
+
         render_reel(
             image_file, audio_file, ass_file, output_video,
             aspect_ratio=req.aspect_ratio,
             effect_type=req.effect_type,
             camera_motion=req.camera_motion,
             music_track=req.music_track,
-            music_volume=req.music_volume
+            music_volume=req.music_volume,
+            image_path_2=image_file_2
         )
 
     except HTTPException:
@@ -357,6 +365,53 @@ def list_outputs():
     ]
     files.sort(key=lambda f: os.path.getmtime(os.path.join(OUTPUTS_DIR, f)), reverse=True)
     return [{"filename": f, "url": f"/outputs/{f}"} for f in files]
+
+
+# ─── Daily Batch Schedule & Magnetic Engagement ─────────────────────────────
+
+MAGNETIC_COMMENTS = [
+    "👇 God sees your exact situation today. Drop your first name below so our community can agree in prayer over your home tonight! Say 'I receive it' 🙏",
+    "👇 A praying family breaks every chain. Type the first name or initial of your child/loved one and claim: 'They are protected in Jesus' name!' ❤️",
+    "👇 Sickness does not have the final say. Drop your name below and declare: 'By His stripes I am healed!' 🕊️",
+    "👇 If you woke up carrying fear or anxiety, breathe. Leave a '🙏' below and let us carry this burden in prayer with you right now.",
+    "👇 Drop your first name below to stand in agreement for a financial miracle before this week ends. Type AMEN! 💸",
+    "👇 Comment 'THANK YOU JESUS' and leave one thing you are grateful for today so we can rejoice together! 🙌"
+]
+
+@app.get("/api/magnetic-comments")
+@app.get("/studio/api/magnetic-comments")
+def api_magnetic_comments():
+    return MAGNETIC_COMMENTS
+
+@app.get("/api/daily-batch")
+@app.get("/studio/api/daily-batch")
+def api_daily_batch():
+    return [
+        {
+            "slot": "morning",
+            "time_label": "🌅 Mañana (7:00 AM - 8:30 AM EST)",
+            "purpose": "Apertura de Bendición, Favor y Gratitud",
+            "script": generate_script("morning_favor", mode="deep"),
+            "recommended_image": "jesus_praying_gethsemane.jpg",
+            "recommended_music": "celestial_strings_hope"
+        },
+        {
+            "slot": "midday",
+            "time_label": "☀️ Mediodía (12:30 PM - 2:00 PM EST)",
+            "purpose": "Paz Mental, Sanidad y Superación de Cargas",
+            "script": generate_script("medical_fear", mode="deep"),
+            "recommended_image": "jesus_healing_miracle.jpg",
+            "recommended_music": "worship_piano_peace"
+        },
+        {
+            "slot": "night",
+            "time_label": "🌙 Noche (8:30 PM - 10:00 PM EST)",
+            "purpose": "Milagro Financiero, Familia y Reposo",
+            "script": generate_script("zero_balance", mode="deep"),
+            "recommended_image": "jesus_comforting_embrace.jpg",
+            "recommended_music": "midnight_prayer_acoustic"
+        }
+    ]
 
 
 if __name__ == "__main__":

@@ -166,12 +166,13 @@ def generate_viral_ass(
         alignment = 2  # Bottom-center
         margin_v_calc = margin_v
 
-    # HookBold: large centered text for the visual hook (Anton / High contrast yellow)
+    # HookBadge: Cartel de alerta superior (Roboto Black / Fondo oscuro con resalte dorado, SIEMPRE arriba)
     hook_style_line = ""
     if hook_text:
-        hook_fontsize = 94 if play_res_y > 1080 else 74
-        hook_margin_v = int(play_res_y * 0.24) if position != "top" else int(play_res_y * 0.40)
-        hook_style_line = f"\nStyle: HookBold,Anton,{hook_fontsize},&H0000FFFF&,&H00FFFFFF&,&H00000000&,&HD0000000&,-1,0,0,0,100,100,3,0,1,8,4,5,50,50,{hook_margin_v},1"
+        hook_fontsize = 60 if play_res_y > 1080 else 46
+        hook_margin_v = 160 if play_res_y > 1080 else (75 if play_res_x == play_res_y else 55)
+        # Alignment = 8 (Top-Center estricto, nunca interfiere con subtítulos en centro o fondo)
+        hook_style_line = f"\nStyle: HookBadge,Roboto Black,{hook_fontsize},&H00FFFFFF&,&H0000D7FF&,&H00000000&,&HA0121218&,-1,0,0,0,100,100,2,0,3,8,0,8,40,40,{hook_margin_v},1"
 
     # Style para partículas cinemáticas
     particle_style_line = f"\nStyle: FXParticle,Arial,32,&H00D7FF&,&H00D7FF&,&H00D7FF&,&H000000&,1,0,0,0,100,100,0,0,1,0,0,5,10,10,10,1"
@@ -239,9 +240,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 f"Dialogue: 1,{s_str},{e_str},FXParticle,,0,0,0,,{{\\an5\\move({x1},{y1},{x2},{y2})\\1c&H{alpha}{color}&\\3c&H{alpha}{color}&\\blur{blur}\\fad(400,400)\\fs{size}}}{char}"
             )
 
-    # 2. Hook Visual Inicial (Pattern Interrupt en el segundo 0 a 2.5)
+    # 2. Hook Visual Inicial (Pattern Interrupt en el segundo 0 a 2.8 - SIEMPRE ARRIBA \an8)
     if hook_text:
-        events.append(f"Dialogue: 2,0:00:00.00,0:00:02.50,HookBold,,0,0,0,,{{\\fscx118\\fscy118\\t(0,180,\\fscx100\\fscy100)\\fad(100,450)\\an5}}{hook_text.upper()}")
+        clean_hook = hook_text.strip().upper()
+        if not any(clean_hook.startswith(e) for e in ["⚠️", "🛑", "🕊️", "🙏", "✨", "❤️", "🔔"]):
+            clean_hook = f"⚠️ {clean_hook}"
+        events.append(f"Dialogue: 3,0:00:00.00,0:00:02.80,HookBadge,,0,0,0,,{{\\an8\\fad(60,350)\\fscx106\\fscy106\\t(0,100,\\fscx100\\fscy100)}}{clean_hook}")
 
     # 3. Subtítulos Sincronizados Milimétricamente
     # Definición de animación según selección del usuario

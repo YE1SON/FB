@@ -242,10 +242,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
     # 2. Hook Visual Inicial (Pattern Interrupt en el segundo 0 a 2.8 - SIEMPRE ARRIBA \an8)
     if hook_text:
-        clean_hook = hook_text.strip().upper()
-        if not any(clean_hook.startswith(e) for e in ["⚠️", "🛑", "🕊️", "🙏", "✨", "❤️", "🔔"]):
-            clean_hook = f"⚠️ {clean_hook}"
-        events.append(f"Dialogue: 3,0:00:00.00,0:00:02.80,HookBadge,,0,0,0,,{{\\an8\\fad(60,350)\\fscx106\\fscy106\\t(0,100,\\fscx100\\fscy100)}}{clean_hook}")
+        # Limpiar emojis y glifos especiales para libass (evita '??' o fallbacks rotos en Linux)
+        clean_hook = re.sub(r'[^\x20-\x7E\u00A0-\u00FF]+', '', hook_text).strip().upper()
+        clean_hook = re.sub(r'^[^\w]+', '', clean_hook).strip()
+        if clean_hook:
+            events.append(f"Dialogue: 3,0:00:00.00,0:00:02.80,HookBadge,,0,0,0,,{{\\an8\\fad(60,350)\\fscx106\\fscy106\\t(0,100,\\fscx100\\fscy100)}}{clean_hook}")
 
     # 3. Subtítulos Sincronizados Milimétricamente
     # Definición de animación según selección del usuario

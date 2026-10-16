@@ -1001,85 +1001,85 @@ VIRAL_THEMES = {
 # =============================================================================
 
 SCENARIO_POOLS = {
+    "jesus_praying": [
+        "Jesus Christ kneeling in deep reverent prayer in the Garden of Gethsemane under a gentle full moon, hands clasped, tear of sacred surrender catching ethereal moonlight, ancient olive trees in background, warm celestial halo, dramatic chiaroscuro masterpiece",
+        "Jesus Christ atop an ancient mountain summit at sunrise, arms opened toward the breaking dawn in earnest prayer to the Father, golden morning sunburst illuminating His flowing white garments, peaceful and majestic atmosphere",
+        "Intimate cinematic close-up of Jesus Christ praying with closed eyes and serene devotion, soft warm candlelight illuminating His compassionate face, floating golden dust motes, peaceful and deeply sacred"
+    ],
+    "jesus_comforting": [
+        "Jesus Christ gently wiping away the tears of a brokenhearted person, looking with infinite tenderness and love, warm golden celestial glow enveloping both of them, hyper-realistic, emotionally powerful",
+        "Jesus Christ with compassionate eyes looking directly into the camera, His hand reaching gently out toward the viewer in loving reassurance and healing peace, soft divine aura, 8k portrait",
+        "Jesus Christ standing beside a person praying in tears beside their bed at night, His hand resting tenderly on their shoulder releasing heavenly light that dispels room shadows"
+    ],
+    "jesus_healing": [
+        "Jesus Christ standing in gentle divine light beside a hospital bed, placing His radiant hand over a sleeping patient's heart, heavenly golden rays filling the quiet room with supernatural peace and healing",
+        "Jesus Christ lovingly touching the forehead of an earnest believer kneeling in prayer, divine golden luminescence radiating from His touch, tears of miraculous relief, award-winning cinematic shot",
+        "Jesus Christ surrounded by an aura of sacred restoration, reaching down with warmth and divine grace to lift up a weary soul, volumetric God-rays, photorealistic masterpiece"
+    ],
+    "people_praying": [
+        "Devout hands tightly clasped in earnest tearful prayer resting upon an open illuminated Holy Bible, warm golden candlelight and heavenly sunbeams streaming through sacred glass, floating dust motes",
+        "A humble devout believer kneeling in deep heartfelt prayer in a sunlit sanctuary, head bowed in surrender, brilliant golden shafts of divine light descending from above, atmosphere of awe and peace",
+        "A loving praying mother and father with eyes closed, holding hands over their open family Bible in prayer, soft warm amber glow illuminating their faithful expressions, cinematic 35mm photography"
+    ],
+    "holy_bible": [
+        "Extreme macro close-up of an ancient leather-bound Holy Bible open to the Psalms, golden gilded page edges catching warm radiant sunbeams, floating golden dust motes, sacred and reverent",
+        "A grand wooden altar with an illuminated Holy Bible open in the center, celestial golden rays streaming directly onto the sacred scripture, soft incense mist, photorealistic masterpiece",
+        "An open Holy Bible with a rustic wooden cross resting gently on the pages, warm morning golden-hour light washing over the scripture, deep emotional atmosphere"
+    ],
+    "holy_cross": [
+        "Solemn sacred silhouette of the holy wooden cross with the crown of thorns atop Mount Calvary at golden hour sunrise, brilliant sunburst flaring through the wood, gentle morning mist rolling over ancient hills, reverent cinematic masterpiece",
+        "Intimate low-angle view looking up toward the Holy Cross against a breaking dawn sky, warm heavenly colors radiating outward, peaceful, reverent, cinematic 35mm film grain",
+        "Dramatic sky with sacred golden clouds parting around the glowing Holy Cross bathed in amber celestial light, shafts of glory pouring onto ancient stones, hyper-realistic 8k"
+    ],
+    "storm_rescue": [
+        "Dramatic low-angle cinematic shot, Jesus Christ standing calmly atop roaring stormy ocean waves, reaching His hand directly out of the screen toward the viewer to pull them from churning waters, dark clouds parting to reveal blinding golden sunbeams",
+        "Jesus Christ walking serenely across turbulent dark sea waters amidst lightning, glowing white robe billowing, extending a strong hand of deliverance to the viewer, hyper-detailed, epic composition",
+        "Jesus Christ standing on the bow of a wooden boat in a violent storm, raising His hand with divine authority to command the wind and waves to be still, instant calm and celestial light breaking through"
+    ],
     "lion_judah": [
         "Epic majestic Lion of Judah standing proudly atop a colossal mountain cliff, glowing golden mane illuminated by dramatic celestial God-rays, dark storm clouds parting in the background, sharp lightning flashes, hyper-realistic, volumetric lighting",
         "Regal golden lion representing Jesus the Lion of Judah, majestic golden eyes looking with authority, sacred divine aura, ancient stone altar, mist and golden dust motes floating, octane render 8k",
         "Powerful dynamic shot of the Lion of Judah walking triumphantly across an ancient biblical plateau, roaring with divine power, supernatural golden dawn breaking over the horizon, cinematic composition"
     ],
-    "holy_fire": [
-        "Epic heroic composition, brilliant blinding shield of pure holy fire and radiant gold light held high, deflecting dark shadows and smoke, fiery embers and golden sparks floating through the air, intense dynamic angle",
-        "Celestial warrior of light surrounded by a swirling pillar of holy fire, golden divine armor, dramatic sacred illumination cutting through dense darkness, ultra-detailed 8k render",
-        "A peaceful modern home at night completely enveloped in a glowing supernatural dome of golden celestial fire and light, protecting the sleeping family inside, starry sky above, photorealistic masterpiece"
+    "break_chains": [
+        "Heavy rusted iron chains snapping and shattering into glowing golden sparks as radiant divine light bursts through, Jesus Christ standing in triumph in the background, cinematic dramatic contrast",
+        "Jesus Christ gently breaking the heavy chains binding a weeping person's hands, shackles dissolving into golden dust, tears of deliverance and freedom, emotional masterpiece",
+        "Colossal locked prison doors swinging wide open as the glory and light of Jesus Christ enters the darkness, shackles falling to the floor, triumphant and sacred"
     ],
-    "ancient_bible": [
-        "Extreme macro close-up of weathered devout hands gently resting upon an ancient leather-bound Holy Bible, warm flickering candlelight casting soft chiaroscuro shadows, floating golden dust motes in sacred sunbeams",
-        "A grand ancient wooden table with an open illuminated Bible, sacred golden rays streaming through stained glass onto the pages, delicate incense smoke curling upward, hyper-realistic photography",
-        "Emotional intimate shot of hands clasped in deep earnest prayer over worn scriptures, a warm radiant glow emanating from within the pages, cinematic depth of field, 35mm film aesthetic"
-    ],
-    "parted_seas": [
-        "Colossal biblical vista, roaring ocean waves parted in half creating towering turquoise water walls, a pathway of dry ground illuminated by a blazing pillar of celestial fire, splashing sea spray, epic cinematic scale",
-        "Dramatic low-angle view from the floor of the parted Red Sea, towering translucent water held back by divine power, brilliant golden sunlight piercing through the water surface, majestic atmosphere",
-        "Jesus Christ standing at the edge of turbulent churning waters, raising His hand and commanding the storm to be still, water calming into crystalline glass, dramatic God-rays, hyper-detailed"
-    ],
-    "healing_touch": [
-        "Deeply emotional close-up, glowing compassionate hands gently touching the forehead of a person in earnest prayer, tears of relief on their face catching warm amber light, dramatic chiaroscuro lighting, photorealistic masterpiece",
-        "A weeping person kneeling in surrender, enveloped in a radiant embrace of pure warm divine light, cold shadows retreating, tears turning into tiny sparkles of gold, deeply touching cinematic portrait",
-        "Jesus Christ with compassionate eyes looking directly into the camera, hand gently reaching out toward the viewer in loving reassurance, warm glowing candlelight aura, masterpiece photography"
-    ],
-    "storm_rescue": [
-        "Dramatic low-angle shot, Jesus Christ standing on turbulent roaring ocean waves, reaching hand out directly to the viewer to pull them from the water, massive dark storm clouds parting to reveal blinding golden sunbeams, dynamic splash",
-        "A small weathered boat in the center of a stormy dark sea, a singular shaft of blinding heavenly golden light beaming down from heaven directly onto the boat, calming the surrounding waves with supernatural peace",
-        "Jesus Christ walking serenely across churning dark waters amidst lightning, glowing white robe billowing in the wind, tranquil expression, divine light illuminating the stormy sea"
-    ],
-    "heavenly_valley": [
-        "Breathtaking wide landscape of lush green pastures and rolling hills bathed in radiant golden hour sunrise light, a calm crystal-clear river flowing through the valley, ethereal morning fog, peaceful and sacred",
-        "A lone traveler walking along a sunlit pathway through a magnificent valley of blooming wildflowers and ancient olive trees, soft golden sun flare, atmosphere of overwhelming peace and divine favor",
-        "Golden wheat fields swaying gently in the morning breeze under an expansive radiant dawn sky, God-rays pouring down, dust particles dancing in the light, cinematic 8k landscape"
-    ],
-    "guardian_wings": [
-        "Magnificent silhouette of a towering heavenly guardian angel of light with expansive glowing feathered wings, standing guard over a small humble cottage at twilight, soft celestial luminescence, peaceful atmosphere",
-        "An awe-inspiring heavenly warrior angel holding a sword of blazing white light, hovering protectively above a quiet city street at night, starry sky, hyper-detailed cinematic rendering",
-        "Two colossal glowing angelic wings wrapping gently around a person in deep prayer, shielding them from surrounding dark shadows, warm amber and pearlescent white illumination, deeply comforting"
-    ],
-    "open_doors": [
-        "Epic wide shot, colossal ancient wooden and stone double doors swinging open, revealing a blinding supernatural corridor of pure golden glory, stepping out of cold darkness into warm abundance, floating dust motes",
-        "A lone silhouette walking boldly through a magnificent arched doorway carved into an ancient mountain, pure divine morning light flooding through the portal, cinematic composition, octane render",
-        "A radiant golden key turning in an ancient locked iron gate, the heavy chains bursting into sparks of light as the gate swings open toward freedom, dramatic high-contrast lighting"
-    ],
-    "cross_sunrise": [
-        "Solemn sacred silhouette of the holy cross atop Mount Calvary at golden hour sunrise, brilliant sunburst flaring through the wood, gentle morning mist rolling over ancient hills, reverent cinematic masterpiece",
-        "Dramatic sky with clouds forming majestic patterns around a glowing cross bathed in heavenly amber light, golden hour colors, dust and light beams falling across an open landscape",
-        "Warm intimate low-angle view looking up toward the cross against a breaking dawn sky, warm colors radiating, peaceful, reverent, cinematic 35mm film grain"
+    "family_blessing": [
+        "Jesus Christ standing with a gentle smile, placing His hands of blessing upon the heads of young children and their parents, surrounded by warm golden daylight and peaceful olive trees, heartfelt and comforting",
+        "Jesus Christ gently guiding a young child through a field of wild lilies, holding the child's small hand in loving protection, bright sunny sky with soft clouds, heartwarming biblical scene",
+        "A Christian family gathered in unity around a dinner table with hands held in prayer, a luminous subtle presence of Jesus Christ standing behind them with outstretched hands of peace and protection"
     ]
 }
 
 THEME_TO_SCENARIO_MAP = {
-    "zero_balance": ["open_doors", "heavenly_valley", "ancient_bible"],
-    "lost_child": ["guardian_wings", "healing_touch", "storm_rescue"],
-    "night_anxiety": ["guardian_wings", "peace_in_storm", "holy_fire", "healing_touch"],
-    "medical_fear": ["healing_touch", "holy_fire", "guardian_wings"],
-    "betrayal": ["healing_touch", "open_doors", "cross_sunrise"],
-    "morning_favor": ["heavenly_valley", "open_doors", "cross_sunrise"],
-    "job_breakthrough": ["open_doors", "heavenly_valley", "ancient_bible"],
-    "marriage_crisis": ["healing_touch", "guardian_wings", "cross_sunrise"],
-    "silent_depression": ["healing_touch", "guardian_wings", "heavenly_valley"],
-    "spiritual_warfare": ["holy_fire", "lion_judah", "guardian_wings"],
-    "psalm_91_shield": ["guardian_wings", "holy_fire", "lion_judah"],
-    "psalm_23_valley": ["heavenly_valley", "guardian_wings", "storm_rescue"],
-    "lion_of_judah": ["lion_judah", "holy_fire", "parted_seas"],
-    "exhausted_parent": ["guardian_wings", "healing_touch", "heavenly_valley"],
-    "break_chains": ["holy_fire", "open_doors", "lion_judah"],
-    "lonely_season": ["guardian_wings", "ancient_bible", "healing_touch"],
-    "unexpected_doors": ["open_doors", "heavenly_valley", "lion_judah"],
-    "forgive_yourself": ["cross_sunrise", "healing_touch", "ancient_bible"],
-    "school_children": ["guardian_wings", "holy_fire", "heavenly_valley"],
-    "restoration_double": ["open_doors", "heavenly_valley", "lion_judah"],
-    "hard_decisions": ["heavenly_valley", "open_doors", "ancient_bible"],
-    "peace_in_storm": ["parted_seas", "storm_rescue", "guardian_wings"],
-    "hidden_enemies": ["holy_fire", "lion_judah", "guardian_wings"],
-    "business_blessing": ["open_doors", "heavenly_valley", "ancient_bible"],
-    "grief_loss": ["guardian_wings", "healing_touch", "cross_sunrise"],
-    "gratitude_harvest": ["heavenly_valley", "cross_sunrise", "open_doors"]
+    "zero_balance": ["jesus_comforting", "break_chains", "holy_bible", "jesus_praying"],
+    "lost_child": ["family_blessing", "jesus_comforting", "storm_rescue", "people_praying"],
+    "night_anxiety": ["jesus_comforting", "storm_rescue", "jesus_praying", "people_praying"],
+    "medical_fear": ["jesus_healing", "jesus_comforting", "people_praying", "holy_cross"],
+    "betrayal": ["jesus_comforting", "holy_cross", "jesus_praying"],
+    "morning_favor": ["jesus_praying", "holy_bible", "holy_cross", "family_blessing"],
+    "job_breakthrough": ["break_chains", "jesus_comforting", "holy_bible"],
+    "marriage_crisis": ["family_blessing", "jesus_comforting", "people_praying"],
+    "silent_depression": ["jesus_comforting", "jesus_healing", "people_praying"],
+    "spiritual_warfare": ["lion_judah", "break_chains", "holy_cross"],
+    "psalm_91_shield": ["lion_judah", "jesus_comforting", "holy_cross"],
+    "psalm_23_valley": ["jesus_praying", "jesus_comforting", "storm_rescue"],
+    "lion_of_judah": ["lion_judah", "break_chains", "holy_cross"],
+    "exhausted_parent": ["family_blessing", "jesus_comforting", "people_praying"],
+    "break_chains": ["break_chains", "lion_judah", "jesus_comforting"],
+    "lonely_season": ["jesus_comforting", "jesus_praying", "holy_bible"],
+    "unexpected_doors": ["break_chains", "jesus_comforting", "lion_judah"],
+    "forgive_yourself": ["holy_cross", "jesus_comforting", "holy_bible"],
+    "school_children": ["family_blessing", "jesus_comforting", "people_praying"],
+    "restoration_double": ["break_chains", "jesus_comforting", "lion_judah"],
+    "hard_decisions": ["jesus_praying", "holy_bible", "people_praying"],
+    "peace_in_storm": ["storm_rescue", "jesus_comforting", "jesus_praying"],
+    "hidden_enemies": ["lion_judah", "holy_cross", "break_chains"],
+    "business_blessing": ["break_chains", "holy_bible", "jesus_comforting"],
+    "grief_loss": ["jesus_comforting", "holy_cross", "people_praying"],
+    "gratitude_harvest": ["holy_bible", "people_praying", "holy_cross", "family_blessing"]
 }
 
 CAMERA_STYLES = [

@@ -79,7 +79,7 @@ function bootstrapJesusStudio() {
       const res = await fetch("/api/voices");
       const voices = await res.json();
       voiceSelect.innerHTML = voices
-        .map(v => `<option value="${v.key}" ${v.key === "christopher" ? "selected" : ""}>${v.name}</option>`)
+        .map(v => `<option value="${v.key}" ${v.key === "adam" || v.key === "christopher" ? "selected" : ""}>${v.name}</option>`)
         .join("");
     } catch (e) {
       console.error("Error al cargar voces:", e);
@@ -653,12 +653,12 @@ function bootstrapJesusStudio() {
       });
       fxCtx.shadowBlur = 0;
     } else if (effect === "holy_fire") {
-      // Fuego del Espíritu Santo (Chispas rubí, ámbar y oro)
+      // Fuego y Unción del Espíritu Santo (Chispas ámbar sagrado, dorado y resplandor cálido)
       particles.forEach(p => {
-        p.y -= p.speedY * 1.6;
-        p.x += p.speedX * 1.2;
-        p.pulseVal += p.pulseSpeed * 1.5;
-        const currentAlpha = p.alpha * (0.7 + 0.3 * Math.sin(p.pulseVal));
+        p.y -= p.speedY * 1.4;
+        p.x += p.speedX * 0.8;
+        p.pulseVal += p.pulseSpeed * 1.3;
+        const currentAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulseVal));
 
         if (p.y < -10) {
           p.y = h + 10;
@@ -667,9 +667,55 @@ function bootstrapJesusStudio() {
 
         fxCtx.beginPath();
         fxCtx.arc(p.x, p.y, p.radius * 0.9, 0, Math.PI * 2);
-        fxCtx.fillStyle = p.radius > 2.5 ? `rgba(255, 60, 20, ${currentAlpha})` : `rgba(255, 190, 0, ${currentAlpha})`;
-        fxCtx.shadowColor = "#ff4500";
+        fxCtx.fillStyle = p.radius > 2.5 ? `rgba(255, 175, 20, ${currentAlpha})` : `rgba(255, 220, 70, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ffb700";
+        fxCtx.shadowBlur = 10;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "celestial_bloom") {
+      // Resplandor de Gloria (Bloom Celestial suave y aura angelical)
+      const time = Date.now() * 0.0015;
+      const pulse = 0.12 + 0.05 * Math.sin(time);
+      const gradient = fxCtx.createRadialGradient(w / 2, h * 0.35, 10, w / 2, h * 0.35, w * 0.8);
+      gradient.addColorStop(0, `rgba(255, 255, 240, ${pulse * 1.2})`);
+      gradient.addColorStop(0.6, `rgba(255, 235, 180, ${pulse * 0.5})`);
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.y -= p.speedY * 0.5;
+        p.pulseVal += p.pulseSpeed;
+        const currentAlpha = p.alpha * 0.6;
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius * 1.1, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 255, 255, ${currentAlpha})`;
+        fxCtx.shadowColor = "#fff8db";
         fxCtx.shadowBlur = 12;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "dawn_hope") {
+      // Amanecer de Esperanza (Gradiente de alba con rayos suaves)
+      const gradient = fxCtx.createLinearGradient(0, 0, 0, h);
+      gradient.addColorStop(0, "rgba(255, 215, 140, 0.14)");
+      gradient.addColorStop(0.5, "rgba(255, 180, 100, 0.08)");
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0.02)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.y -= p.speedY * 0.7;
+        p.pulseVal += p.pulseSpeed;
+        const currentAlpha = p.alpha * 0.65;
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 230, 150, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ffe082";
+        fxCtx.shadowBlur = 8;
         fxCtx.fill();
       });
       fxCtx.shadowBlur = 0;

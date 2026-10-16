@@ -138,10 +138,20 @@ def build_video_filter(
         fx_parts.append("eq=saturation=1.40:contrast=1.22")
         fx_parts.append("vignette=PI/3.8")
     elif effect_type == "holy_fire":
-        # Fuego del Espíritu Santo
-        fx_parts.append("colorbalance=rs=0.32:gs=-0.02:bs=-0.26:rm=0.22:gm=-0.02:bm=-0.20")
-        fx_parts.append("eq=contrast=1.34:saturation=1.45")
-        fx_parts.append("vignette=PI/3.2")
+        # Fuego y Unción del Espíritu Santo (Resplandor ámbar cálido y destellos dorados sin quemar en rojo)
+        fx_parts.append("colorbalance=rh=0.14:gh=0.06:bh=-0.16:rm=0.06:gm=0.02:bm=-0.08")
+        fx_parts.append("eq=contrast=1.18:saturation=1.12:brightness=0.03")
+        fx_parts.append("vignette=PI/3.8")
+    elif effect_type == "celestial_bloom":
+        # Aura de Gloria Celestial (Resplandor suave en las altas luces y presencia divina)
+        fx_parts.append("eq=brightness=0.07:contrast=1.15:saturation=1.16")
+        fx_parts.append("colorbalance=rh=0.10:gh=0.10:bh=0.04")
+        fx_parts.append("vignette=PI/4.0")
+    elif effect_type == "dawn_hope":
+        # Amanecer de Esperanza (Luz cálida y suave para oraciones de sanidad y mañana)
+        fx_parts.append("colorbalance=rh=0.16:gh=0.08:bh=-0.12:rm=0.08:gm=0.04:bm=-0.06")
+        fx_parts.append("eq=contrast=1.12:saturation=1.10:brightness=0.04")
+        fx_parts.append("vignette=PI/4.2")
 
     # Burn in Subtitles & Embedded Floating Particles
     fx_parts.append(f"ass='{norm_ass}'")

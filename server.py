@@ -18,7 +18,7 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, VIRAL_THEMES
-from engine.tts import synthesize_speech, get_available_voices, VOICES
+from engine.tts import synthesize_speech, get_available_voices, VOICES, LEGACY_VOICE_MAP
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, WORSHIP_TRACKS
 
@@ -145,13 +145,7 @@ def api_generate_image_prompt(req: ImagePromptRequest):
 @app.get("/api/voices")
 @app.get("/studio/api/voices")
 def list_voices():
-    return [
-        {"key": "christopher", "name": "Christopher (Solemne, Profundo y Reverente — Voz de Jesús)", "gender": "Hombre"},
-        {"key": "guy", "name": "Guy (Apasionado, Emocional y Directo)", "gender": "Hombre"},
-        {"key": "brian", "name": "Brian (Tranquilo, Cálido e Inspirador)", "gender": "Hombre"},
-        {"key": "andrew", "name": "Andrew (Moderno, Expresivo y Cercano)", "gender": "Hombre"},
-        {"key": "jenny", "name": "Jenny (Dulce, Maternal y Reconfortante)", "gender": "Mujer"}
-    ]
+    return get_available_voices()
 
 @app.get("/api/subtitle-styles")
 @app.get("/studio/api/subtitle-styles")
@@ -263,7 +257,8 @@ async def preview_audio(req: AudioPreviewRequest):
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="El texto no puede estar vacío.")
 
-    voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
+    voice_key = LEGACY_VOICE_MAP.get(req.voice_key, req.voice_key)
+    voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
     audio_id = f"preview_{uuid.uuid4().hex[:8]}.mp3"
     audio_path = os.path.join(OUTPUTS_DIR, audio_id)
 
@@ -287,7 +282,8 @@ async def api_render_video(req: RenderRequest):
 
     try:
         # 1. Synthesize TTS audio
-        voice_info = VOICES.get(req.voice_key, VOICES["christopher"])
+        voice_key = LEGACY_VOICE_MAP.get(req.voice_key, req.voice_key)
+        voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
         cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
 
         # 2. Generate ASS subtitles & Embedded Particles

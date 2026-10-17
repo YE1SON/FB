@@ -40,14 +40,6 @@ def get_audio_duration(audio_path: str) -> float:
     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
     return float(res.stdout.strip())
 
-def _build_audio_filter(audio_path: str, music_file: str, music_volume: float, duration: float) -> str:
-    fade_out_start = max(0.0, duration - 2.0)
-    return (
-        f"[1:a]volume=1.0[voice];"
-        f"[2:a]volume={music_volume:.2f},afade=t=out:st={fade_out_start:.2f}:d=2.0[bgm];"
-        f"[voice][bgm]amix=inputs=2:duration=first:dropout_transition=2[a]"
-    )
-
 def _resolve_music_file(music_track: str):
     if music_track and music_track != "none":
         candidate = os.path.join(AUDIO_DIR, f"{music_track}.mp3")
@@ -55,117 +47,95 @@ def _resolve_music_file(music_track: str):
             return candidate
     return None
 
-def build_video_filter(
+def build_3scene_video_filter(
     w: int, h: int,
     aspect_ratio: str,
     effect_type: str,
-    camera_motion: str,
-    total_frames: int,
     norm_ass: str,
     duration: float,
-    fps: int = 30,
-    has_two_images: bool = False,
-    split_time: float = 0.0
+    fps: int = 30
 ) -> str:
     """
-    Builds an optimized, high-performance FFmpeg filter graph:
-    1. Continuous Camera Motion or Dual-Scene Crossfade (xfade) between Scene 1 and Scene 2.
-    2. Smart Framing: For 1:1 or 16:9 on vertical reels, blurred background preserves full image.
-    3. Noticeable Visual Effects: Color-balanced shaders for instant visible impact.
-    4. Burned-in ASS subtitles and floating particle elements.
+    Pipeline de Composición de 3 Escenas Dinámicas con Flash-Focus Cinético:
+    - Escena 1 (Gancho): 0.0s a 3.2s con Flash-Focus inicial (desenfoque gaussiano
+      disipándose en 0.35s + pulso de brillo dorado en 0.40s) y Zoom-In centrado.
+    - Transición 1 (3.2s): Disolución rápida (xfade 0.35s, offset 2.85s).
+    - Escena 2 (Punto de Inflexión / Intercesión): 3.2s a D * 0.62 con cinemática alternada.
+    - Transición 2: Disolución suave (xfade 0.60s, offset (D*0.62)-0.60s).
+    - Escena 3 (Paz / Victoria / Promesa): D * 0.62 al final con Zoom-In suave continuo.
+    - Etalonaje de color + Subtítulos SSA/ASS con Doble Insignia Superior.
     """
     filters = []
 
-    if has_two_images:
-        # Dual-Scene 2-Shot Reel: Scene 1 (The struggle/prayer) -> Scene 2 (Hope/deliverance)
-        tf1 = max(int((split_time + 1.0) * fps), 30)
-        tf2 = max(int((duration - split_time + 0.5) * fps), 30)
-        
-        motion_filter1 = f"[0:v]zoompan=z='1.0+(0.18*on/{tf1})':d={tf1}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[v1]"
-        motion_filter2 = f"[1:v]zoompan=z='1.16-(0.16*on/{tf2})':d={tf2}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[v2]"
-        blend_filter = f"[v1][v2]xfade=transition=fade:duration=1.0:offset={split_time:.2f}[motion]"
-        
-        filters.extend([motion_filter1, motion_filter2, blend_filter])
-    else:
-        has_motion = camera_motion and camera_motion != "none"
-        if has_motion:
-            # Single image camera motion generated smoothly across the entire video duration
-            tf = max(total_frames, 1)
-            if camera_motion == "zoom_in":
-                motion_filter = f"[0:v]zoompan=z='1.0+(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-            elif camera_motion == "zoom_out":
-                motion_filter = f"[0:v]zoompan=z='1.22-(0.22*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-            elif camera_motion == "pan_up":
-                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
-            elif camera_motion == "pan_down":
-                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(on/{tf})':s={w}x{h}:fps={fps}[motion]"
-            elif camera_motion == "pan_right":
-                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-            elif camera_motion == "pan_left":
-                motion_filter = f"[0:v]zoompan=z=1.18:d={tf}:x='(iw-(iw/zoom))*(1.0-on/{tf})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
-            elif camera_motion == "zoom_in_pan_up":
-                motion_filter = f"[0:v]zoompan=z='1.0+(0.24*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf})':s={w}x{h}:fps={fps}[motion]"
-            else:
-                motion_filter = f"[0:v]zoompan=z='1.0+(0.20*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[motion]"
+    t2 = round(max(duration * 0.62, 4.5), 2)
+    d1 = 0.35
+    d2 = 0.60
+    offset1 = round(max(3.20 - d1, 0.5), 2)
+    offset2 = round(max(t2 - d2, offset1 + 1.0), 2)
 
-            filters.append(motion_filter)
-        else:
-            # Static framing (fast scale & crop on looped input)
-            if aspect_ratio in ["1:1", "16:9"]:
-                base_setup = (
-                    f"[0:v]split=2[bg][fg];"
-                    f"[bg]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},avgblur=20,setsar=1[bgblur];"
-                    f"[fg]scale={w}:{h}:force_original_aspect_ratio=decrease,setsar=1[fgfit];"
-                    f"[bgblur][fgfit]overlay=(W-w)/2:(H-h)/2[motion]"
-                )
-            else:
-                base_setup = f"[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1[motion]"
+    tf1 = max(int((3.20 + 1.0) * fps), 30)
+    tf2 = max(int(((t2 - offset1) + 1.5) * fps), 30)
+    tf3 = max(int(((duration - offset2) + 1.5) * fps), 30)
 
-            filters.append(base_setup)
+    # 1. Escena 1: Scale/Crop + Zoom-in centrado (1.0 -> 1.08) + Flash-Focus
+    s1_filter = (
+        f"[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
+        f"zoompan=z='1.0+(0.08*on/{tf1})':d={tf1}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps},"
+        f"split=2[v1_sharp][v1_blur_in];"
+        f"[v1_blur_in]gblur=sigma=12[v1_blurred];"
+        f"[v1_sharp][v1_blurred]blend=all_expr='if(lt(T,0.35), B*(1-T/0.35)+A*(T/0.35), A)',"
+        f"eq=brightness='if(lt(t,0.40), 0.15*(1-t/0.40), 0)'[v1]"
+    )
+    filters.append(s1_filter)
 
-    # Visual Effects Grading
+    # 2. Escena 2: Scale/Crop + Cinemática alternada (Zoom-out y pan hacia arriba)
+    s2_filter = (
+        f"[1:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
+        f"zoompan=z='1.10-(0.08*on/{tf2})':d={tf2}:x='iw/2-(iw/zoom/2)':y='(ih-(ih/zoom))*(1.0-on/{tf2})':s={w}x{h}:fps={fps}[v2]"
+    )
+    filters.append(s2_filter)
+
+    # 3. Escena 3: Scale/Crop + Zoom-in continuo suave (1.0 -> 1.10)
+    s3_filter = (
+        f"[2:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
+        f"zoompan=z='1.0+(0.10*on/{tf3})':d={tf3}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}[v3]"
+    )
+    filters.append(s3_filter)
+
+    # 4. Transiciones encadenadas xfade
+    blend_filter = (
+        f"[v1][v2]xfade=transition=fade:duration={d1}:offset={offset1}[v12];"
+        f"[v12][v3]xfade=transition=fade:duration={d2}:offset={offset2}[motion]"
+    )
+    filters.append(blend_filter)
+
+    # 5. Visual Effects Grading
     fx_parts = []
     if effect_type == "cinematic_dust":
-        # Polvo de oro: tinte dorado cálido y viñeta de cine suave
         fx_parts.append("colorchannelmixer=rr=1.06:gg=1.03:bb=0.95")
         fx_parts.append("vignette=PI/3.5")
     elif effect_type == "divine_light":
-        # Rayos de Luz Celestial: aura resplandeciente, cálida y de gran impacto visual
         fx_parts.append("eq=brightness=0.09:contrast=1.30:saturation=1.35")
         fx_parts.append("colorbalance=rs=0.22:gs=0.10:bs=-0.14:rm=0.15:gm=0.08:bm=-0.10")
         fx_parts.append("vignette=PI/4")
     elif effect_type == "dramatic_grain":
-        # Grano de cine dramático 35mm Hollywood, alto contraste y sombras profundas
         fx_parts.append("noise=alls=45:allf=t+u")
         fx_parts.append("eq=contrast=1.38:saturation=0.78")
         fx_parts.append("vignette=PI/3.0")
     elif effect_type == "celestial_glow":
-        # Resplandor Celestial / Niebla de Gloria
         fx_parts.append("eq=brightness=0.12:contrast=1.22:saturation=1.25")
         fx_parts.append("colorbalance=rs=0.14:gs=0.12:bs=0.02")
         fx_parts.append("vignette=PI/4.2")
     elif effect_type == "golden_hour":
-        # Hora Dorada Sagrada
         fx_parts.append("colorbalance=rs=0.28:gs=0.14:bs=-0.22:rh=0.22:gh=0.10:bh=-0.25")
         fx_parts.append("eq=saturation=1.40:contrast=1.22")
         fx_parts.append("vignette=PI/3.8")
     elif effect_type == "holy_fire":
-        # Fuego y Unción del Espíritu Santo (Resplandor ámbar cálido y destellos dorados sin quemar en rojo)
         fx_parts.append("colorbalance=rh=0.14:gh=0.06:bh=-0.16:rm=0.06:gm=0.02:bm=-0.08")
         fx_parts.append("eq=contrast=1.18:saturation=1.12:brightness=0.03")
         fx_parts.append("vignette=PI/3.8")
-    elif effect_type == "celestial_bloom":
-        # Aura de Gloria Celestial (Resplandor suave en las altas luces y presencia divina)
-        fx_parts.append("eq=brightness=0.07:contrast=1.15:saturation=1.16")
-        fx_parts.append("colorbalance=rh=0.10:gh=0.10:bh=0.04")
-        fx_parts.append("vignette=PI/4.0")
-    elif effect_type == "dawn_hope":
-        # Amanecer de Esperanza (Luz cálida y suave para oraciones de sanidad y mañana)
-        fx_parts.append("colorbalance=rh=0.16:gh=0.08:bh=-0.12:rm=0.08:gm=0.04:bm=-0.06")
-        fx_parts.append("eq=contrast=1.12:saturation=1.10:brightness=0.04")
-        fx_parts.append("vignette=PI/4.2")
 
-    # Burn in Subtitles & Embedded Floating Particles
+    # Burn-in Subtítulos ASS
     fx_parts.append(f"ass='{norm_ass}'")
 
     fx_str = f"[motion]{','.join(fx_parts)}[v]"
@@ -184,14 +154,14 @@ def render_reel(
     music_track: str = "worship_piano_peace",
     music_volume: float = 0.20,
     fps: int = 30,
-    image_path_2: str = None
+    image_path_2: str = None,
+    image_path_3: str = None
 ) -> str:
     """
-    Renders the final vertical video using all 4 CPU cores, ultra-fast encoding,
-    and rock-solid memory management. Supports single-image Ken Burns or dual-image xfade.
+    Renderiza el Reel final utilizando el pipeline cinemático de 3 escenas,
+    Flash-Focus instantáneo en el segundo 0, y subtítulos de doble insignia.
     """
     duration = get_audio_duration(audio_path)
-    total_frames = int((duration + 0.5) * fps)
     norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
     music_file = _resolve_music_file(music_track)
 
@@ -199,32 +169,32 @@ def render_reel(
         w, h = 1080, 1080
     elif aspect_ratio == "16:9":
         w, h = 1920, 1080
-    else: # default 9:16
+    else:  # default 9:16
         w, h = 1080, 1920
 
-    has_two_images = bool(image_path_2 and os.path.exists(image_path_2))
-    split_time = round(duration * 0.45, 2) if has_two_images else 0.0
+    # Resolución y duplicación inteligente de imágenes según disponibilidad
+    img1 = image_path if (image_path and os.path.exists(image_path)) else None
+    img2 = image_path_2 if (image_path_2 and os.path.exists(image_path_2)) else None
+    img3 = image_path_3 if (image_path_3 and os.path.exists(image_path_3)) else None
 
-    video_filter = build_video_filter(
-        w, h, aspect_ratio, effect_type, camera_motion, total_frames, norm_ass, duration, fps,
-        has_two_images=has_two_images, split_time=split_time
+    if not img1:
+        raise FileNotFoundError(f"Imagen principal no encontrada: {image_path}")
+
+    if img1 and img2 and not img3:
+        img3 = img1  # Duplicar imagen 1 para escena 3 con encuadre y zoom alternativo
+    elif img1 and not img2 and not img3:
+        img2 = img1
+        img3 = img1
+
+    video_filter = build_3scene_video_filter(
+        w, h, aspect_ratio, effect_type, norm_ass, duration, fps
     )
 
     cmd = ["ffmpeg", "-y", "-threads", "4"]
-
-    if has_two_images:
-        # Two image inputs for dual-scene crossfade
-        cmd.extend(["-i", image_path, "-i", image_path_2])
-        cmd.extend(["-i", audio_path])
-        audio_input_idx = 2
-    else:
-        has_motion = camera_motion and camera_motion != "none"
-        if has_motion:
-            cmd.extend(["-i", image_path])
-        else:
-            cmd.extend(["-loop", "1", "-t", f"{duration + 0.2:.2f}", "-i", image_path])
-        cmd.extend(["-i", audio_path])
-        audio_input_idx = 1
+    # 3 entradas de video para la composición dinámica
+    cmd.extend(["-i", img1, "-i", img2, "-i", img3])
+    cmd.extend(["-i", audio_path])
+    audio_input_idx = 3
 
     if music_file:
         cmd.extend(["-i", music_file])
@@ -248,7 +218,7 @@ def render_reel(
         output_mp4_path
     ])
 
-    print(f"[Render] Ratio: {aspect_ratio}, Motion: {camera_motion}, FX: {effect_type}, 2-Shot: {has_two_images}, Dur: {duration:.2f}s")
+    print(f"[Render 3-Scene] Ratio: {aspect_ratio}, FX: {effect_type}, Dur: {duration:.2f}s")
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg rendering failed: {result.stderr[-500:]}")

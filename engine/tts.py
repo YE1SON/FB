@@ -7,6 +7,7 @@ import tempfile
 import wave
 from dataclasses import dataclass
 from typing import List, Optional
+from engine.audio import sanitize_and_trim_audio
 
 # ─── Kokoro-82M Studio + Piper TTS + Faster-Whisper Word Alignment ───────────
 # 1. Kokoro-82M: Ultra-natural human neural voices (24,000 Hz, natural breathing).
@@ -257,22 +258,8 @@ async def synthesize_speech(text: str, voice_id: str, output_path: str, rate: st
     if not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) == 0:
         raise RuntimeError("El sintetizador de voz no generó el archivo de audio WAV.")
 
-    # Convert WAV -> MP3 using ffmpeg
-    convert_cmd = [
-        "ffmpeg", "-y",
-        "-i", tmp_wav,
-        "-codec:a", "libmp3lame",
-        "-q:a", "2",
-        output_path
-    ]
-    conv_proc = await asyncio.create_subprocess_exec(
-        *convert_cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    _, conv_err = await conv_proc.communicate()
-    if conv_proc.returncode != 0:
-        raise RuntimeError(f"FFmpeg WAV a MP3 falló: {conv_err.decode(errors='replace')[:300]}")
+    # Convert WAV -> MP3 while sanitizing initial silence (>20ms under -45dB) and compressing
+    await asyncio.to_thread(sanitize_and_trim_audio, tmp_wav, output_path)
 
     try:
         if os.path.exists(tmp_wav):

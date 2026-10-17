@@ -130,6 +130,7 @@ def generate_viral_ass(
     style_key: str = "gold_highlight",
     margin_v: int = 450,
     hook_text: str = "",
+    micro_cta_text: str = "",
     animation_type: str = "pop",
     position: str = "bottom",
     effect_type: str = "cinematic_dust",
@@ -137,8 +138,10 @@ def generate_viral_ass(
     play_res_y: int = 1920
 ) -> str:
     """
-    Genera subtítulos ASS dinámicos con amplia variedad de fuentes, posiciones y animaciones.
-    Sincronización milimétrica derivada de Whisper + Piper TTS.
+    Genera subtítulos ASS dinámicos con doble insignia superior:
+    1. Insignia 1: Cartel de Título Emocional (0.0s a 3.2s)
+    2. Insignia 2: Píldora de Micro-CTA (3.4s a 7.8s)
+    Ambas ancladas en \\an8 superior para no colisionar con los subtítulos principales.
     """
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["gold_highlight"])
     font = style_cfg["font"]
@@ -166,13 +169,15 @@ def generate_viral_ass(
         alignment = 2  # Bottom-center
         margin_v_calc = margin_v
 
-    # HookBadge: Cartel de alerta superior (Roboto Black / Fondo oscuro con resalte dorado, SIEMPRE arriba)
-    hook_style_line = ""
-    if hook_text:
-        hook_fontsize = 60 if play_res_y > 1080 else 46
-        hook_margin_v = 160 if play_res_y > 1080 else (75 if play_res_x == play_res_y else 55)
-        # Alignment = 8 (Top-Center estricto, nunca interfiere con subtítulos en centro o fondo)
-        hook_style_line = f"\nStyle: HookBadge,Roboto Black,{hook_fontsize},&H00FFFFFF&,&H0000D7FF&,&H00000000&,&HA0121218&,-1,0,0,0,100,100,2,0,3,8,0,8,40,40,{hook_margin_v},1"
+    # Margen vertical superior seguro para las dos insignias
+    hook_margin_v = 95 if play_res_y > 1080 else (60 if play_res_x == play_res_y else 45)
+    hook_fontsize = 48 if play_res_y > 1080 else 38
+    cta_fontsize = 38 if play_res_y > 1080 else 30
+
+    badge_styles_block = (
+        f"\nStyle: HookBadge,Roboto Black,{hook_fontsize},&H00FFFFFF,&H000000FF,&H00000000,&HB0000000,-1,0,0,0,100,100,1,0,3,4,0,8,40,40,{hook_margin_v},1"
+        f"\nStyle: MicroCTABadge,Roboto,{cta_fontsize},&H00E0E0E0,&H000000FF,&H00000000,&HC0000000,1,0,0,0,100,100,1,0,3,3,0,8,40,40,{hook_margin_v},1"
+    )
 
     # Style para partículas cinemáticas
     particle_style_line = f"\nStyle: FXParticle,Arial,32,&H00D7FF&,&H00D7FF&,&H00D7FF&,&H000000&,1,0,0,0,100,100,0,0,1,0,0,5,10,10,10,1"
@@ -186,7 +191,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},{alignment},40,40,{margin_v_calc},1{hook_style_line}{particle_style_line}
+Style: ViralMain,{font},{fontsize},{primary},&H0000FFFF&,{outline},{back_color},-1,0,0,0,100,100,2,0,{border_style},{outline_w},{shadow_w},{alignment},40,40,{margin_v_calc},1{badge_styles_block}{particle_style_line}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -240,13 +245,23 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 f"Dialogue: 1,{s_str},{e_str},FXParticle,,0,0,0,,{{\\an5\\move({x1},{y1},{x2},{y2})\\1c&H{alpha}{color}&\\3c&H{alpha}{color}&\\blur{blur}\\fad(400,400)\\fs{size}}}{char}"
             )
 
-    # 2. Hook Visual Inicial (Pattern Interrupt en el segundo 0 a 2.8 - SIEMPRE ARRIBA \an8)
+    # 2. Doble Insignia Superior (Pattern Interrupts en \an8 sin solapamiento)
+    # 2.1. Insignia 1: Cartel de Título Emocional (0.0s a 3.2s)
     if hook_text:
-        # Limpiar emojis y glifos especiales para libass (evita '??' o fallbacks rotos en Linux)
         clean_hook = re.sub(r'[^\x20-\x7E\u00A0-\u00FF]+', '', hook_text).strip().upper()
         clean_hook = re.sub(r'^[^\w]+', '', clean_hook).strip()
+        words = clean_hook.split()
+        if len(words) > 5:
+            clean_hook = " ".join(words[:5])
         if clean_hook:
-            events.append(f"Dialogue: 3,0:00:00.00,0:00:02.80,HookBadge,,0,0,0,,{{\\an8\\fad(60,350)\\fscx106\\fscy106\\t(0,100,\\fscx100\\fscy100)}}{clean_hook}")
+            events.append(f"Dialogue: 3,0:00:00.00,0:00:03.20,HookBadge,,0,0,0,,{{\\an8\\fad(60,200)\\fscx104\\fscy104\\t(0,100,\\fscx100\\fscy100)}}{clean_hook}")
+
+    # 2.2. Insignia 2: Píldora de Micro-CTA (3.4s a 7.8s con Fade-in suave)
+    if micro_cta_text:
+        clean_cta = re.sub(r'[^\x20-\x7E\u00A0-\u00FF]+', '', micro_cta_text).strip()
+        clean_cta = re.sub(r'^[^\w]+', '', clean_cta).strip()
+        if clean_cta:
+            events.append(f"Dialogue: 3,0:00:03.40,0:00:07.80,MicroCTABadge,,0,0,0,,{{\\an8\\fad(200,200)}}{clean_cta}")
 
     # 3. Subtítulos Sincronizados Milimétricamente
     # Definición de animación según selección del usuario

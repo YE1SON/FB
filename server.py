@@ -21,13 +21,16 @@ from engine.scripts import generate_script, get_themes_list, generate_image_prom
 from engine.tts import synthesize_speech, get_available_voices, VOICES, LEGACY_VOICE_MAP
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, WORSHIP_TRACKS
+from engine.image_cards import create_prayer_card_4_5
 
 ASSETS_DIR = os.path.join(BASE_DIR, "assets", "images")
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
+CARDS_DIR = os.path.join(OUTPUTS_DIR, "cards")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
 os.makedirs(ASSETS_DIR, exist_ok=True)
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
+os.makedirs(CARDS_DIR, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,9 +45,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static and assets folders
+# Mount static, assets and cards output folders
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
+app.mount("/outputs/cards", StaticFiles(directory=CARDS_DIR), name="outputs_cards")
+app.mount("/output/cards", StaticFiles(directory=CARDS_DIR), name="output_cards")
 app.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
 
 IMAGE_METADATA = {
@@ -83,6 +88,7 @@ class RenderRequest(BaseModel):
     rate: str = "+0%"
     image_name: str = "jesus_healing_miracle.jpg"
     image_name_2: Optional[str] = None
+    image_name_3: Optional[str] = None
     subtitle_style: str = "gold_highlight"
     subtitle_size: str = "normal"
     subtitle_animation: str = "pop"
@@ -93,6 +99,13 @@ class RenderRequest(BaseModel):
     effect_type: str = "cinematic_dust"
     camera_motion: str = "none"
     hook_text: str = ""
+    micro_cta_text: Optional[str] = ""
+
+class ImageCardRequest(BaseModel):
+    background_image_path: str
+    title: str
+    prayer_text: str
+    verse_footer: str = ""
 
 
 # ─── Worship Tracks ──────────────────────────────────────────────────────────
@@ -303,6 +316,7 @@ async def api_render_video(req: RenderRequest):
             style_key=req.subtitle_style,
             margin_v=margin_v,
             hook_text=req.hook_text,
+            micro_cta_text=req.micro_cta_text or "",
             animation_type=req.subtitle_animation,
             position=req.subtitle_position,
             effect_type=req.effect_type,
@@ -310,13 +324,19 @@ async def api_render_video(req: RenderRequest):
             play_res_y=play_h
         )
 
-        # 3. Render video (Micro-Motion Engine with smart fit, camera choice & dual scene)
+        # 3. Render video (3-Scene Dynamic Pipeline with Flash-Focus)
         image_file = _resolve_image(req.image_name)
         image_file_2 = None
         if req.image_name_2 and req.image_name_2 not in ["none", ""]:
             cand2 = os.path.join(ASSETS_DIR, os.path.basename(req.image_name_2))
             if os.path.exists(cand2):
                 image_file_2 = cand2
+
+        image_file_3 = None
+        if req.image_name_3 and req.image_name_3 not in ["none", ""]:
+            cand3 = os.path.join(ASSETS_DIR, os.path.basename(req.image_name_3))
+            if os.path.exists(cand3):
+                image_file_3 = cand3
 
         render_reel(
             image_file, audio_file, ass_file, output_video,
@@ -325,7 +345,8 @@ async def api_render_video(req: RenderRequest):
             camera_motion=req.camera_motion,
             music_track=req.music_track,
             music_volume=req.music_volume,
-            image_path_2=image_file_2
+            image_path_2=image_file_2,
+            image_path_3=image_file_3
         )
 
     except HTTPException:
@@ -383,6 +404,33 @@ MAGNETIC_COMMENTS = [
 def api_magnetic_comments():
     return MAGNETIC_COMMENTS
 
+@app.post("/api/render-image-card")
+@app.post("/studio/api/render-image-card")
+async def api_render_image_card(req: ImageCardRequest):
+    try:
+        card_id = str(uuid.uuid4())[:8]
+        out_filename = f"card_{card_id}.jpg"
+        out_path = os.path.join(CARDS_DIR, out_filename)
+
+        bg_path = _resolve_image(req.background_image_path)
+
+        create_prayer_card_4_5(
+            background_image_path=bg_path,
+            title=req.title,
+            prayer_text=req.prayer_text,
+            verse_footer=req.verse_footer,
+            output_path=out_path
+        )
+        return {
+            "success": True,
+            "card_url": f"/outputs/cards/{out_filename}",
+            "filename": out_filename
+        }
+    except Exception as e:
+        import traceback
+        print(f"[CARD ERROR]: {traceback.format_exc()}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/daily-batch")
 @app.get("/studio/api/daily-batch")
 def api_daily_batch():
@@ -390,25 +438,31 @@ def api_daily_batch():
         {
             "slot": "morning",
             "time_label": "🌅 Mañana (7:00 AM - 8:30 AM EST)",
-            "purpose": "Apertura de Bendición, Favor y Gratitud",
+            "purpose": "Apertura de Bendición, Favor y Sabiduría",
             "script": generate_script("morning_favor", mode="deep"),
-            "recommended_image": "jesus_praying_gethsemane.jpg",
+            "recommended_image": "jesus_holy_bible.jpg",
+            "recommended_image_2": "jesus_praying_gethsemane.jpg",
+            "recommended_image_3": "jesus_reaching_hand.jpg",
             "recommended_music": "celestial_strings_hope"
         },
         {
             "slot": "midday",
             "time_label": "☀️ Mediodía (12:30 PM - 2:00 PM EST)",
-            "purpose": "Paz Mental, Sanidad y Superación de Cargas",
+            "purpose": "Sanidad en el Cuerpo y Paz en el Hogar",
             "script": generate_script("medical_fear", mode="deep"),
             "recommended_image": "jesus_healing_miracle.jpg",
+            "recommended_image_2": "jesus_comforting_embrace.jpg",
+            "recommended_image_3": "jesus_praying_gethsemane.jpg",
             "recommended_music": "worship_piano_peace"
         },
         {
             "slot": "night",
             "time_label": "🌙 Noche (8:30 PM - 10:00 PM EST)",
-            "purpose": "Milagro Financiero, Familia y Reposo",
-            "script": generate_script("zero_balance", mode="deep"),
-            "recommended_image": "jesus_comforting_embrace.jpg",
+            "purpose": "Protección para los Hijos y Familia",
+            "script": generate_script("lost_child", mode="deep"),
+            "recommended_image": "holy_cross_calvary.jpg",
+            "recommended_image_2": "jesus_comforting_embrace.jpg",
+            "recommended_image_3": "jesus_healing_miracle.jpg",
             "recommended_music": "midnight_prayer_acoustic"
         }
     ]

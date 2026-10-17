@@ -6,7 +6,10 @@ __pycache__/
 outputs/*.mp4
 outputs/*.mp3
 outputs/*.ass
+outputs/*.jpg
+outputs/cards/*
 !outputs/.gitkeep
+!outputs/cards/.gitkeep
 
 # Virtual environment
 .venv/

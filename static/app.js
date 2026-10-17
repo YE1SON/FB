@@ -61,8 +61,11 @@ function bootstrapJesusStudio() {
   let currentScripture = "";
   let selectedImageName = "jesus_healing_miracle.jpg";
   let selectedImageName2 = null;
+  let selectedImageName3 = null;
   let currentSceneTab = 1;
+  let currentMicroCtaText = "";
 
+  const microCtaInput = document.getElementById("microCtaInput");
   const hookBadgeInput = document.getElementById("hookBadgeInput");
   const chkEnableHookBadge = document.getElementById("chkEnableHookBadge");
   const btnRerollHookBadge = document.getElementById("btnRerollHookBadge");
@@ -71,34 +74,52 @@ function bootstrapJesusStudio() {
 
   const btnTabScene1 = document.getElementById("btnTabScene1");
   const btnTabScene2 = document.getElementById("btnTabScene2");
-  const scene2StatusBanner = document.getElementById("scene2StatusBanner");
-  const scene2StatusText = document.getElementById("scene2StatusText");
+  const btnTabScene3 = document.getElementById("btnTabScene3");
+  const sceneStatusBanner = document.getElementById("sceneStatusBanner");
+  const sceneStatusText = document.getElementById("sceneStatusText");
   const btnClearScene2 = document.getElementById("btnClearScene2");
+  const btnClearScene3 = document.getElementById("btnClearScene3");
+  const btnGenerateCardFromReel = document.getElementById("btnGenerateCardFromReel");
 
   function updateSceneTabsUI() {
-    if (btnTabScene1 && btnTabScene2) {
-      if (currentSceneTab === 1) {
-        btnTabScene1.classList.add("btn-primary");
-        btnTabScene1.classList.remove("btn-outline");
-        btnTabScene2.classList.add("btn-outline");
-        btnTabScene2.classList.remove("btn-primary");
-      } else {
-        btnTabScene2.classList.add("btn-primary");
-        btnTabScene2.classList.remove("btn-outline");
-        btnTabScene1.classList.add("btn-outline");
-        btnTabScene1.classList.remove("btn-primary");
-      }
-    }
-    if (scene2StatusBanner) {
-      if (selectedImageName2) {
-        scene2StatusBanner.style.display = "block";
-        if (scene2StatusText) {
-          scene2StatusText.innerHTML = `✨ <strong>Doble Escena Activa:</strong> Escena 2 asignada. El video cambiará suavemente a mitad de duración.`;
+    const tabs = [
+      { tab: 1, btn: btnTabScene1 },
+      { tab: 2, btn: btnTabScene2 },
+      { tab: 3, btn: btnTabScene3 }
+    ];
+    tabs.forEach(t => {
+      if (t.btn) {
+        if (currentSceneTab === t.tab) {
+          t.btn.classList.add("btn-primary");
+          t.btn.classList.remove("btn-outline");
+        } else {
+          t.btn.classList.add("btn-outline");
+          t.btn.classList.remove("btn-primary");
         }
-      } else {
-        scene2StatusBanner.style.display = currentSceneTab === 2 ? "block" : "none";
-        if (scene2StatusText) {
-          scene2StatusText.innerHTML = `✨ <strong>Modo Escena 2:</strong> Toca abajo cualquier imagen para asignarla a la segunda mitad del video.`;
+      }
+    });
+
+    if (btnClearScene2) {
+      btnClearScene2.style.display = selectedImageName2 ? "inline-block" : "none";
+    }
+    if (btnClearScene3) {
+      btnClearScene3.style.display = selectedImageName3 ? "inline-block" : "none";
+    }
+
+    if (sceneStatusText) {
+      if (currentSceneTab === 1) {
+        sceneStatusText.innerHTML = `🎬 <strong>Escena 1 Activa (Apertura con Flash-Focus):</strong> Duración 0.0s a 3.2s. Selecciona abajo la foto de apertura.`;
+      } else if (currentSceneTab === 2) {
+        if (selectedImageName2) {
+          sceneStatusText.innerHTML = `✨ <strong>Escena 2 Asignada (Intercesión):</strong> Punto de inflexión desde 3.2s hasta el 62% del video con pan suave.`;
+        } else {
+          sceneStatusText.innerHTML = `✨ <strong>Escena 2 Activa (Intercesión):</strong> Selecciona abajo la foto para el punto de inflexión.`;
+        }
+      } else if (currentSceneTab === 3) {
+        if (selectedImageName3) {
+          sceneStatusText.innerHTML = `🕊️ <strong>Escena 3 Asignada (Victoria y Paz):</strong> Conclusión desde el 62% al final con zoom continuo.`;
+        } else {
+          sceneStatusText.innerHTML = `🕊️ <strong>Escena 3 Activa (Victoria y Paz):</strong> Selecciona abajo la foto para la promesa de paz.`;
         }
       }
     }
@@ -124,25 +145,46 @@ function bootstrapJesusStudio() {
     });
   }
 
+  if (btnTabScene3) {
+    btnTabScene3.addEventListener("click", () => {
+      currentSceneTab = 3;
+      updateSceneTabsUI();
+      if (selectedImageName3) {
+        stageSelectedImage.src = `/assets/images/${selectedImageName3}`;
+      }
+      loadImages();
+    });
+  }
+
   if (btnClearScene2) {
     btnClearScene2.addEventListener("click", () => {
       selectedImageName2 = null;
-      currentSceneTab = 1;
+      if (currentSceneTab === 2) currentSceneTab = 1;
       updateSceneTabsUI();
       stageSelectedImage.src = `/assets/images/${selectedImageName}`;
       loadImages();
     });
   }
 
-  // Hook Badge Presets
+  if (btnClearScene3) {
+    btnClearScene3.addEventListener("click", () => {
+      selectedImageName3 = null;
+      if (currentSceneTab === 3) currentSceneTab = 1;
+      updateSceneTabsUI();
+      stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+      loadImages();
+    });
+  }
+
+  // Hook Badge Presets (Estrictamente intercesores y de fe - Cero frases prohibidas)
   const HOOK_BADGE_PRESETS = [
-    "⚠️ WAIT... GOD HAS A MESSAGE FOR YOU",
-    "🛑 STOP SCROLLING. GOD SEES YOUR TEARS.",
-    "🙏 DO NOT SKIP: A PRAYER FOR YOUR FAMILY",
-    "⚡ HEAR THIS PROMISE BEFORE YOU SLEEP",
-    "🕊️ PEACE TO YOUR TIRED MIND RIGHT NOW",
-    "✝️ JESUS SAYS: YOUR TESTIMONY IS COMING",
-    "🔔 GOD IS TURNING YOUR SITUATION AROUND"
+    "⚡ PRAYER FOR YOUR CHILDREN TONIGHT",
+    "🙏 HEALING OVER YOUR TIRED MIND",
+    "🛡️ GOD IS BREAKING EVERY HEAVY BURDEN",
+    "🕊️ PEACE SURROUNDS YOUR HOME NOW",
+    "✝️ JESUS HEALS WHAT NO ONE SEES",
+    "🔥 THE LORD FIGHTS THIS BATTLE FOR YOU",
+    "👑 HIS MERCIES ARE RENEWED RIGHT NOW"
   ];
   let hookPresetIdx = 0;
   if (btnRerollHookBadge) {
@@ -158,7 +200,7 @@ function bootstrapJesusStudio() {
     hookBadgeInput.addEventListener("input", () => {
       if (stageHookBadge) {
         const val = hookBadgeInput.value.trim().toUpperCase();
-        stageHookBadge.textContent = val ? (val.startsWith("⚠️") || val.startsWith("🛑") || val.startsWith("🙏") ? val : `⚠️ ${val}`) : "";
+        stageHookBadge.textContent = val;
       }
     });
   }
@@ -269,11 +311,13 @@ function bootstrapJesusStudio() {
         .map(img => {
           const isScene1 = img.filename === selectedImageName;
           const isScene2 = img.filename === selectedImageName2;
-          const isSelected = (currentSceneTab === 1 && isScene1) || (currentSceneTab === 2 && isScene2);
+          const isScene3 = img.filename === selectedImageName3;
+          const isSelected = (currentSceneTab === 1 && isScene1) || (currentSceneTab === 2 && isScene2) || (currentSceneTab === 3 && isScene3);
           return `
             <div class="image-thumb ${isSelected ? "selected" : ""}" data-filename="${img.filename}">
               ${isScene1 ? `<span class="scene-badge-indicator" title="Escena 1 (Apertura)">1</span>` : ''}
-              ${isScene2 ? `<span class="scene-badge-indicator scene-2" title="Escena 2 (Victoria)">2</span>` : ''}
+              ${isScene2 ? `<span class="scene-badge-indicator scene-2" title="Escena 2 (Intercesión)">2</span>` : ''}
+              ${isScene3 ? `<span class="scene-badge-indicator scene-3" title="Escena 3 (Victoria)">3</span>` : ''}
               ${img.deletable ? `<button class="thumb-delete-btn" title="Eliminar foto de la galería" data-del="${img.filename}">🗑️</button>` : ''}
               <img src="${img.url}" alt="${img.label}">
               <div class="thumb-title">${img.label}</div>
@@ -289,13 +333,17 @@ function bootstrapJesusStudio() {
           if (currentSceneTab === 1) {
             selectedImageName = fname;
             stageSelectedImage.src = `/assets/images/${selectedImageName}`;
-          } else {
+          } else if (currentSceneTab === 2) {
             selectedImageName2 = fname;
             stageSelectedImage.src = `/assets/images/${selectedImageName2}`;
+          } else {
+            selectedImageName3 = fname;
+            stageSelectedImage.src = `/assets/images/${selectedImageName3}`;
           }
           const stageBlurBg = document.getElementById("stageBlurBg");
           if (stageBlurBg) {
-            stageBlurBg.style.backgroundImage = `url('/assets/images/${currentSceneTab === 1 ? selectedImageName : (selectedImageName2 || selectedImageName)}')`;
+            const activeImg = currentSceneTab === 1 ? selectedImageName : (currentSceneTab === 2 ? (selectedImageName2 || selectedImageName) : (selectedImageName3 || selectedImageName));
+            stageBlurBg.style.backgroundImage = `url('/assets/images/${activeImg}')`;
           }
           updateSceneTabsUI();
           loadImages();
@@ -318,6 +366,9 @@ function bootstrapJesusStudio() {
               }
               if (selectedImageName2 === fname) {
                 selectedImageName2 = null;
+              }
+              if (selectedImageName3 === fname) {
+                selectedImageName3 = null;
               }
               updateSceneTabsUI();
               await loadImages();
@@ -355,13 +406,18 @@ function bootstrapJesusStudio() {
       scriptBody.value = data.body;
       scriptCta.value = data.cta;
 
-      if (data.hook_text) {
-        currentHookText = data.hook_text;
-        if (hookBadgeInput) hookBadgeInput.value = data.hook_text;
+      const badge = data.hook_badge_text || data.hook_text;
+      if (badge) {
+        currentHookText = badge;
+        if (hookBadgeInput) hookBadgeInput.value = badge;
         if (stageHookBadge) {
-          const val = data.hook_text;
-          stageHookBadge.textContent = (val.startsWith("⚠️") || val.startsWith("🛑") || val.startsWith("🙏")) ? val : `⚠️ ${val}`;
+          stageHookBadge.textContent = badge;
         }
+      }
+
+      if (data.micro_cta_text) {
+        currentMicroCtaText = data.micro_cta_text;
+        if (microCtaInput) microCtaInput.value = data.micro_cta_text;
       }
 
       if (data.scripture) {
@@ -1120,6 +1176,7 @@ function bootstrapJesusStudio() {
           rate: rateSelect.value,
           image_name: selectedImageName,
           image_name_2: selectedImageName2 || "none",
+          image_name_3: selectedImageName3 || "none",
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
           subtitle_animation: animSelect ? animSelect.value : "pop",
@@ -1130,7 +1187,8 @@ function bootstrapJesusStudio() {
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
           effect_type: effectSelect ? effectSelect.value : "cinematic_dust",
           theme_key: themeSelect ? themeSelect.value : "",
-          hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : ""
+          hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : "",
+          micro_cta_text: microCtaInput ? microCtaInput.value.trim() : ""
         })
       });
 
@@ -1196,6 +1254,51 @@ function bootstrapJesusStudio() {
     });
   }
 
+  // 11b. Generar Tarjeta de Oración 4:5 para Facebook Feed (1080x1350)
+  if (btnGenerateCardFromReel) {
+    btnGenerateCardFromReel.addEventListener("click", async () => {
+      btnGenerateCardFromReel.disabled = true;
+      const originalText = btnGenerateCardFromReel.innerHTML;
+      btnGenerateCardFromReel.innerHTML = "⏳ Generando Tarjeta 4:5 (1080x1350)...";
+
+      try {
+        const themeOption = themeSelect && themeSelect.options[themeSelect.selectedIndex];
+        let rawTitle = themeOption ? themeOption.text : "DAILY BLESSING";
+        rawTitle = rawTitle.replace(/^[\p{Emoji}\s]+/u, '').trim().toUpperCase();
+        if (!rawTitle) rawTitle = "PRAYER OF FAITH";
+
+        const prayer = (scriptBody ? scriptBody.value.trim() : "") || (scriptHook ? scriptHook.value.trim() : "May the Lord bless you and keep you today.");
+        const verse = currentScripture || "Numbers 6:24-26";
+
+        const res = await fetch("/api/render-image-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            background_image_path: selectedImageName,
+            title: rawTitle,
+            prayer_text: prayer,
+            verse_footer: verse
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.card_url) {
+          const win = window.open(data.card_url, "_blank");
+          if (!win) {
+            alert(`¡Tarjeta 4:5 creada con éxito!\nPuedes verla y descargarla aquí: ${data.card_url}`);
+          }
+        } else {
+          throw new Error(data.error || "No se pudo crear la tarjeta de oración.");
+        }
+      } catch (err) {
+        alert("Error al generar la tarjeta de oración 4:5: " + err.message);
+      } finally {
+        btnGenerateCardFromReel.disabled = false;
+        btnGenerateCardFromReel.innerHTML = originalText;
+      }
+    });
+  }
+
   // 12. Cargar Biblioteca de Videos Recientes
   async function loadRecentOutputs() {
     try {
@@ -1249,9 +1352,14 @@ function bootstrapJesusStudio() {
               <span style="font-weight: 700; color: #ffd700; font-size: 15px;">${item.time_label}</span>
               <span style="display: block; font-size: 12px; color: #94a3b8;">${item.purpose}</span>
             </div>
-            <button type="button" class="btn btn-sm btn-gold btn-load-batch-slot" data-slot-index="${idx}" style="font-weight: 700;">
-              ⚡ Cargar en el Estudio
-            </button>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-sm btn-gold btn-load-batch-slot" data-slot-index="${idx}" style="font-weight: 700;">
+                ⚡ Cargar en el Estudio
+              </button>
+              <button type="button" class="btn btn-sm btn-outline btn-card-batch-slot" data-slot-index="${idx}" style="font-weight: 700;" title="Generar Tarjeta 4:5 para Facebook Feed">
+                🖼️ Tarjeta 4:5
+              </button>
+            </div>
           </div>
           <div style="font-size: 13px; color: #e2e8f0; margin-bottom: 6px;">
             <strong>🎣 Gancho:</strong> <em>"${item.script.hook}"</em>
@@ -1265,6 +1373,7 @@ function bootstrapJesusStudio() {
         </div>
       `).join("");
 
+      // Cargar slot en el estudio (3 escenas completas)
       document.querySelectorAll(".btn-load-batch-slot").forEach(btn => {
         btn.addEventListener("click", () => {
           const sIdx = parseInt(btn.dataset.slotIndex, 10);
@@ -1281,13 +1390,16 @@ function bootstrapJesusStudio() {
           currentPinnedComment = selectedSlot.script.pinned_comment;
           currentScripture = selectedSlot.script.scripture || "";
 
-          if (selectedSlot.script.hook_text) {
-            currentHookText = selectedSlot.script.hook_text;
-            if (hookBadgeInput) hookBadgeInput.value = selectedSlot.script.hook_text;
-            if (stageHookBadge) {
-              const val = selectedSlot.script.hook_text;
-              stageHookBadge.textContent = (val.startsWith("⚠️") || val.startsWith("🛑") || val.startsWith("🙏")) ? val : `⚠️ ${val}`;
-            }
+          const badge = selectedSlot.script.hook_badge_text || selectedSlot.script.hook_text;
+          if (badge) {
+            currentHookText = badge;
+            if (hookBadgeInput) hookBadgeInput.value = badge;
+            if (stageHookBadge) stageHookBadge.textContent = badge;
+          }
+
+          if (selectedSlot.script.micro_cta_text) {
+            currentMicroCtaText = selectedSlot.script.micro_cta_text;
+            if (microCtaInput) microCtaInput.value = selectedSlot.script.micro_cta_text;
           }
 
           if (aiImagePrompt && selectedSlot.script.image_prompt) {
@@ -1296,10 +1408,17 @@ function bootstrapJesusStudio() {
 
           if (selectedSlot.recommended_image) {
             selectedImageName = selectedSlot.recommended_image;
-            if (stageSelectedImage) stageSelectedImage.src = `/assets/images/${selectedImageName}`;
-            const stageBlurBg = document.getElementById("stageBlurBg");
-            if (stageBlurBg) stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
           }
+          if (selectedSlot.recommended_image_2) {
+            selectedImageName2 = selectedSlot.recommended_image_2;
+          }
+          if (selectedSlot.recommended_image_3) {
+            selectedImageName3 = selectedSlot.recommended_image_3;
+          }
+
+          if (stageSelectedImage) stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+          const stageBlurBg = document.getElementById("stageBlurBg");
+          if (stageBlurBg) stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
 
           if (musicSelect && selectedSlot.recommended_music) {
             musicSelect.value = selectedSlot.recommended_music;
@@ -1307,8 +1426,46 @@ function bootstrapJesusStudio() {
 
           dailyBatchModal.style.display = "none";
           showStageView();
+          updateSceneTabsUI();
           loadImages();
-          alert(`¡Reel de ${selectedSlot.time_label} cargado con éxito en el estudio! Revisa los campos y pulsa "Renderizar Reel".`);
+          alert(`¡Reel de ${selectedSlot.time_label} cargado con 3 escenas en el estudio! Revisa los campos y pulsa "Generar Reel Viral".`);
+        });
+      });
+
+      // Generar tarjeta 4:5 desde el lote diario
+      document.querySelectorAll(".btn-card-batch-slot").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const sIdx = parseInt(btn.dataset.slotIndex, 10);
+          const slot = batch[sIdx];
+          if (!slot) return;
+          btn.disabled = true;
+          const orig = btn.innerHTML;
+          btn.innerHTML = "⏳ Creando...";
+          try {
+            const rawTitle = slot.purpose ? slot.purpose.replace(/^[\p{Emoji}\s]+/u, '').trim().toUpperCase() : "PRAYER OF FAITH";
+            const res = await fetch("/api/render-image-card", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                background_image_path: slot.recommended_image || "jesus_holy_bible.jpg",
+                title: rawTitle,
+                prayer_text: slot.script.body,
+                verse_footer: slot.script.scripture || "Jeremiah 29:11"
+              })
+            });
+            const data = await res.json();
+            if (data.success && data.card_url) {
+              window.open(data.card_url, "_blank");
+            } else {
+              alert("Error: " + (data.error || "No se pudo generar la tarjeta"));
+            }
+          } catch (err) {
+            alert("Error al generar tarjeta: " + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+          }
         });
       });
     } catch (e) {

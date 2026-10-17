@@ -27,3 +27,4 @@ assets/kokoro/*.bin
 assets/voices/*.onnx
 broll_cache/
 outputs/*.wav
+ai_keys.json

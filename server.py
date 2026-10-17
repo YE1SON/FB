@@ -23,6 +23,7 @@ from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, WORSHIP_TRACKS
 from engine.image_cards import create_prayer_card_4_5
 from engine.broll import get_broll_status, get_broll_clip
+from engine.image_gen import generate_ai_scene_image, get_providers_status, save_keys, load_keys
 
 
 ASSETS_DIR = os.path.join(BASE_DIR, "assets", "images")
@@ -73,13 +74,26 @@ class ImagePromptRequest(BaseModel):
     script_text: str = ""
     custom_topic: Optional[str] = None
 
+class SaveKeysRequest(BaseModel):
+    cf_account_id: Optional[str] = None
+    cf_api_token: Optional[str] = None
+    hf_token: Optional[str] = None
+
 class GenerateAiImageRequest(BaseModel):
     prompt: str
     aspect_ratio: str = "9:16"
+    provider: str = "auto"
+    cf_account_id: Optional[str] = None
+    cf_api_token: Optional[str] = None
+    hf_token: Optional[str] = None
 
 class BatchGenerateAiImageRequest(BaseModel):
     prompts: List[str]
     aspect_ratio: str = "9:16"
+    provider: str = "auto"
+    cf_account_id: Optional[str] = None
+    cf_api_token: Optional[str] = None
+    hf_token: Optional[str] = None
 
 class AudioPreviewRequest(BaseModel):
     text: str
@@ -258,99 +272,34 @@ async def upload_image(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida", "deletable": True}
 
-def _generate_single_ai_image(prompt: str, aspect_ratio: str = "9:16", label: str = "IA Flux HD") -> dict:
-    prompt = prompt.strip()
-    if not prompt:
-        raise ValueError("El prompt no puede estar vacío.")
+# ─── Image Generation Engine (Cloudflare Workers AI & Hugging Face FLUX.1) ──
 
-    enhanced_prompt = prompt
-    if "cinematic" not in enhanced_prompt.lower() and "masterpiece" not in enhanced_prompt.lower():
-        enhanced_prompt = f"Ultra-realistic cinematic 8k portrait of {prompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus"
+@app.get("/api/image-providers")
+@app.get("/studio/api/image-providers")
+def api_image_providers():
+    return get_providers_status()
 
-    # Map aspect ratio to dimensions
-    width, height = 768, 1344
-    if aspect_ratio == "1:1":
-        width, height = 1024, 1024
-    elif aspect_ratio == "16:9":
-        width, height = 1344, 768
-
-    filename = f"custom_ai_{uuid.uuid4().hex[:8]}.jpg"
-    filepath = os.path.join(ASSETS_DIR, filename)
-
-    # Intento 1: Proveedor externo público
-    try:
-        encoded_prompt = urllib.parse.quote(enhanced_prompt)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true"
-        req_obj = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        )
-        with urllib.request.urlopen(req_obj, timeout=25) as resp:
-            content_type = resp.headers.get("Content-Type", "")
-            data = resp.read()
-            if "image" in content_type and len(data) >= 2000:
-                with open(filepath, "wb") as f:
-                    f.write(data)
-                return {
-                    "status": "success",
-                    "filename": filename,
-                    "url": f"/assets/images/{filename}",
-                    "label": label,
-                    "deletable": True
-                }
-    except Exception as ext_err:
-        print(f"[AI GENERATION NOTICE]: External API limited or unavailable ({ext_err}). Using high-fidelity library asset.")
-
-    # Intento 2 (Respaldo Seguro): Asignar escena bíblica cinematográfica de alta resolución
-    # Selecciona una imagen cinematográfica existente que coincida con el tema
-    prompt_low = prompt.lower()
-    candidate_map = [
-        (["child", "son", "daughter", "nieto", "baby", "crib"], "jesus_reaching_hand.jpg"),
-        (["protect", "family", "shield", "muro", "home", "warfare"], "holy_cross_calvary.jpg"),
-        (["night", "sleep", "anxiety", "insomnia", "peace", "rest"], "jesus_praying_gethsemane.jpg"),
-        (["heal", "body", "sick", "doctor", "fever", "pain"], "jesus_healing_miracle.jpg"),
-        (["bible", "word", "scripture", "read", "truth"], "jesus_holy_bible.jpg"),
-    ]
-    matched_img = None
-    for keywords, img_name in candidate_map:
-        if any(k in prompt_low for k in keywords):
-            p = os.path.join(ASSETS_DIR, img_name)
-            if os.path.exists(p):
-                matched_img = p
-                break
-
-    if not matched_img:
-        # Buscar cualquier imagen HD en la galería
-        lib_imgs = [
-            os.path.join(ASSETS_DIR, f) for f in os.listdir(ASSETS_DIR)
-            if f.lower().endswith((".jpg", ".jpeg", ".png")) and not f.startswith("custom_flux_")
-        ]
-        matched_img = random.choice(lib_imgs) if lib_imgs else os.path.join(ASSETS_DIR, "jesus_healing_miracle.jpg")
-
-    # Copiar con nuevo nombre para que el usuario pueda usarla de forma independiente
-    if os.path.exists(matched_img):
-        shutil.copyfile(matched_img, filepath)
-    else:
-        # Fallback de emergencia
-        img_fallback = Image.new("RGB", (width, height), (22, 28, 42))
-        img_fallback.save(filepath, "JPEG")
-
-    return {
-        "status": "success",
-        "filename": filename,
-        "url": f"/assets/images/{filename}",
-        "label": f"{label} (HD)",
-        "deletable": True,
-        "notice": "Escena bíblica HD asignada con éxito."
-    }
+@app.post("/api/save-image-keys")
+@app.post("/studio/api/save-image-keys")
+def api_save_image_keys(req: SaveKeysRequest):
+    save_keys(req.cf_account_id, req.cf_api_token, req.hf_token)
+    return {"status": "success", "providers": get_providers_status()}
 
 @app.post("/api/generate-ai-image")
 @app.post("/studio/api/generate-ai-image")
 def api_generate_ai_image(req: GenerateAiImageRequest):
     try:
-        return _generate_single_ai_image(req.prompt, req.aspect_ratio, label="IA Flux HD")
+        return generate_ai_scene_image(
+            prompt=req.prompt,
+            aspect_ratio=req.aspect_ratio,
+            label="IA FLUX.1 HD",
+            provider=req.provider,
+            cf_account_id=req.cf_account_id,
+            cf_api_token=req.cf_api_token,
+            hf_token=req.hf_token
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con Flux AI: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con FLUX AI: {str(e)}")
 
 @app.post("/api/generate-ai-image-batch")
 @app.post("/studio/api/generate-ai-image-batch")
@@ -365,7 +314,15 @@ def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
 
     def _worker(idx, prompt_text):
         lbl = labels[idx] if idx < len(labels) else f"Escena {idx+1}"
-        return _generate_single_ai_image(prompt_text, req.aspect_ratio, label=lbl)
+        return generate_ai_scene_image(
+            prompt=prompt_text,
+            aspect_ratio=req.aspect_ratio,
+            label=lbl,
+            provider=req.provider,
+            cf_account_id=req.cf_account_id,
+            cf_api_token=req.cf_api_token,
+            hf_token=req.hf_token
+        )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(prompts), 3)) as executor:
         future_to_idx = {executor.submit(_worker, i, p): i for i, p in enumerate(prompts[:3])}

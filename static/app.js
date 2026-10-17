@@ -791,33 +791,118 @@ function bootstrapJesusStudio() {
     }
   }
 
-  if (btnPuterReset) {
-    btnPuterReset.addEventListener("click", resetPuterSession);
-  }
-  if (btnSwitchAccountNow) {
-    btnSwitchAccountNow.addEventListener("click", resetPuterSession);
+  const aiImageProviderSelect = document.getElementById("aiImageProviderSelect");
+  const btnToggleAiSettings = document.getElementById("btnToggleAiSettings");
+  const btnCloseAiKeys = document.getElementById("btnCloseAiKeys");
+  const aiKeysConfigBox = document.getElementById("aiKeysConfigBox");
+  const cfAccountIdInput = document.getElementById("cfAccountIdInput");
+  const cfApiTokenInput = document.getElementById("cfApiTokenInput");
+  const hfTokenInput = document.getElementById("hfTokenInput");
+  const btnSaveAiKeys = document.getElementById("btnSaveAiKeys");
+  const aiKeysStatusText = document.getElementById("aiKeysStatusText");
+  const btnCopyPromptForExternal = document.getElementById("btnCopyPromptForExternal");
+
+  function updateAiProviderUI() {
+    if (!aiImageProviderSelect) return;
+    const prov = aiImageProviderSelect.value;
+    const puterBox = document.getElementById("puterStatusBox");
+    if (puterBox) {
+      puterBox.style.display = prov === "puter" ? "flex" : "none";
+    }
   }
 
-  // 8. Motor de Generación Cinemática de 3 Escenas con IA (DALL-E 3 / Flux HD)
+  if (aiImageProviderSelect) {
+    aiImageProviderSelect.addEventListener("change", updateAiProviderUI);
+  }
+
+  if (btnToggleAiSettings && aiKeysConfigBox) {
+    btnToggleAiSettings.addEventListener("click", () => {
+      aiKeysConfigBox.style.display = aiKeysConfigBox.style.display === "none" ? "block" : "none";
+    });
+  }
+
+  if (btnCloseAiKeys && aiKeysConfigBox) {
+    btnCloseAiKeys.addEventListener("click", () => {
+      aiKeysConfigBox.style.display = "none";
+    });
+  }
+
+  if (btnSaveAiKeys) {
+    btnSaveAiKeys.addEventListener("click", async () => {
+      btnSaveAiKeys.disabled = true;
+      btnSaveAiKeys.textContent = "⏳ Guardando...";
+      const cfAcc = cfAccountIdInput ? cfAccountIdInput.value.trim() : "";
+      const cfTok = cfApiTokenInput ? cfApiTokenInput.value.trim() : "";
+      const hfTok = hfTokenInput ? hfTokenInput.value.trim() : "";
+
+      try {
+        localStorage.setItem("cf_account_id", cfAcc);
+        localStorage.setItem("cf_api_token", cfTok);
+        localStorage.setItem("hf_token", hfTok);
+
+        await fetch("/api/save-image-keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cf_account_id: cfAcc,
+            cf_api_token: cfTok,
+            hf_token: hfTok
+          })
+        });
+
+        if (aiKeysStatusText) {
+          aiKeysStatusText.textContent = "✅ ¡Claves guardadas y activadas con éxito!";
+          setTimeout(() => { if (aiKeysStatusText) aiKeysStatusText.textContent = ""; }, 4000);
+        }
+        alert("¡Claves de IA guardadas con éxito! Ya puedes generar imágenes con Cloudflare Workers AI y Hugging Face.");
+      } catch (err) {
+        alert("Aviso al guardar claves: " + err.message);
+      } finally {
+        btnSaveAiKeys.disabled = false;
+        btnSaveAiKeys.textContent = "💾 Guardar Claves";
+      }
+    });
+  }
+
+  if (btnCopyPromptForExternal) {
+    btnCopyPromptForExternal.addEventListener("click", () => {
+      const activePrompt = (scene1PromptInput && scene1PromptInput.value.trim()) ||
+        (aiImagePrompt && aiImagePrompt.value.trim()) ||
+        "Cinematic photograph of Jesus Christ, warm sacred golden hour lighting, gentle depth of field, photorealistic 35mm photograph";
+      navigator.clipboard.writeText(activePrompt).then(() => {
+        alert("📋 ¡Prompt copiado al portapapeles!\n\nPuedes pegarlo en:\n• Bing Image Creator (bing.com/images/create)\n• Recraft (recraft.ai)\n\nLuego descarga la foto y súbela con 'Subir Mi Propia Imagen'.");
+      }).catch(() => {
+        prompt("Copia tu prompt cinematográfico aquí:", activePrompt);
+      });
+    });
+  }
+
+  // 8. Motor de Generación Cinemática de 3 Escenas con IA (Cloudflare / Hugging Face / Puter)
   async function generateSingleScene(promptText, sceneNum = 1, label = "Escena") {
     let cleanPrompt = (promptText || "").trim();
     if (!cleanPrompt) {
-      cleanPrompt = "Jesus Christ with compassionate loving eyes, gentle smile, holy warm golden light, cinematic 8k";
+      cleanPrompt = "Jesus Christ with compassionate loving eyes, gentle smile, sacred warm golden hour light, cinematic photorealistic";
     }
 
-    let enhancedPrompt = cleanPrompt;
-    if (!enhancedPrompt.toLowerCase().includes("cinematic") && !enhancedPrompt.toLowerCase().includes("masterpiece")) {
-      enhancedPrompt = `Ultra-realistic cinematic 8k portrait of ${cleanPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus`;
-    }
+    const providerSelect = document.getElementById("aiImageProviderSelect");
+    const activeProvider = providerSelect ? providerSelect.value : "cloudflare";
+
+    const cfAcc = (cfAccountIdInput ? cfAccountIdInput.value.trim() : "") || localStorage.getItem("cf_account_id") || "";
+    const cfTok = (cfApiTokenInput ? cfApiTokenInput.value.trim() : "") || localStorage.getItem("cf_api_token") || "";
+    const hfTok = (hfTokenInput ? hfTokenInput.value.trim() : "") || localStorage.getItem("hf_token") || "";
 
     let savedFilename = null;
     let savedUrl = null;
-
-    // Intento 1: DALL-E 3 a través de Puter si está disponible y autenticado
     let usedPuter = false;
-    if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2img && puter.auth && puter.auth.isSignedIn()) {
+
+    // Intento 1: Puter si el usuario lo seleccionó
+    if (activeProvider === "puter" && typeof puter !== "undefined" && puter.ai && puter.ai.txt2img && puter.auth && puter.auth.isSignedIn()) {
       try {
-        const imgElement = await puter.ai.txt2img(enhancedPrompt);
+        let enhancedPuterPrompt = cleanPrompt;
+        if (!enhancedPuterPrompt.toLowerCase().includes("cinematic")) {
+          enhancedPuterPrompt = `Ultra-realistic cinematic portrait of ${cleanPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, sharp focus`;
+        }
+        const imgElement = await puter.ai.txt2img(enhancedPuterPrompt);
         let blob;
         if (imgElement instanceof HTMLImageElement || (imgElement && imgElement.src)) {
           const response = await fetch(imgElement.src);
@@ -839,20 +924,23 @@ function bootstrapJesusStudio() {
           }
         }
       } catch (puterErr) {
-        console.warn("Fallo en Puter, recurriendo a motor Flux HD del servidor:", puterErr);
-        const pMsg = extractError(puterErr);
-        if (pMsg.toLowerCase().includes("credits") || pMsg.toLowerCase().includes("billing")) {
-          if (puterCreditAlert) puterCreditAlert.style.display = "block";
-        }
+        console.warn("Fallo en Puter, recurriendo a motor Cloudflare / Hugging Face del servidor:", puterErr);
       }
     }
 
-    // Intento 2 / Fallback: Servidor Flux HD (rápido, sin bloqueos ni requerir sesión)
+    // Intento 2: Cloudflare Workers AI o Hugging Face FLUX.1 (del servidor)
     if (!savedFilename) {
       const res = await fetch("/api/generate-ai-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: enhancedPrompt, aspect_ratio: "9:16" })
+        body: JSON.stringify({
+          prompt: cleanPrompt,
+          aspect_ratio: "9:16",
+          provider: activeProvider,
+          cf_account_id: cfAcc,
+          cf_api_token: cfTok,
+          hf_token: hfTok
+        })
       });
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
@@ -1888,6 +1976,32 @@ function bootstrapJesusStudio() {
     videoModeSelect.addEventListener("change", toggleVideoMode);
   }
 
+  async function loadAiProviderKeys() {
+    try {
+      if (cfAccountIdInput && !cfAccountIdInput.value) {
+        cfAccountIdInput.value = localStorage.getItem("cf_account_id") || "";
+      }
+      if (cfApiTokenInput && !cfApiTokenInput.value) {
+        cfApiTokenInput.value = localStorage.getItem("cf_api_token") || "";
+      }
+      if (hfTokenInput && !hfTokenInput.value) {
+        hfTokenInput.value = localStorage.getItem("hf_token") || "";
+      }
+
+      const res = await fetch("/api/image-providers");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.cloudflare && data.cloudflare.configured && cfAccountIdInput && !cfAccountIdInput.value) {
+          cfAccountIdInput.placeholder = `Configurado en servidor (${data.cloudflare.account_id_masked})`;
+        }
+        if (data.huggingface && data.huggingface.configured && hfTokenInput && !hfTokenInput.value) {
+          hfTokenInput.placeholder = `Configurado en servidor (${data.huggingface.token_masked})`;
+        }
+      }
+    } catch (_) {}
+    updateAiProviderUI();
+  }
+
   async function init() {
     await loadThemes();
     await loadVoices();
@@ -1895,6 +2009,7 @@ function bootstrapJesusStudio() {
     await loadBrollStatus();
     await loadImages();
     await loadRecentOutputs();
+    await loadAiProviderKeys();
     await triggerGenerateScript();
     updateSubtitlePreview();
     updateSubtitlePosition();

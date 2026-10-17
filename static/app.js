@@ -797,6 +797,8 @@ function bootstrapJesusStudio() {
   const aiKeysConfigBox = document.getElementById("aiKeysConfigBox");
   const cfAccountIdInput = document.getElementById("cfAccountIdInput");
   const cfApiTokenInput = document.getElementById("cfApiTokenInput");
+  const cfModelSelect = document.getElementById("cfModelSelect");
+  const aiHordeKeyInput = document.getElementById("aiHordeKeyInput");
   const hfTokenInput = document.getElementById("hfTokenInput");
   const btnSaveAiKeys = document.getElementById("btnSaveAiKeys");
   const aiKeysStatusText = document.getElementById("aiKeysStatusText");
@@ -833,11 +835,15 @@ function bootstrapJesusStudio() {
       btnSaveAiKeys.textContent = "⏳ Guardando...";
       const cfAcc = cfAccountIdInput ? cfAccountIdInput.value.trim() : "";
       const cfTok = cfApiTokenInput ? cfApiTokenInput.value.trim() : "";
+      const cfMod = cfModelSelect ? cfModelSelect.value : "@cf/leonardo/phoenix-1.0";
+      const hordeKey = aiHordeKeyInput ? aiHordeKeyInput.value.trim() : "0000000000";
       const hfTok = hfTokenInput ? hfTokenInput.value.trim() : "";
 
       try {
         localStorage.setItem("cf_account_id", cfAcc);
         localStorage.setItem("cf_api_token", cfTok);
+        localStorage.setItem("cf_model", cfMod);
+        localStorage.setItem("aihorde_api_key", hordeKey);
         localStorage.setItem("hf_token", hfTok);
 
         await fetch("/api/save-image-keys", {
@@ -846,15 +852,17 @@ function bootstrapJesusStudio() {
           body: JSON.stringify({
             cf_account_id: cfAcc,
             cf_api_token: cfTok,
+            cf_model: cfMod,
+            aihorde_api_key: hordeKey,
             hf_token: hfTok
           })
         });
 
         if (aiKeysStatusText) {
-          aiKeysStatusText.textContent = "✅ ¡Claves guardadas y activadas con éxito!";
+          aiKeysStatusText.textContent = "✅ ¡Configuración guardada y activada con éxito!";
           setTimeout(() => { if (aiKeysStatusText) aiKeysStatusText.textContent = ""; }, 4000);
         }
-        alert("¡Claves de IA guardadas con éxito! Ya puedes generar imágenes con Cloudflare Workers AI y Hugging Face.");
+        alert("¡Configuración de IA guardada con éxito! Ya puedes generar imágenes fotorrealistas con Leonardo en Cloudflare y AI Horde.");
       } catch (err) {
         alert("Aviso al guardar claves: " + err.message);
       } finally {
@@ -889,6 +897,15 @@ function bootstrapJesusStudio() {
 
     const cfAcc = (cfAccountIdInput ? cfAccountIdInput.value.trim() : "") || localStorage.getItem("cf_account_id") || "";
     const cfTok = (cfApiTokenInput ? cfApiTokenInput.value.trim() : "") || localStorage.getItem("cf_api_token") || "";
+    let cfMod = (cfModelSelect ? cfModelSelect.value : "") || localStorage.getItem("cf_model") || "@cf/leonardo/phoenix-1.0";
+    if (activeProvider === "cloudflare_lucid") {
+      cfMod = "@cf/leonardo/lucid-origin";
+    } else if (activeProvider === "cloudflare_flux") {
+      cfMod = "@cf/black-forest-labs/flux-1-schnell";
+    } else if (activeProvider === "cloudflare") {
+      cfMod = "@cf/leonardo/phoenix-1.0";
+    }
+    const hordeKey = (aiHordeKeyInput ? aiHordeKeyInput.value.trim() : "") || localStorage.getItem("aihorde_api_key") || "0000000000";
     const hfTok = (hfTokenInput ? hfTokenInput.value.trim() : "") || localStorage.getItem("hf_token") || "";
 
     let savedFilename = null;
@@ -924,11 +941,11 @@ function bootstrapJesusStudio() {
           }
         }
       } catch (puterErr) {
-        console.warn("Fallo en Puter, recurriendo a motor Cloudflare / Hugging Face del servidor:", puterErr);
+        console.warn("Fallo en Puter, recurriendo a motor Cloudflare / AI Horde del servidor:", puterErr);
       }
     }
 
-    // Intento 2: Cloudflare Workers AI o Hugging Face FLUX.1 (del servidor)
+    // Intento 2: Cloudflare Workers AI (Leonardo Phoenix / Lucid) o AI Horde (del servidor)
     if (!savedFilename) {
       const res = await fetch("/api/generate-ai-image", {
         method: "POST",
@@ -937,8 +954,10 @@ function bootstrapJesusStudio() {
           prompt: cleanPrompt,
           aspect_ratio: "9:16",
           provider: activeProvider,
+          cf_model: cfMod,
           cf_account_id: cfAcc,
           cf_api_token: cfTok,
+          aihorde_api_key: hordeKey,
           hf_token: hfTok
         })
       });
@@ -1984,6 +2003,13 @@ function bootstrapJesusStudio() {
       if (cfApiTokenInput && !cfApiTokenInput.value) {
         cfApiTokenInput.value = localStorage.getItem("cf_api_token") || "";
       }
+      if (cfModelSelect) {
+        const savedModel = localStorage.getItem("cf_model");
+        if (savedModel) cfModelSelect.value = savedModel;
+      }
+      if (aiHordeKeyInput && !aiHordeKeyInput.value) {
+        aiHordeKeyInput.value = localStorage.getItem("aihorde_api_key") || "";
+      }
       if (hfTokenInput && !hfTokenInput.value) {
         hfTokenInput.value = localStorage.getItem("hf_token") || "";
       }
@@ -1993,6 +2019,9 @@ function bootstrapJesusStudio() {
         const data = await res.json();
         if (data.cloudflare && data.cloudflare.configured && cfAccountIdInput && !cfAccountIdInput.value) {
           cfAccountIdInput.placeholder = `Configurado en servidor (${data.cloudflare.account_id_masked})`;
+        }
+        if (data.cloudflare && data.cloudflare.model && cfModelSelect && !localStorage.getItem("cf_model")) {
+          cfModelSelect.value = data.cloudflare.model;
         }
         if (data.huggingface && data.huggingface.configured && hfTokenInput && !hfTokenInput.value) {
           hfTokenInput.placeholder = `Configurado en servidor (${data.huggingface.token_masked})`;

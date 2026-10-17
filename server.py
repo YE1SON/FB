@@ -77,22 +77,28 @@ class ImagePromptRequest(BaseModel):
 class SaveKeysRequest(BaseModel):
     cf_account_id: Optional[str] = None
     cf_api_token: Optional[str] = None
+    cf_model: Optional[str] = None
+    aihorde_api_key: Optional[str] = None
     hf_token: Optional[str] = None
 
 class GenerateAiImageRequest(BaseModel):
     prompt: str
     aspect_ratio: str = "9:16"
     provider: str = "auto"
+    cf_model: Optional[str] = None
     cf_account_id: Optional[str] = None
     cf_api_token: Optional[str] = None
+    aihorde_api_key: Optional[str] = None
     hf_token: Optional[str] = None
 
 class BatchGenerateAiImageRequest(BaseModel):
     prompts: List[str]
     aspect_ratio: str = "9:16"
     provider: str = "auto"
+    cf_model: Optional[str] = None
     cf_account_id: Optional[str] = None
     cf_api_token: Optional[str] = None
+    aihorde_api_key: Optional[str] = None
     hf_token: Optional[str] = None
 
 class AudioPreviewRequest(BaseModel):
@@ -282,7 +288,13 @@ def api_image_providers():
 @app.post("/api/save-image-keys")
 @app.post("/studio/api/save-image-keys")
 def api_save_image_keys(req: SaveKeysRequest):
-    save_keys(req.cf_account_id, req.cf_api_token, req.hf_token)
+    save_keys(
+        cf_account_id=req.cf_account_id,
+        cf_api_token=req.cf_api_token,
+        cf_model=req.cf_model,
+        aihorde_api_key=req.aihorde_api_key,
+        hf_token=req.hf_token
+    )
     return {"status": "success", "providers": get_providers_status()}
 
 @app.post("/api/generate-ai-image")
@@ -292,14 +304,16 @@ def api_generate_ai_image(req: GenerateAiImageRequest):
         return generate_ai_scene_image(
             prompt=req.prompt,
             aspect_ratio=req.aspect_ratio,
-            label="IA FLUX.1 HD",
+            label="IA Cinemática HD",
             provider=req.provider,
+            cf_model=req.cf_model,
             cf_account_id=req.cf_account_id,
             cf_api_token=req.cf_api_token,
+            aihorde_api_key=req.aihorde_api_key,
             hf_token=req.hf_token
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con FLUX AI: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con IA: {str(e)}")
 
 @app.post("/api/generate-ai-image-batch")
 @app.post("/studio/api/generate-ai-image-batch")
@@ -319,8 +333,10 @@ def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
             aspect_ratio=req.aspect_ratio,
             label=lbl,
             provider=req.provider,
+            cf_model=req.cf_model,
             cf_account_id=req.cf_account_id,
             cf_api_token=req.cf_api_token,
+            aihorde_api_key=req.aihorde_api_key,
             hf_token=req.hf_token
         )
 

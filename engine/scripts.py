@@ -496,5 +496,54 @@ def generate_3scene_prompts_for_script(theme_key: Optional[str] = None, script_t
 
 
 
+def get_card_template_for_theme(theme_key: Optional[str] = None) -> dict:
+    chosen_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else "lost_child"
+    theme = VIRAL_THEMES[chosen_key]
+
+    raw_title = theme.get("hook_badge_text", "PRAYER OF FAITH")
+    body = theme.get("script_english", "")
+    # Clean prayer body of video-specific CTA sentences
+    clean_prayer = re.sub(r'Send this [^.]+\.', '', body).strip()
+    if not clean_prayer:
+        clean_prayer = body
+
+    scripture = theme.get("scripture", "Philippians 4:19 — And my God will supply every need of yours.")
+    hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianFamily"])
+
+    rec_img = "jesus_healing_miracle.jpg"
+    if "child" in chosen_key:
+        rec_img = "jesus_reaching_hand.jpg"
+    elif "family" in chosen_key or "protection" in chosen_key:
+        rec_img = "holy_cross_calvary.jpg"
+    elif "night" in chosen_key or "anxiety" in chosen_key or "sleep" in chosen_key:
+        rec_img = "jesus_praying_gethsemane.jpg"
+    elif "grace" in chosen_key or "forgive" in chosen_key or "peace" in chosen_key:
+        rec_img = "jesus_comforting_embrace.jpg"
+    elif "word" in chosen_key or "bible" in chosen_key:
+        rec_img = "jesus_holy_bible.jpg"
+
+    feed_copy = f"""✝️ {raw_title} ✝️
+
+"{clean_prayer}"
+
+📖 {scripture}
+
+🕊️ If you receive this prayer into your heart and home today, type "AMEN" and share it with someone who needs God's peace right now. 
+
+{" ".join(hashtags)}"""
+
+    return {
+        "theme_key": chosen_key,
+        "theme_title_es": theme["title"],
+        "title_english": raw_title,
+        "prayer_english": clean_prayer,
+        "scripture": scripture,
+        "recommended_image": rec_img,
+        "feed_copy": feed_copy,
+        "pinned_comment": theme.get("pinned_comment", "Drop your first name below so we can cover you in prayer! 🙏")
+    }
+
+
 def get_themes_list():
     return [{"key": k, "title": v["title"], "description": v["description"]} for k, v in VIRAL_THEMES.items()]
+

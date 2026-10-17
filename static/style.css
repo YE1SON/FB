@@ -976,6 +976,57 @@ textarea.form-control {
   color: #fbbf24;
 }
 
+/* Selector de Modo de Producción (Reels vs Tarjetas Feed) */
+.production-mode-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.prod-mode-tab {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1.5px solid #2a3346;
+  background: #141b26;
+  color: #94a3b8;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.prod-mode-tab:hover {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #3b82f6;
+}
+
+.prod-mode-tab.active {
+  background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%);
+  border-color: #60a5fa;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
+}
+
+.prod-mode-tab.prod-mode-batch {
+  flex: 0.7;
+  min-width: 180px;
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+}
+.prod-mode-tab.prod-mode-batch:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
 .preview-mode-bar {
   display: flex;
   gap: 8px;

@@ -96,6 +96,36 @@ function bootstrapJesusStudio() {
   const btnGenScene2Only = document.getElementById("btnGenScene2Only");
   const btnGenScene3Only = document.getElementById("btnGenScene3Only");
 
+  // Modo de Producción (Reels 9:16 vs Tarjetas Feed 4:5)
+  const tabModeReels = document.getElementById("tabModeReels");
+  const tabModeFeedCards = document.getElementById("tabModeFeedCards");
+  const btnOpenDailyBatchTop = document.getElementById("btnOpenDailyBatchTop");
+  const workspaceReels = document.getElementById("workspaceReels");
+  const workspaceCards = document.getElementById("workspaceCards");
+
+  // Estudio de Tarjetas de Oración 4:5
+  const cardThemeSelect = document.getElementById("cardThemeSelect");
+  const btnSyncCardTheme = document.getElementById("btnSyncCardTheme");
+  const cardTitleInput = document.getElementById("cardTitleInput");
+  const cardPrayerInput = document.getElementById("cardPrayerInput");
+  const btnRerollCardPrayer = document.getElementById("btnRerollCardPrayer");
+  const cardVerseInput = document.getElementById("cardVerseInput");
+  const chkCardWatermark = document.getElementById("chkCardWatermark");
+  const cardWatermarkInput = document.getElementById("cardWatermarkInput");
+  const cardGalleryPicker = document.getElementById("cardGalleryPicker");
+  const cardImageUpload = document.getElementById("cardImageUpload");
+  const btnRenderCard = document.getElementById("btnRenderCard");
+  const cardResultImg = document.getElementById("cardResultImg");
+  const cardRenderOverlay = document.getElementById("cardRenderOverlay");
+  const btnDownloadCard = document.getElementById("btnDownloadCard");
+  const btnCopyCardFeedPost = document.getElementById("btnCopyCardFeedPost");
+  const btnCopyCardPinnedComment = document.getElementById("btnCopyCardPinnedComment");
+  const cardFeedCopyText = document.getElementById("cardFeedCopyText");
+
+  let cardSelectedImageName = "jesus_healing_miracle.jpg";
+  let cardCurrentPinnedComment = "";
+  let cardStudioInitialized = false;
+
   function updateSceneTabsUI() {
     const tabs = [
       { tab: 1, btn: btnTabScene1 },
@@ -274,9 +304,11 @@ function bootstrapJesusStudio() {
     try {
       const res = await fetch("/api/themes");
       const themes = await res.json();
-      themeSelect.innerHTML = themes
+      const optionsHtml = themes
         .map(t => `<option value="${t.key}">${t.title}</option>`)
         .join("");
+      if (themeSelect) themeSelect.innerHTML = optionsHtml;
+      if (cardThemeSelect) cardThemeSelect.innerHTML = optionsHtml;
     } catch (e) {
       console.error("Error al cargar temas:", e);
     }
@@ -423,6 +455,29 @@ function bootstrapJesusStudio() {
           }
         });
       });
+
+      // Cargar galería en el Estudio de Tarjetas 4:5
+      if (cardGalleryPicker) {
+        cardGalleryPicker.innerHTML = images
+          .map(img => {
+            const isCardSel = img.filename === cardSelectedImageName;
+            return `
+              <div class="image-thumb ${isCardSel ? "selected" : ""}" data-card-filename="${img.filename}">
+                <img src="${img.url}" alt="${img.label}">
+                <div class="thumb-title">${img.label}</div>
+              </div>
+            `;
+          })
+          .join("");
+
+        cardGalleryPicker.querySelectorAll("[data-card-filename]").forEach(thumb => {
+          thumb.addEventListener("click", () => {
+            cardSelectedImageName = thumb.dataset.cardFilename;
+            if (cardResultImg) cardResultImg.src = `/assets/images/${cardSelectedImageName}`;
+            loadImages();
+          });
+        });
+      }
     } catch (e) {
       console.error("Error al cargar imágenes:", e);
     }
@@ -1441,48 +1496,188 @@ function bootstrapJesusStudio() {
     });
   }
 
-  // 11b. Generar Tarjeta de Oración 4:5 para Facebook Feed (1080x1350)
+  // ─── MODO DE PRODUCCIÓN (REELS 9:16 VS TARJETAS FEED 4:5) ─────────────
+  function switchProductionMode(mode) {
+    if (mode === "cards") {
+      if (tabModeReels) tabModeReels.classList.remove("active");
+      if (tabModeFeedCards) tabModeFeedCards.classList.add("active");
+      if (workspaceReels) workspaceReels.style.display = "none";
+      if (workspaceCards) workspaceCards.style.display = "grid";
+      if (!cardStudioInitialized) {
+        syncCardTemplate(cardThemeSelect ? cardThemeSelect.value : "morning_favor");
+        cardStudioInitialized = true;
+      }
+    } else {
+      if (tabModeFeedCards) tabModeFeedCards.classList.remove("active");
+      if (tabModeReels) tabModeReels.classList.add("active");
+      if (workspaceCards) workspaceCards.style.display = "none";
+      if (workspaceReels) workspaceReels.style.display = "grid";
+    }
+  }
+
+  if (tabModeReels) {
+    tabModeReels.addEventListener("click", () => switchProductionMode("reels"));
+  }
+  if (tabModeFeedCards) {
+    tabModeFeedCards.addEventListener("click", () => switchProductionMode("cards"));
+  }
+  if (btnOpenDailyBatchTop) {
+    btnOpenDailyBatchTop.addEventListener("click", openDailyBatchModal);
+  }
+
+  // ─── ESTUDIO DE TARJETAS DE ORACIÓN 4:5 (FEED HD) ──────────────────────
+  async function syncCardTemplate(themeKey, useExistingImage = false) {
+    const key = themeKey || (cardThemeSelect ? cardThemeSelect.value : "morning_favor");
+    if (btnSyncCardTheme) {
+      btnSyncCardTheme.disabled = true;
+      btnSyncCardTheme.textContent = "⏳ Sincronizando...";
+    }
+    try {
+      const res = await fetch(`/api/card-template/${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (cardTitleInput) cardTitleInput.value = data.title_english || "PRAYER OF FAITH";
+      if (cardPrayerInput) cardPrayerInput.value = data.prayer_english || "";
+      if (cardVerseInput) cardVerseInput.value = data.scripture || "";
+      if (cardFeedCopyText) cardFeedCopyText.value = data.feed_copy || "";
+      cardCurrentPinnedComment = data.pinned_comment || "";
+
+      if (!useExistingImage && data.recommended_image) {
+        cardSelectedImageName = data.recommended_image;
+        if (cardResultImg) cardResultImg.src = `/assets/images/${cardSelectedImageName}`;
+        loadImages();
+      }
+    } catch (err) {
+      console.error("Error al sincronizar plantilla de tarjeta:", err);
+    } finally {
+      if (btnSyncCardTheme) {
+        btnSyncCardTheme.disabled = false;
+        btnSyncCardTheme.textContent = "🪄 Sincronizar";
+      }
+    }
+  }
+
+  async function renderCardImage() {
+    const prayer = cardPrayerInput ? cardPrayerInput.value.trim() : "";
+    if (!prayer) {
+      alert("Por favor escribe o sincroniza una oración devocional para la tarjeta.");
+      return;
+    }
+
+    if (cardRenderOverlay) cardRenderOverlay.style.display = "flex";
+    if (btnRenderCard) {
+      btnRenderCard.disabled = true;
+      btnRenderCard.textContent = "⏳ COMPONIENDO TARJETA 4:5...";
+    }
+
+    const isWatermark = chkCardWatermark ? chkCardWatermark.checked : true;
+    const watermarkVal = isWatermark ? (cardWatermarkInput ? cardWatermarkInput.value.trim() : "@JesusDailyFaith") : "";
+
+    const payload = {
+      background_image_path: cardSelectedImageName || "jesus_healing_miracle.jpg",
+      title: cardTitleInput ? (cardTitleInput.value.trim() || "PRAYER OF FAITH") : "PRAYER OF FAITH",
+      prayer_text: prayer,
+      verse_footer: cardVerseInput ? (cardVerseInput.value.trim() || "Jeremiah 29:11") : "",
+      watermark_text: watermarkVal
+    };
+
+    try {
+      const res = await fetch("/api/render-image-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success && data.card_url) {
+        if (cardResultImg) cardResultImg.src = data.card_url + "?t=" + Date.now();
+        if (btnDownloadCard) {
+          btnDownloadCard.href = data.card_url;
+          btnDownloadCard.download = `prayer_card_4_5_${Date.now()}.jpg`;
+        }
+      } else {
+        alert("Error al renderizar tarjeta 4:5: " + (data.error || "Error desconocido"));
+      }
+    } catch (err) {
+      alert("Error de conexión al renderizar la tarjeta: " + err.message);
+    } finally {
+      if (cardRenderOverlay) cardRenderOverlay.style.display = "none";
+      if (btnRenderCard) {
+        btnRenderCard.disabled = false;
+        btnRenderCard.textContent = "✨ RENDERIZAR TARJETA DE ORACIÓN 4:5 (FEED HD)";
+      }
+    }
+  }
+
+  if (cardThemeSelect) {
+    cardThemeSelect.addEventListener("change", () => syncCardTemplate(cardThemeSelect.value));
+  }
+  if (btnSyncCardTheme) {
+    btnSyncCardTheme.addEventListener("click", () => syncCardTemplate(cardThemeSelect.value));
+  }
+  if (btnRerollCardPrayer) {
+    btnRerollCardPrayer.addEventListener("click", () => syncCardTemplate(cardThemeSelect.value, true));
+  }
+  if (btnRenderCard) {
+    btnRenderCard.addEventListener("click", renderCardImage);
+  }
+
+  if (cardImageUpload) {
+    cardImageUpload.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch("/api/upload-image", { method: "POST", body: formData });
+        const data = await res.json();
+        cardSelectedImageName = data.filename;
+        if (cardResultImg) cardResultImg.src = data.url;
+        await loadImages();
+      } catch (err) {
+        alert("Fallo al subir imagen para tarjeta: " + err.message);
+      }
+    });
+  }
+
+  if (btnCopyCardFeedPost) {
+    btnCopyCardFeedPost.addEventListener("click", () => {
+      const text = cardFeedCopyText ? cardFeedCopyText.value.trim() : "";
+      if (!text) {
+        alert("No hay copy de publicación disponible para copiar.");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btnCopyCardFeedPost.innerHTML;
+        btnCopyCardFeedPost.innerHTML = "✅ ¡Copy para Facebook Copiado!";
+        setTimeout(() => { btnCopyCardFeedPost.innerHTML = orig; }, 2500);
+      }).catch(err => alert("Error al copiar: " + err));
+    });
+  }
+
+  if (btnCopyCardPinnedComment) {
+    btnCopyCardPinnedComment.addEventListener("click", () => {
+      const text = cardCurrentPinnedComment || "Type AMEN and write the name of who you are praying for today! 🙏";
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btnCopyCardPinnedComment.innerHTML;
+        btnCopyCardPinnedComment.innerHTML = "✅ ¡Comentario Fijado Copiado!";
+        setTimeout(() => { btnCopyCardPinnedComment.innerHTML = orig; }, 2500);
+      }).catch(err => alert("Error al copiar: " + err));
+    });
+  }
+
+  // Sincronizar desde Reel hacia Tarjeta 4:5
   if (btnGenerateCardFromReel) {
     btnGenerateCardFromReel.addEventListener("click", async () => {
-      btnGenerateCardFromReel.disabled = true;
-      const originalText = btnGenerateCardFromReel.innerHTML;
-      btnGenerateCardFromReel.innerHTML = "⏳ Generando Tarjeta 4:5 (1080x1350)...";
-
-      try {
-        const themeOption = themeSelect && themeSelect.options[themeSelect.selectedIndex];
-        let rawTitle = themeOption ? themeOption.text : "DAILY BLESSING";
-        rawTitle = rawTitle.replace(/^[\p{Emoji}\s]+/u, '').trim().toUpperCase();
-        if (!rawTitle) rawTitle = "PRAYER OF FAITH";
-
-        const prayer = (scriptBody ? scriptBody.value.trim() : "") || (scriptHook ? scriptHook.value.trim() : "May the Lord bless you and keep you today.");
-        const verse = currentScripture || "Numbers 6:24-26";
-
-        const res = await fetch("/api/render-image-card", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            background_image_path: selectedImageName,
-            title: rawTitle,
-            prayer_text: prayer,
-            verse_footer: verse
-          })
-        });
-
-        const data = await res.json();
-        if (data.success && data.card_url) {
-          const win = window.open(data.card_url, "_blank");
-          if (!win) {
-            alert(`¡Tarjeta 4:5 creada con éxito!\nPuedes verla y descargarla aquí: ${data.card_url}`);
-          }
-        } else {
-          throw new Error(data.error || "No se pudo crear la tarjeta de oración.");
-        }
-      } catch (err) {
-        alert("Error al generar la tarjeta de oración 4:5: " + err.message);
-      } finally {
-        btnGenerateCardFromReel.disabled = false;
-        btnGenerateCardFromReel.innerHTML = originalText;
+      switchProductionMode("cards");
+      const currentTheme = themeSelect ? themeSelect.value : "morning_favor";
+      if (cardThemeSelect) cardThemeSelect.value = currentTheme;
+      if (selectedImageName) {
+        cardSelectedImageName = selectedImageName;
       }
+      await syncCardTemplate(currentTheme, true);
+      if (scriptBody && scriptBody.value.trim()) {
+        cardPrayerInput.value = scriptBody.value.trim();
+      }
+      renderCardImage();
     });
   }
 
@@ -1631,6 +1826,7 @@ function bootstrapJesusStudio() {
           btn.innerHTML = "⏳ Creando...";
           try {
             const rawTitle = slot.purpose ? slot.purpose.replace(/^[\p{Emoji}\s]+/u, '').trim().toUpperCase() : "PRAYER OF FAITH";
+            const watermarkVal = (chkCardWatermark && chkCardWatermark.checked) ? (cardWatermarkInput ? cardWatermarkInput.value.trim() : "@JesusDailyFaith") : "";
             const res = await fetch("/api/render-image-card", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1638,7 +1834,8 @@ function bootstrapJesusStudio() {
                 background_image_path: slot.recommended_image || "jesus_holy_bible.jpg",
                 title: rawTitle,
                 prayer_text: slot.script.body,
-                verse_footer: slot.script.scripture || "Jeremiah 29:11"
+                verse_footer: slot.script.scripture || "Jeremiah 29:11",
+                watermark_text: watermarkVal
               })
             });
             const data = await res.json();

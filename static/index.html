@@ -81,6 +81,19 @@
       </div>
     </header>
 
+    <!-- Selector de Modo de Producción (Reels 9:16 vs Tarjetas Feed 4:5) -->
+    <div class="production-mode-bar">
+      <button type="button" id="tabModeReels" class="prod-mode-tab active">
+        🎬 Creador de Reels Virales (Video 9:16)
+      </button>
+      <button type="button" id="tabModeFeedCards" class="prod-mode-tab">
+        🖼️ Creador de Tarjetas de Oración (Feed 4:5)
+      </button>
+      <button type="button" id="btnOpenDailyBatchTop" class="prod-mode-tab prod-mode-batch">
+        📅 Lote Diario (3 Videos del Día)
+      </button>
+    </div>
+
     <!-- Botón Flotante / Acceso Rápido Móvil para saltar al reproductor -->
     <div class="mobile-quick-nav">
       <a href="#previewSection" class="btn btn-outline btn-sm">
@@ -88,8 +101,8 @@
       </a>
     </div>
 
-    <!-- Área de Trabajo Principal -->
-    <main class="workspace">
+    <!-- Área de Trabajo Principal (Reels 9:16) -->
+    <main class="workspace" id="workspaceReels">
       <!-- Columna Izquierda: Controles y Creador -->
       <section class="controls-panel">
         
@@ -399,11 +412,15 @@
               </div>
 
               <!-- Mensaje de aviso de créditos con solución en 1 clic -->
-              <div id="puterCreditAlert" style="display: none; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; font-size: 12.5px; color: #fca5a5;">
-                <p style="margin: 0 0 6px 0; font-weight: 700; color: #f87171;">⚠️ Créditos de esta cuenta de Puter agotados</p>
-                <p style="margin: 0 0 10px 0; line-height: 1.4;">Para seguir generando con la máxima calidad DALL-E 3 sin pagar, haz clic abajo para cambiar a otra cuenta (con Google o cualquier otro correo) y recibirás créditos nuevos de inmediato.</p>
-                <button type="button" id="btnSwitchAccountNow" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 8px 14px; width: 100%; cursor: pointer;">
-                  🔄 Cambiar de Cuenta Ahora (Recibir Créditos Nuevos)
+              <div id="puterCreditAlert" style="display: none; background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.5); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; font-size: 12.5px; color: #fca5a5;">
+                <p style="margin: 0 0 6px 0; font-weight: 800; color: #f87171; font-size: 13.5px;">⚠️ Créditos de esta cuenta de Puter agotados</p>
+                <p style="margin: 0 0 8px 0; line-height: 1.45;">Para renovar créditos de DALL-E 3 gratis, haz clic en el botón de abajo.</p>
+                <div style="background: rgba(0, 0, 0, 0.35); border-left: 3px solid #ffd700; padding: 8px 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; color: #e2e8f0; line-height: 1.4;">
+                  💡 <strong>¿Google te pide número de teléfono al cambiar?</strong><br>
+                  En la ventana de Puter que se abrirá, <strong>NO</strong> hagas clic en "Continue with Google". Haz clic en <strong>"Sign Up"</strong> (Registrarse con Usuario, Correo y Contraseña). Puter <strong>NUNCA pide número de teléfono</strong> y te dará créditos nuevos al instante con cualquier cuenta de correo.
+                </div>
+                <button type="button" id="btnSwitchAccountNow" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 8px 14px; width: 100%; cursor: pointer; font-weight: 700;">
+                  🔄 Cambiar de Cuenta / Renovar Créditos (Sin Teléfono)
                 </button>
               </div>
 
@@ -607,6 +624,137 @@
             <h3>Biblioteca de Videos Recientes</h3>
             <div class="recent-list" id="recentList">
               <p class="text-muted">Aún no hay videos generados. ¡Crea el primero!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Área de Trabajo 2: Creador Dedicado de Tarjetas de Oración (Feed 4:5) -->
+    <main class="workspace" id="workspaceCards" style="display: none;">
+      <!-- Columna Izquierda: Configuración de la Tarjeta -->
+      <section class="controls-panel">
+        <div class="card card-step">
+          <div class="card-header">
+            <span class="step-num">🖼️</span>
+            <div>
+              <h2>Estudio de Tarjetas de Oración para Feed (4:5 HD)</h2>
+              <p>Formato vertical 1080x1350 optimizado para el Feed de Facebook. Diseñado para retener la lectura, despertar fe y disparar comentarios de "AMEN".</p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-8">
+              <label for="cardThemeSelect">Tema Bíblico o Dolor Específico (26 Categorías)</label>
+              <select id="cardThemeSelect" class="form-control">
+                <!-- Inyectado dinámicamente -->
+              </select>
+            </div>
+            <div class="form-group col-4" style="display: flex; align-items: flex-end;">
+              <button type="button" id="btnSyncCardTheme" class="btn btn-gold-outline btn-block" style="height: 42px; font-weight: 700;">
+                🪄 Sincronizar
+              </button>
+            </div>
+          </div>
+
+          <!-- Título en Inglés de la Tarjeta -->
+          <div class="form-group">
+            <label for="cardTitleInput">Título en Pantalla de la Tarjeta (En Inglés - Cinzel Dorado)</label>
+            <input type="text" id="cardTitleInput" class="form-control" style="font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 1px; color: #ffd700;" placeholder="DIVINE HEALING & PEACE OVER YOUR HOME">
+            <small class="text-muted block mt-5">Aparece centrado arriba con marco dorado. Atrae la mirada de tu audiencia en EE. UU.</small>
+          </div>
+
+          <!-- Oración Devocional en Inglés -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label for="cardPrayerInput" style="margin: 0;">Oración Devocional (En Inglés - Texto Central de Alto Impacto)</label>
+              <button type="button" id="btnRerollCardPrayer" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px;">
+                🎲 Otra Oración
+              </button>
+            </div>
+            <textarea id="cardPrayerInput" rows="5" class="form-control" style="font-family: 'Cinzel', Georgia, serif; font-size: 14.5px; line-height: 1.6;" placeholder="Infuse divine strength into every cell, reverse medical reports, and breathe supernatural life from head to toe. What doctors call impossible, You redeem."></textarea>
+            <small class="text-muted block mt-5">Redactada con autoridad bíblica y unción para que las personas la lean completa y la compartan con sus familiares.</small>
+          </div>
+
+          <!-- Versículo Bíblico al Pie -->
+          <div class="form-group">
+            <label for="cardVerseInput">Versículo Bíblico al Pie de la Imagen</label>
+            <input type="text" id="cardVerseInput" class="form-control" style="font-size: 13.5px;" placeholder="Isaiah 53:5 — By his wounds we are healed.">
+            <small class="text-muted block mt-5">Sello de autoridad bíblica posicionado con margen seguro dentro del marco.</small>
+          </div>
+
+          <!-- Configuración de Marca de Agua Sutil de la Página de Facebook -->
+          <div class="card-watermark-box" style="background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255, 215, 0, 0.4); border-radius: 10px; padding: 14px; margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="chkCardWatermark" checked style="width: 17px; height: 17px; cursor: pointer;">
+                <label for="chkCardWatermark" style="margin: 0; font-size: 13px; font-weight: 700; color: #ffd700; cursor: pointer;">
+                  🔒 Marca de Agua Sutil de tu Página de Facebook
+                </label>
+              </div>
+              <small style="font-size: 11px; color: #94a3b8;">Protección de autoría</small>
+            </div>
+            <input type="text" id="cardWatermarkInput" class="form-control" style="font-size: 13px;" placeholder="@JesusDailyFaith">
+            <small class="text-muted block mt-5" style="color: #94a3b8; font-size: 11px;">
+              💡 <strong>Diseño Elegante y Discreto:</strong> Se imprime al pie en un tono dorado suave semi-transparente. Nadie podrá robar tus imágenes en grupos de Facebook sin que se vea el nombre de tu página.
+            </small>
+          </div>
+
+          <!-- Selector de Fondo de la Tarjeta -->
+          <div class="form-group" style="margin-top: 18px;">
+            <label>Selecciona la Imagen de Fondo Sagrada</label>
+            <div class="image-gallery-picker" id="cardGalleryPicker">
+              <!-- Inyectado dinámicamente -->
+            </div>
+            <div class="upload-wrapper mt-10">
+              <label class="btn-upload" for="cardImageUpload">
+                📁 O Subir Fondo Propio desde tu Dispositivo
+              </label>
+              <input type="file" id="cardImageUpload" accept="image/*" style="display:none;">
+            </div>
+          </div>
+
+          <!-- Botón de Renderizado de Tarjeta -->
+          <button type="button" id="btnRenderCard" class="btn btn-primary btn-large btn-block mt-15" style="font-weight: 800; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35);">
+            ✨ RENDERIZAR TARJETA DE ORACIÓN 4:5 (FEED HD)
+          </button>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Vista Previa de la Tarjeta y Descarga -->
+      <section class="preview-panel" id="cardPreviewSection">
+        <div class="preview-sticky-wrap">
+          <div class="preview-header-mobile">
+            <h3>🖼️ Vista Previa Tarjeta 4:5</h3>
+          </div>
+
+          <!-- Mockup Tarjeta 4:5 -->
+          <div class="feed-card-mockup" style="width: 100%; max-width: 360px; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 0 2px #2a3346; position: relative; background: #000; margin: 0 auto;">
+            <img id="cardResultImg" src="/assets/images/jesus_healing_miracle.jpg" alt="Tarjeta de Oración 4:5" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            
+            <div id="cardRenderOverlay" style="display: none; position: absolute; inset: 0; background: rgba(11, 14, 20, 0.94); flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; backdrop-filter: blur(4px); z-index: 20;">
+              <div class="spinner"></div>
+              <h3 style="font-size: 15px; margin-bottom: 6px; color: #ffd700;">Componiendo Tarjeta 4:5...</h3>
+              <p style="font-size: 12px; color: #94a3b8;">Aplicando marco dorado, tipografía noble y marca de agua...</p>
+            </div>
+          </div>
+
+          <!-- Acciones de la Tarjeta Generada -->
+          <div class="card-actions-box" id="cardActionsBox" style="width: 100%; max-width: 360px; margin-top: 14px;">
+            <a id="btnDownloadCard" href="#" download="prayer_card_4_5.jpg" class="btn btn-success btn-large btn-block" style="font-weight: 800;">
+              ⬇️ Descargar Tarjeta JPG (1080x1350)
+            </a>
+            <button type="button" id="btnCopyCardFeedPost" class="btn btn-primary btn-block mt-10" style="font-weight: 700;">
+              📋 Copiar Publicación Completa para Facebook (Copy + Hashtags)
+            </button>
+            <button type="button" id="btnCopyCardPinnedComment" class="btn btn-gold-outline btn-block mt-10" style="font-weight: 700;">
+              📌 Copiar Comentario Fijado de la Tarjeta
+            </button>
+
+            <!-- Cuadro con el texto de la publicación copiada -->
+            <div style="margin-top: 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px;">
+              <div style="font-size: 11px; font-weight: 700; color: #ffd700; margin-bottom: 4px;">📝 Copy de Publicación para el Feed:</div>
+              <textarea id="cardFeedCopyText" rows="4" class="form-control" style="font-size: 12px; line-height: 1.4;" placeholder="El copy viral para pegar en Facebook aparecerá aquí..."></textarea>
             </div>
           </div>
         </div>

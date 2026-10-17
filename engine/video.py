@@ -53,15 +53,16 @@ def build_3scene_video_filter(
     effect_type: str,
     norm_ass: str,
     duration: float,
-    fps: int = 30
+    fps: int = 30,
+    transition_style: str = "fade"
 ) -> str:
     """
     Pipeline de Composición de 3 Escenas Dinámicas con Flash-Focus Cinético:
     - Escena 1 (Gancho): 0.0s a 3.2s con Flash-Focus inicial (desenfoque gaussiano
       disipándose en 0.35s + pulso de brillo dorado en 0.40s) y Zoom-In centrado.
-    - Transición 1 (3.2s): Disolución rápida (xfade 0.35s, offset 2.85s).
+    - Transición 1 (3.2s): Transición cinemática personalizable (xfade 0.35s, offset 2.85s).
     - Escena 2 (Punto de Inflexión / Intercesión): 3.2s a D * 0.62 con cinemática alternada.
-    - Transición 2: Disolución suave (xfade 0.60s, offset (D*0.62)-0.60s).
+    - Transición 2: Transición suave (xfade 0.60s, offset (D*0.62)-0.60s).
     - Escena 3 (Paz / Victoria / Promesa): D * 0.62 al final con Zoom-In suave continuo.
     - Etalonaje de color + Subtítulos SSA/ASS con Doble Insignia Superior.
     """
@@ -102,10 +103,16 @@ def build_3scene_video_filter(
     )
     filters.append(s3_filter)
 
-    # 4. Transiciones encadenadas xfade
+    # 4. Transiciones encadenadas xfade configurables
+    valid_transitions = {
+        "fade", "fadewhite", "circlecrop", "dissolve", "smoothup",
+        "hblur", "wipeleft", "fadeblack", "radial", "slideup"
+    }
+    trans = transition_style.lower().strip() if (transition_style and transition_style.lower().strip() in valid_transitions) else "fade"
+
     blend_filter = (
-        f"[v1][v2]xfade=transition=fade:duration={d1}:offset={offset1}[v12];"
-        f"[v12][v3]xfade=transition=fade:duration={d2}:offset={offset2}[motion]"
+        f"[v1][v2]xfade=transition={trans}:duration={d1}:offset={offset1}[v12];"
+        f"[v12][v3]xfade=transition={trans}:duration={d2}:offset={offset2}[motion]"
     )
     filters.append(blend_filter)
 
@@ -155,7 +162,8 @@ def render_reel(
     music_volume: float = 0.20,
     fps: int = 30,
     image_path_2: str = None,
-    image_path_3: str = None
+    image_path_3: str = None,
+    transition_style: str = "fade"
 ) -> str:
     """
     Renderiza el Reel final utilizando el pipeline cinemático de 3 escenas,
@@ -187,7 +195,8 @@ def render_reel(
         img3 = img1
 
     video_filter = build_3scene_video_filter(
-        w, h, aspect_ratio, effect_type, norm_ass, duration, fps
+        w, h, aspect_ratio, effect_type, norm_ass, duration, fps,
+        transition_style=transition_style
     )
 
     cmd = ["ffmpeg", "-y", "-threads", "4"]

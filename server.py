@@ -7,7 +7,7 @@ import random
 import urllib.request
 import urllib.parse
 from PIL import Image
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, VIRAL_THEMES
+from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, generate_3scene_prompts_for_script, VIRAL_THEMES
 from engine.tts import synthesize_speech, get_available_voices, VOICES, LEGACY_VOICE_MAP
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, WORSHIP_TRACKS
@@ -75,6 +75,10 @@ class GenerateAiImageRequest(BaseModel):
     prompt: str
     aspect_ratio: str = "9:16"
 
+class BatchGenerateAiImageRequest(BaseModel):
+    prompts: List[str]
+    aspect_ratio: str = "9:16"
+
 class AudioPreviewRequest(BaseModel):
     text: str
     voice_key: str = "christopher"
@@ -98,7 +102,9 @@ class RenderRequest(BaseModel):
     aspect_ratio: str = "9:16"
     effect_type: str = "cinematic_dust"
     camera_motion: str = "none"
+    transition_style: Optional[str] = "fade"
     hook_text: str = ""
+    hook_badge_style: Optional[str] = "gold_cinematic"
     micro_cta_text: Optional[str] = ""
 
 class ImageCardRequest(BaseModel):
@@ -150,8 +156,14 @@ def api_generate_script(req: ScriptRequest):
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")
 def api_generate_image_prompt(req: ImagePromptRequest):
-    prompt = generate_image_prompt_for_script(req.theme_key, req.script_text, req.custom_topic)
-    return {"prompt": prompt}
+    prompts = generate_3scene_prompts_for_script(req.theme_key, req.script_text, req.custom_topic)
+    return {
+        "prompt": prompts["scene_1_prompt"],
+        "scene_1_prompt": prompts["scene_1_prompt"],
+        "scene_2_prompt": prompts["scene_2_prompt"],
+        "scene_3_prompt": prompts["scene_3_prompt"]
+    }
+
 
 
 # ─── Voices & Subtitles ─────────────────────────────────────────────────────
@@ -214,12 +226,10 @@ async def upload_image(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida", "deletable": True}
 
-@app.post("/api/generate-ai-image")
-@app.post("/studio/api/generate-ai-image")
-def api_generate_ai_image(req: GenerateAiImageRequest):
-    prompt = req.prompt.strip()
+def _generate_single_ai_image(prompt: str, aspect_ratio: str = "9:16", label: str = "IA Flux HD") -> dict:
+    prompt = prompt.strip()
     if not prompt:
-        raise HTTPException(status_code=400, detail="El prompt no puede estar vacío.")
+        raise ValueError("El prompt no puede estar vacío.")
 
     enhanced_prompt = prompt
     if "cinematic" not in enhanced_prompt.lower() and "masterpiece" not in enhanced_prompt.lower():
@@ -227,9 +237,9 @@ def api_generate_ai_image(req: GenerateAiImageRequest):
 
     # Map aspect ratio to dimensions
     width, height = 768, 1344
-    if req.aspect_ratio == "1:1":
+    if aspect_ratio == "1:1":
         width, height = 1024, 1024
-    elif req.aspect_ratio == "16:9":
+    elif aspect_ratio == "16:9":
         width, height = 1344, 768
 
     seed = random.randint(100000, 999999)
@@ -239,28 +249,59 @@ def api_generate_ai_image(req: GenerateAiImageRequest):
     filename = f"custom_flux_{uuid.uuid4().hex[:8]}.jpg"
     filepath = os.path.join(ASSETS_DIR, filename)
 
-    try:
-        req_obj = urllib.request.Request(
-            url,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-        )
-        with urllib.request.urlopen(req_obj, timeout=60) as resp:
-            content_type = resp.headers.get("Content-Type", "")
-            data = resp.read()
-            if "image" not in content_type and len(data) < 2000:
-                raise RuntimeError(f"Respuesta no válida del proveedor: {data.decode(errors='replace')[:200]}")
-            with open(filepath, "wb") as f:
-                f.write(data)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con Flux AI: {str(e)}")
+    req_obj = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    )
+    with urllib.request.urlopen(req_obj, timeout=60) as resp:
+        content_type = resp.headers.get("Content-Type", "")
+        data = resp.read()
+        if "image" not in content_type and len(data) < 2000:
+            raise RuntimeError(f"Respuesta no válida del proveedor: {data.decode(errors='replace')[:200]}")
+        with open(filepath, "wb") as f:
+            f.write(data)
 
     return {
         "status": "success",
         "filename": filename,
         "url": f"/assets/images/{filename}",
-        "label": "IA Flux HD",
+        "label": label,
         "deletable": True
     }
+
+@app.post("/api/generate-ai-image")
+@app.post("/studio/api/generate-ai-image")
+def api_generate_ai_image(req: GenerateAiImageRequest):
+    try:
+        return _generate_single_ai_image(req.prompt, req.aspect_ratio, label="IA Flux HD")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con Flux AI: {str(e)}")
+
+@app.post("/api/generate-ai-image-batch")
+@app.post("/studio/api/generate-ai-image-batch")
+def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
+    prompts = [p.strip() for p in req.prompts if p.strip()]
+    if not prompts:
+        raise HTTPException(status_code=400, detail="Debe proporcionar al menos un prompt.")
+
+    import concurrent.futures
+    labels = ["Escena 1 (Apertura)", "Escena 2 (Intercesión)", "Escena 3 (Victoria)"]
+    results = [None] * len(prompts)
+
+    def _worker(idx, prompt_text):
+        lbl = labels[idx] if idx < len(labels) else f"Escena {idx+1}"
+        return _generate_single_ai_image(prompt_text, req.aspect_ratio, label=lbl)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(prompts), 3)) as executor:
+        future_to_idx = {executor.submit(_worker, i, p): i for i, p in enumerate(prompts[:3])}
+        for future in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                results[idx] = future.result()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Fallo al generar imagen {idx+1}: {str(e)}")
+
+    return {"status": "success", "images": results}
 
 
 # ─── Audio Preview ──────────────────────────────────────────────────────────
@@ -317,6 +358,7 @@ async def api_render_video(req: RenderRequest):
             margin_v=margin_v,
             hook_text=req.hook_text,
             micro_cta_text=req.micro_cta_text or "",
+            hook_badge_style=req.hook_badge_style or "gold_cinematic",
             animation_type=req.subtitle_animation,
             position=req.subtitle_position,
             effect_type=req.effect_type,
@@ -346,7 +388,8 @@ async def api_render_video(req: RenderRequest):
             music_track=req.music_track,
             music_volume=req.music_volume,
             image_path_2=image_file_2,
-            image_path_3=image_file_3
+            image_path_3=image_file_3,
+            transition_style=req.transition_style or "fade"
         )
 
     except HTTPException:

@@ -6,7 +6,7 @@
   <title>JesusReels Studio - Creador de Videos Cristianos para Facebook</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cinzel:wght@700;800;900&family=Montserrat:wght@700;800;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
   <script>
@@ -155,31 +155,53 @@
           </div>
 
           <!-- Gancho Visual de Emergencia (Segundos 0 a 3 — Siempre en la Parte Superior) -->
-          <div class="hook-badge-config-box" style="margin-top: 15px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 215, 0, 0.35); border-radius: 8px; padding: 12px 14px;">
+          <div class="hook-badge-config-box" style="margin-top: 15px; background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 215, 0, 0.45); border-radius: 10px; padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 13px; font-weight: 700; color: #ffd700;">⚡ Gancho Visual de Emergencia (Segundos 0 a 3)</span>
+              <span style="font-size: 13px; font-weight: 700; color: #ffd700;">⚡ Gancho Visual de Impacto (0.0s a 3.2s — Superior)</span>
               <button type="button" id="btnRerollHookBadge" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px;">
                 🎲 Otra Alerta
               </button>
             </div>
-            <input type="text" id="hookBadgeInput" class="form-control" style="font-weight: 800; font-family: 'Roboto', sans-serif; letter-spacing: 0.5px; text-transform: uppercase;" placeholder="PRAYER FOR YOUR CHILDREN">
-            <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
-              <input type="checkbox" id="chkEnableHookBadge" checked style="width: 16px; height: 16px; cursor: pointer;">
-              <label for="chkEnableHookBadge" style="margin: 0; font-size: 12px; color: #cbd5e1; cursor: pointer;">
-                Mostrar recuadro de alerta superior (Detiene el pulgar en el segundo 0 a 3.2s)
-              </label>
+            <input type="text" id="hookBadgeInput" class="form-control" style="font-weight: 900; font-family: 'Cinzel', serif; letter-spacing: 1.2px; text-transform: uppercase; font-size: 13.5px;" placeholder="PRAYER FOR YOUR CHILDREN">
+            
+            <div class="form-row" style="margin-top: 8px;">
+              <div class="form-group col-7" style="margin-bottom: 0;">
+                <label for="hookBadgeStyleSelect" style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 3px; display: block;">🎨 Diseño y Tipografía de la Insignia</label>
+                <select id="hookBadgeStyleSelect" class="form-control" style="font-size: 12px; height: 34px;">
+                  <option value="gold_cinematic" selected>🌟 Oro Sagrado Cinematográfico (Cinzel + Marco Dorado)</option>
+                  <option value="urgency_red">🔥 Urgencia Santa de Fe (Oswald + Borde Ámbar)</option>
+                  <option value="royal_navy">👑 Nube de Gloria y Majestad (Azul Profundo + Platino)</option>
+                  <option value="clean_glass">🪟 Cristal Oscuro Minimalista (Montserrat Moderno)</option>
+                </select>
+              </div>
+              <div class="form-group col-5" style="margin-bottom: 0; display: flex; align-items: center; padding-top: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="chkEnableHookBadge" checked style="width: 17px; height: 17px; cursor: pointer;">
+                  <label for="chkEnableHookBadge" style="margin: 0; font-size: 12px; color: #cbd5e1; cursor: pointer; font-weight: 600;">
+                    Mostrar Alerta
+                  </label>
+                </div>
+              </div>
             </div>
             
-            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.12);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-size: 12px; font-weight: 700; color: #93c5fd;">💬 Píldora de Micro-CTA Superior (Segundos 3.4 a 7.8)</span>
-                <small style="font-size: 11px; color: #94a3b8;">Fade-in suave sin solapamiento</small>
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.14);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="chkEnableMicroCta" checked style="width: 17px; height: 17px; cursor: pointer;">
+                  <label for="chkEnableMicroCta" style="margin: 0; font-size: 12.5px; font-weight: 700; color: #93c5fd; cursor: pointer;">
+                    💬 Píldora de Micro-CTA Superior (Segundos 3.4 a 7.8)
+                  </label>
+                </div>
+                <small style="font-size: 11px; color: #94a3b8;">Fade-in suave sin tapar subtítulos</small>
               </div>
-              <input type="text" id="microCtaInput" class="form-control" style="font-size: 13px;" placeholder="💬 Leave their first name below">
+              <input type="text" id="microCtaInput" class="form-control" style="font-size: 13px; margin-top: 4px;" placeholder="💬 Leave their first name below">
+              <small class="text-muted block mt-5" style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                💡 <strong>¿Qué es la Píldora Micro-CTA?</strong> Es un aviso flotante y discreto arriba que invita a comentar nombres en el segundo 3.4 mientras se escucha la oración. Puedes desmarcar la casilla si prefieres que no aparezca en tu video.
+              </small>
             </div>
 
             <small class="text-muted block mt-5" style="font-size: 11.5px; color: #94a3b8;">
-              📌 <strong>Diseño Seguro:</strong> Ambas insignias se anclan estrictamente en la <strong>parte superior (\an8)</strong> para que <u>nunca</u> se monten sobre tus subtítulos.
+              📌 <strong>Diseño Seguro Anti-Colisiones:</strong> Ambas insignias se anclan estrictamente en la <strong>parte superior (\an8)</strong> para que <u>nunca</u> se monten sobre tus subtítulos.
             </small>
           </div>
 
@@ -202,10 +224,10 @@
 
           <!-- Botón de Sincronización Guion -> Imagen -->
           <div class="script-to-image-sync">
-            <button id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block mt-10">
-              🪄 Sincronizar: Crear Prompt de Imagen que Coincida con este Guion
+            <button id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block mt-10" style="font-weight: 700;">
+              🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion
             </button>
-            <small class="text-muted block mt-5">Analiza el dolor y las palabras de la oración para crear la escena exacta.</small>
+            <small class="text-muted block mt-5">Analiza el dolor y las palabras de la oración para generar las 3 escenas exactas (Apertura, Intercesión y Victoria).</small>
           </div>
         </div>
 
@@ -270,7 +292,7 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group col-4">
+            <div class="form-group col-3">
               <label for="aspectRatioSelect">Formato de Video</label>
               <select id="aspectRatioSelect" class="form-control">
                 <option value="9:16" selected>📱 9:16 (Reels/Shorts)</option>
@@ -278,30 +300,43 @@
                 <option value="16:9">📺 16:9 (YouTube/TV)</option>
               </select>
             </div>
-            <div class="form-group col-4">
+            <div class="form-group col-3">
               <label for="cameraMotionSelect">Movimiento Cámara</label>
               <select id="cameraMotionSelect" class="form-control">
-                <option value="none">🔒 Fija / Estable (Sin Movimiento)</option>
-                <option value="zoom_in" selected>🔍 Acercamiento Lento (Zoom In)</option>
-                <option value="zoom_out">🔭 Alejamiento Suave (Zoom Out)</option>
-                <option value="pan_up">⬆️ Inclinación al Cielo (Pan Up)</option>
-                <option value="pan_down">⬇️ Revelación Divina (Pan Down)</option>
-                <option value="pan_right">➡️ Barrido Cinematográfico (Derecha)</option>
-                <option value="pan_left">⬅️ Barrido Inverso (Izquierda)</option>
-                <option value="zoom_in_pan_up">✨ Ascenso + Zoom Épico</option>
+                <option value="none" selected>🔒 Fija / Estable</option>
+                <option value="zoom_in">🔍 Acercamiento (Zoom In)</option>
+                <option value="zoom_out">🔭 Alejamiento (Zoom Out)</option>
+                <option value="pan_up">⬆️ Inclinación Cielo</option>
+                <option value="pan_down">⬇️ Revelación Divina</option>
+                <option value="pan_right">➡️ Barrido Derecha</option>
+                <option value="pan_left">⬅️ Barrido Izquierda</option>
+                <option value="zoom_in_pan_up">✨ Ascenso + Zoom</option>
               </select>
             </div>
-            <div class="form-group col-4">
+            <div class="form-group col-3">
+              <label for="transitionStyleSelect">Transición entre Escenas</label>
+              <select id="transitionStyleSelect" class="form-control">
+                <option value="fade" selected>🕊️ Disolución Suave (Fade)</option>
+                <option value="fadewhite">☀️ Resplandor Divino (White Flash)</option>
+                <option value="circlecrop">⭕ Foco Sagrado (Circle Crop)</option>
+                <option value="dissolve">✨ Disolución Profunda</option>
+                <option value="smoothup">⬆️ Ascenso de Esperanza (Slide Up)</option>
+                <option value="hblur">🌫️ Desenfoque de Cine (Blur)</option>
+                <option value="wipeleft">➡️ Barrido Cinemático (Wipe)</option>
+                <option value="fadeblack">🌌 Fundido Solemne a Negro</option>
+              </select>
+            </div>
+            <div class="form-group col-3">
               <label for="effectTypeSelect">Efecto Visual</label>
               <select id="effectTypeSelect" class="form-control">
-                <option value="cinematic_dust" selected>✨ Polvo de Oro (Partículas Celestiales)</option>
-                <option value="holy_fire">🔥 Fuego y Unción (Resplandor Ámbar Sagrado)</option>
-                <option value="celestial_bloom">🕊️ Resplandor de Gloria (Bloom Celestial)</option>
-                <option value="dawn_hope">🌅 Amanecer de Esperanza (Luz Cálida Suave)</option>
-                <option value="divine_light">☀️ Rayos de Luz Divina (Aura Brillante)</option>
-                <option value="dramatic_grain">🎬 Grano de Cine Épico (35mm Hollywood)</option>
-                <option value="celestial_glow">✨ Niebla de Gloria (Luz Ecosistema)</option>
-                <option value="golden_hour">🌇 Hora Dorada Sagrada (Luz Cálida)</option>
+                <option value="cinematic_dust" selected>✨ Polvo de Oro (Partículas)</option>
+                <option value="holy_fire">🔥 Fuego y Unción (Ámbar)</option>
+                <option value="celestial_bloom">🕊️ Resplandor de Gloria</option>
+                <option value="dawn_hope">🌅 Amanecer de Esperanza</option>
+                <option value="divine_light">☀️ Rayos de Luz Divina</option>
+                <option value="dramatic_grain">🎬 Grano de Cine 35mm</option>
+                <option value="celestial_glow">✨ Niebla de Gloria</option>
+                <option value="golden_hour">🌇 Hora Dorada Sagrada</option>
                 <option value="none">🖼️ Limpio (Sin Efectos)</option>
               </select>
             </div>
@@ -338,12 +373,12 @@
               </div>
             </div>
 
-            <!-- Generador de Nuevas Imágenes con IA -->
-            <div class="ai-generator-box">
-              <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span>🎨 Generador de Imágenes IA — DALL-E 3 (Máxima Calidad)</span>
-                <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra escena que también coincide con tu guion">
-                  🎲 Otra Variante Visual
+            <!-- Generador Cinemático de 3 Escenas con IA (1 Clic) -->
+            <div class="ai-generator-box" style="background: rgba(15, 23, 42, 0.75); border: 1.5px solid rgba(255, 215, 0, 0.4); border-radius: 12px; padding: 18px; margin-top: 15px;">
+              <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                <span style="font-size: 14px; font-weight: 800; color: #ffd700;">🎨 Generador Cinemático de 3 Escenas con IA (DALL-E 3 / Flux HD)</span>
+                <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra terna de escenas que coincidan con la oración">
+                  🎲 Otras 3 Variantes
                 </button>
               </div>
 
@@ -372,14 +407,60 @@
                 </button>
               </div>
 
-              <div class="form-group">
-                <label for="aiImagePrompt" class="sub-label">Prompt Visual Cinematográfico (IA):</label>
-                <textarea id="aiImagePrompt" rows="4" class="form-control" placeholder="Ej: Jesus Christ gently wiping away the tears of a broken person, divine golden lighting, hyper-realistic, dynamic..."></textarea>
-              </div>
-              <button id="btnGenerateAiImage" class="btn btn-secondary btn-block">
-                🎨 Crear Imagen con IA (DALL-E 3 - Alta Resolución)
+              <!-- Botón Principal 1 Clic para Crear y Asignar las 3 Escenas -->
+              <button type="button" id="btnGenerate3ScenesAi" class="btn btn-primary btn-large btn-block" style="font-weight: 800; font-size: 14.5px; letter-spacing: 0.5px; margin-bottom: 12px; padding: 12px; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35);">
+                🚀 GENERAR LAS 3 ESCENAS CON IA EN 1 CLIC (CREAR Y ASIGNAR)
               </button>
-              <small class="text-muted block mt-5">Generación en ultra alta resolución (DALL-E 3 / HD) sin marcas de agua con iluminación divina y detalles cinematográficos.</small>
+
+              <!-- Barra de Progreso de Generación de Lote -->
+              <div id="batchGenProgressBox" style="display: none; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; text-align: center;">
+                <div class="spinner" style="width: 28px; height: 28px; margin: 0 auto 8px auto; border-top-color: #10b981;"></div>
+                <div id="batchGenProgressText" style="font-size: 13px; font-weight: 700; color: #a7f3d0;">Generando Escena 1 de 3 (Apertura)...</div>
+                <div id="batchGenProgressSub" style="font-size: 11.5px; color: #6ee7b7; margin-top: 3px;">Creando toma con iluminación dorada e impacto visual...</div>
+              </div>
+
+              <!-- Prompts de las 3 Escenas -->
+              <div class="scene-prompts-grid" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                <!-- Toma 1 -->
+                <div class="scene-prompt-card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 10px 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 12px; font-weight: 700; color: #93c5fd;">🎬 Toma 1: Apertura y Gancho (0.0s a 3.2s)</span>
+                    <button type="button" id="btnGenScene1Only" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;">
+                      🎨 Crear solo Toma 1
+                    </button>
+                  </div>
+                  <textarea id="scene1PromptInput" rows="2" class="form-control" style="font-size: 11.5px; padding: 6px 10px;" placeholder="Prompt de la escena 1..."></textarea>
+                </div>
+
+                <!-- Toma 2 -->
+                <div class="scene-prompt-card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 10px 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 12px; font-weight: 700; color: #fde047;">✨ Toma 2: Intercesión y Punto de Dolor (3.2s a 10s)</span>
+                    <button type="button" id="btnGenScene2Only" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;">
+                      🎨 Crear solo Toma 2
+                    </button>
+                  </div>
+                  <textarea id="scene2PromptInput" rows="2" class="form-control" style="font-size: 11.5px; padding: 6px 10px;" placeholder="Prompt de la escena 2..."></textarea>
+                </div>
+
+                <!-- Toma 3 -->
+                <div class="scene-prompt-card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 10px 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 12px; font-weight: 700; color: #86efac;">🕊️ Toma 3: Victoria y Promesa Cumplida (10s al final)</span>
+                    <button type="button" id="btnGenScene3Only" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;">
+                      🎨 Crear solo Toma 3
+                    </button>
+                  </div>
+                  <textarea id="scene3PromptInput" rows="2" class="form-control" style="font-size: 11.5px; padding: 6px 10px;" placeholder="Prompt de la escena 3..."></textarea>
+                </div>
+              </div>
+
+              <!-- Input oculto para compatibilidad hacia atrás -->
+              <textarea id="aiImagePrompt" style="display: none;"></textarea>
+
+              <small class="text-muted block mt-10" style="font-size: 11.5px; color: #94a3b8;">
+                💡 <strong>1 Clic Automático:</strong> El generador crea las 3 tomas y las asigna automáticamente a las posiciones [1], [2] y [3] de tu Reel sin que tengas que cambiar de pestaña.
+              </small>
             </div>
 
             <div class="upload-wrapper mt-15">
@@ -477,8 +558,13 @@
                 <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
 
                 <!-- Recuadro de Alerta Superior (Hook Badge) — Siempre Arriba -->
-                <div id="stageHookBadge" class="stage-hook-badge" style="display: block;">
-                  ⚡ PRAYER FOR YOUR CHILDREN TONIGHT
+                <div id="stageHookBadge" class="stage-hook-badge hook-style-gold" style="display: block;">
+                  PRAYER FOR YOUR CHILDREN
+                </div>
+
+                <!-- Píldora de Micro-CTA Superior — Vista Previa en Vivo -->
+                <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: block;">
+                  💬 Leave their first name below
                 </div>
 
                 <div class="stage-overlay" id="stageOverlay">

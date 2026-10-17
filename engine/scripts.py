@@ -1,4 +1,5 @@
 import random
+import re
 from typing import Dict, List, Optional
 
 # =============================================================================
@@ -467,6 +468,32 @@ def generate_script(theme_key: Optional[str] = None, custom_topic: Optional[str]
         "copy_seo": copy_seo,
         "seo_caption": copy_seo
     }
+
+
+def generate_3scene_prompts_for_script(theme_key: Optional[str] = None, script_text: str = "", custom_topic: Optional[str] = None) -> Dict[str, str]:
+    """
+    Genera 3 prompts cinematográficos complementarios para el video:
+    - Escena 1: Apertura / Gancho de impacto visual (0-3.2s)
+    - Escena 2: Punto de inflexión / Intercesión / Oración ferviente (3.2s-10s)
+    - Escena 3: Victoria / Paz / Promesa divina cumplida (10s al final)
+    """
+    if theme_key and theme_key in VIRAL_THEMES and not custom_topic:
+        theme = VIRAL_THEMES[theme_key]
+        p1 = theme.get("scene_1_prompt", "")
+        p2 = theme.get("scene_2_prompt", "")
+        p3 = theme.get("scene_3_prompt", "")
+        if p1 and p2 and p3:
+            return {"scene_1_prompt": p1, "scene_2_prompt": p2, "scene_3_prompt": p3}
+
+    base_prompt = generate_image_prompt_for_script(theme_key, script_text, custom_topic)
+    clean_base = re.sub(r'--ar\s+[0-9:]+', '', base_prompt).strip()
+
+    p1 = f"{clean_base}, dramatic cinematic opening shot, emotional realism, volumetric God-rays --ar 9:16"
+    p2 = f"Jesus Christ placing loving hands in prayer and intercession, warm sacred golden glow, intimate emotional realism --ar 9:16"
+    p3 = f"Jesus Christ walking victorious in brilliant morning light, open welcoming arms, peace and divine glory, 8k --ar 9:16"
+
+    return {"scene_1_prompt": p1, "scene_2_prompt": p2, "scene_3_prompt": p3}
+
 
 
 def get_themes_list():

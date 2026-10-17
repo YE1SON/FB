@@ -247,8 +247,20 @@ textarea.form-control {
 
 .col-8 { flex: 8; }
 .col-7 { flex: 7; }
+.col-6 { flex: 6; }
 .col-5 { flex: 5; }
 .col-4 { flex: 4; }
+.col-3 { flex: 3; }
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-wrap: wrap;
+  }
+  .form-row .col-3, .form-row .col-4 {
+    flex: 1 1 calc(50% - 12px);
+    min-width: 140px;
+  }
+}
 
 /* Script Fields */
 .script-editor-boxes {
@@ -1012,15 +1024,12 @@ textarea.form-control {
   top: 18px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.92);
-  border: 1.5px solid rgba(255, 215, 0, 0.85);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 215, 0, 0.3);
   color: #ffffff;
-  font-family: 'Roboto', 'Arial Black', sans-serif;
+  font-family: 'Cinzel', serif;
   font-weight: 900;
   font-size: 11px;
-  letter-spacing: 0.5px;
-  padding: 5px 12px;
+  letter-spacing: 1.2px;
+  padding: 5px 14px;
   border-radius: 6px;
   text-align: center;
   max-width: 90%;
@@ -1031,6 +1040,84 @@ textarea.form-control {
   overflow: hidden;
   text-overflow: ellipsis;
   animation: badgePop 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+/* Variantes Estilísticas de Alta Retención */
+.stage-hook-badge.hook-style-gold,
+.stage-hook-badge.hook-style-gold_cinematic {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, rgba(20, 24, 33, 0.96) 0%, rgba(45, 36, 16, 0.96) 100%);
+  border: 1.8px solid #ffd700;
+  color: #fffdf5;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 2px 4px #000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85), 0 0 15px rgba(255, 215, 0, 0.35), inset 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.stage-hook-badge.hook-style-urgency,
+.stage-hook-badge.hook-style-urgency_red {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  background: linear-gradient(135deg, rgba(45, 10, 15, 0.96) 0%, rgba(70, 15, 20, 0.96) 100%);
+  border: 1.8px solid #f59e0b;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.9), 0 2px 4px #000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85), 0 0 15px rgba(239, 68, 68, 0.45);
+}
+
+.stage-hook-badge.hook-style-royal,
+.stage-hook-badge.hook-style-royal_navy {
+  font-family: 'Cinzel', serif;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, rgba(10, 24, 52, 0.96) 0%, rgba(18, 42, 85, 0.96) 100%);
+  border: 1.8px solid #38bdf8;
+  color: #f0f9ff;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 2px 4px #000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85), 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.stage-hook-badge.hook-style-glass,
+.stage-hook-badge.hook-style-clean_glass {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75);
+}
+
+/* Píldora de Micro-CTA Superior en Móvil */
+.stage-micro-cta-badge {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(147, 197, 253, 0.6);
+  color: #bfdbfe;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.6px;
+  padding: 3.5px 10px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 85%;
+  z-index: 14;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6), 0 0 8px rgba(59, 130, 246, 0.25);
+  animation: badgePop 0.4s ease-out;
 }
 
 @keyframes badgePop {
@@ -1042,6 +1129,21 @@ textarea.form-control {
   top: 12px;
   font-size: 10px;
   padding: 4px 10px;
+}
+
+.stage-placeholder.ratio-1-1 .stage-micro-cta-badge {
+  top: 40px;
+  font-size: 8.5px;
+  padding: 3px 8px;
+}
+
+/* Estilos de Tarjetas de Prompts de Escenas */
+.scene-prompt-card {
+  transition: all 0.2s ease;
+}
+.scene-prompt-card:hover {
+  background: rgba(30, 41, 59, 0.85) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
 
 /* Modal Backdrop & Daily Batch Cards */

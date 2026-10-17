@@ -131,6 +131,7 @@ def generate_viral_ass(
     margin_v: int = 450,
     hook_text: str = "",
     micro_cta_text: str = "",
+    hook_badge_style: str = "gold_cinematic",
     animation_type: str = "pop",
     position: str = "bottom",
     effect_type: str = "cinematic_dust",
@@ -171,12 +172,35 @@ def generate_viral_ass(
 
     # Margen vertical superior seguro para las dos insignias
     hook_margin_v = 95 if play_res_y > 1080 else (60 if play_res_x == play_res_y else 45)
-    hook_fontsize = 48 if play_res_y > 1080 else 38
-    cta_fontsize = 38 if play_res_y > 1080 else 30
+    hook_fontsize = 46 if play_res_y > 1080 else 36
+    cta_fontsize = 36 if play_res_y > 1080 else 28
+
+    # Badge configuration according to chosen aesthetic
+    badge_style = hook_badge_style.lower().strip() if hook_badge_style else "gold_cinematic"
+    if badge_style == "urgency_red":
+        badge_font = "Oswald"
+        badge_outline = "&H00008CFF&"  # Amber-gold outline
+        badge_back = "&HE612082A&"     # Dark ruby/crimson box
+        badge_spacing = 1
+    elif badge_style == "royal_navy":
+        badge_font = "Cinzel"
+        badge_outline = "&H00FFE8A0&"  # Ice platinum glow
+        badge_back = "&HE62A150A&"     # Royal blue slate box
+        badge_spacing = 2
+    elif badge_style == "clean_glass":
+        badge_font = "Montserrat"
+        badge_outline = "&H00FFFFFF&"  # White outline
+        badge_back = "&HE0151515&"     # Dark frosted glass
+        badge_spacing = 1
+    else:  # gold_cinematic (default)
+        badge_font = "Cinzel"
+        badge_outline = "&H0000D7FF&"  # Gold outline #ffd700
+        badge_back = "&HE60A0E1A&"     # Midnight slate box
+        badge_spacing = 2
 
     badge_styles_block = (
-        f"\nStyle: HookBadge,Roboto Black,{hook_fontsize},&H00FFFFFF,&H000000FF,&H00000000,&HB0000000,-1,0,0,0,100,100,1,0,3,4,0,8,40,40,{hook_margin_v},1"
-        f"\nStyle: MicroCTABadge,Roboto,{cta_fontsize},&H00E0E0E0,&H000000FF,&H00000000,&HC0000000,1,0,0,0,100,100,1,0,3,3,0,8,40,40,{hook_margin_v},1"
+        f"\nStyle: HookBadge,{badge_font},{hook_fontsize},&H00FFFFFF,&H000000FF,{badge_outline},{badge_back},-1,0,0,0,100,100,{badge_spacing},0,3,3,2,8,40,40,{hook_margin_v},1"
+        f"\nStyle: MicroCTABadge,Montserrat,{cta_fontsize},&H00E0E0E0,&H000000FF,&H00808080,&HC00D1520,1,0,0,0,100,100,1,0,3,2,1,8,40,40,{hook_margin_v},1"
     )
 
     # Style para partículas cinemáticas

@@ -66,11 +66,15 @@ function bootstrapJesusStudio() {
   let currentMicroCtaText = "";
 
   const microCtaInput = document.getElementById("microCtaInput");
+  const chkEnableMicroCta = document.getElementById("chkEnableMicroCta");
+  const stageMicroCtaBadge = document.getElementById("stageMicroCtaBadge");
   const hookBadgeInput = document.getElementById("hookBadgeInput");
   const chkEnableHookBadge = document.getElementById("chkEnableHookBadge");
+  const hookBadgeStyleSelect = document.getElementById("hookBadgeStyleSelect");
   const btnRerollHookBadge = document.getElementById("btnRerollHookBadge");
   const stageHookBadge = document.getElementById("stageHookBadge");
   const btnRerollMagneticComment = document.getElementById("btnRerollMagneticComment");
+  const transitionStyleSelect = document.getElementById("transitionStyleSelect");
 
   const btnTabScene1 = document.getElementById("btnTabScene1");
   const btnTabScene2 = document.getElementById("btnTabScene2");
@@ -80,6 +84,17 @@ function bootstrapJesusStudio() {
   const btnClearScene2 = document.getElementById("btnClearScene2");
   const btnClearScene3 = document.getElementById("btnClearScene3");
   const btnGenerateCardFromReel = document.getElementById("btnGenerateCardFromReel");
+
+  const btnGenerate3ScenesAi = document.getElementById("btnGenerate3ScenesAi");
+  const batchGenProgressBox = document.getElementById("batchGenProgressBox");
+  const batchGenProgressText = document.getElementById("batchGenProgressText");
+  const batchGenProgressSub = document.getElementById("batchGenProgressSub");
+  const scene1PromptInput = document.getElementById("scene1PromptInput");
+  const scene2PromptInput = document.getElementById("scene2PromptInput");
+  const scene3PromptInput = document.getElementById("scene3PromptInput");
+  const btnGenScene1Only = document.getElementById("btnGenScene1Only");
+  const btnGenScene2Only = document.getElementById("btnGenScene2Only");
+  const btnGenScene3Only = document.getElementById("btnGenScene3Only");
 
   function updateSceneTabsUI() {
     const tabs = [
@@ -186,7 +201,34 @@ function bootstrapJesusStudio() {
     "🔥 THE LORD FIGHTS THIS BATTLE FOR YOU",
     "👑 HIS MERCIES ARE RENEWED RIGHT NOW"
   ];
-  let hookPresetIdx = 0;
+  function updateHookBadgeStyle() {
+    if (!stageHookBadge) return;
+    const style = hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_cinematic";
+    stageHookBadge.className = "stage-hook-badge";
+    stageHookBadge.classList.add(`hook-style-${style}`);
+  }
+
+  if (hookBadgeStyleSelect) {
+    hookBadgeStyleSelect.addEventListener("change", updateHookBadgeStyle);
+    updateHookBadgeStyle();
+  }
+
+  if (chkEnableMicroCta) {
+    chkEnableMicroCta.addEventListener("change", () => {
+      if (stageMicroCtaBadge) {
+        stageMicroCtaBadge.style.display = chkEnableMicroCta.checked ? "block" : "none";
+      }
+    });
+  }
+
+  if (microCtaInput) {
+    microCtaInput.addEventListener("input", () => {
+      if (stageMicroCtaBadge) {
+        stageMicroCtaBadge.textContent = microCtaInput.value.trim();
+      }
+    });
+  }
+
   if (btnRerollHookBadge) {
     btnRerollHookBadge.addEventListener("click", () => {
       hookPresetIdx = (hookPresetIdx + 1) % HOOK_BADGE_PRESETS.length;
@@ -418,6 +460,7 @@ function bootstrapJesusStudio() {
       if (data.micro_cta_text) {
         currentMicroCtaText = data.micro_cta_text;
         if (microCtaInput) microCtaInput.value = data.micro_cta_text;
+        if (stageMicroCtaBadge) stageMicroCtaBadge.textContent = data.micro_cta_text;
       }
 
       if (data.scripture) {
@@ -435,9 +478,25 @@ function bootstrapJesusStudio() {
         }
       }
 
-      // Sincronizar automáticamente el prompt para la IA
+      // Sincronizar automáticamente los prompts de las 3 escenas
+      if (data.scene_1_prompt && scene1PromptInput) scene1PromptInput.value = data.scene_1_prompt;
+      if (data.scene_2_prompt && scene2PromptInput) scene2PromptInput.value = data.scene_2_prompt;
+      if (data.scene_3_prompt && scene3PromptInput) scene3PromptInput.value = data.scene_3_prompt;
       if (data.image_prompt) {
         aiImagePrompt.value = data.image_prompt;
+      }
+
+      // Auto-adaptar estilo de la insignia superior según la temática
+      const tKey = (themeSelect.value || "").toLowerCase();
+      if (hookBadgeStyleSelect) {
+        if (tKey.includes("warfare") || tKey.includes("fear") || tKey.includes("addiction") || tKey.includes("court") || tKey.includes("debt")) {
+          hookBadgeStyleSelect.value = "urgency_red";
+        } else if (tKey.includes("majesty") || tKey.includes("glory") || tKey.includes("praise") || tKey.includes("harvest") || tKey.includes("favor")) {
+          hookBadgeStyleSelect.value = "royal_navy";
+        } else {
+          hookBadgeStyleSelect.value = "gold_cinematic";
+        }
+        updateHookBadgeStyle();
       }
     } catch (e) {
       alert("Error al generar guion: " + e.message);
@@ -482,11 +541,11 @@ function bootstrapJesusStudio() {
       btnRerollPrompt.textContent = "⏳ Variando...";
       await triggerSyncPrompt();
       btnRerollPrompt.disabled = false;
-      btnRerollPrompt.textContent = "🎲 Otra Variación de Escena";
+      btnRerollPrompt.textContent = "🎲 Otras 3 Variantes";
     });
   }
 
-  // 5. Sincronizar Prompt de Imagen según el Guion Editado
+  // 5. Sincronizar Prompts de las 3 Escenas según el Guion Editado
   async function triggerSyncPrompt() {
     const fullText = `${scriptHook.value} ${scriptBody.value} ${scriptCta.value}`.trim();
     if (!fullText) {
@@ -495,7 +554,7 @@ function bootstrapJesusStudio() {
     }
 
     btnSyncScriptToImage.disabled = true;
-    btnSyncScriptToImage.textContent = "⏳ Creando Escena que Coincida con la Oración...";
+    btnSyncScriptToImage.textContent = "⏳ Creando las 3 Tomas que Coincidan con la Oración...";
 
     try {
       const res = await fetch("/api/generate-image-prompt", {
@@ -508,18 +567,23 @@ function bootstrapJesusStudio() {
         })
       });
       const data = await res.json();
-      aiImagePrompt.value = data.prompt;
-      btnSyncScriptToImage.textContent = "✅ ¡Escena Sincronizada con la Oración!";
+      if (data.prompt) aiImagePrompt.value = data.prompt;
+      if (data.scene_1_prompt && scene1PromptInput) scene1PromptInput.value = data.scene_1_prompt;
+      if (data.scene_2_prompt && scene2PromptInput) scene2PromptInput.value = data.scene_2_prompt;
+      if (data.scene_3_prompt && scene3PromptInput) scene3PromptInput.value = data.scene_3_prompt;
+
+      btnSyncScriptToImage.textContent = "✅ ¡3 Escenas Sincronizadas con la Oración!";
       setTimeout(() => {
-        btnSyncScriptToImage.textContent = "🪄 Sincronizar: Crear Prompt de Imagen que Coincida con este Guion";
+        btnSyncScriptToImage.textContent = "🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion";
         btnSyncScriptToImage.disabled = false;
       }, 2500);
 
-      // Desplazar suavemente hacia el generador de imágenes
-      aiImagePrompt.scrollIntoView({ behavior: "smooth", block: "center" });
-      aiImagePrompt.focus();
+      // Desplazar suavemente hacia el generador de 3 escenas
+      if (scene1PromptInput) {
+        scene1PromptInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     } catch (err) {
-      alert("Error al sincronizar prompt: " + err.message);
+      alert("Error al sincronizar prompts: " + err.message);
       btnSyncScriptToImage.disabled = false;
     }
   }
@@ -674,98 +738,219 @@ function bootstrapJesusStudio() {
     btnSwitchAccountNow.addEventListener("click", resetPuterSession);
   }
 
-  // 8. Generación de Imagen con IA (DALL-E 3 HD — Máxima Calidad)
-  btnGenerateAiImage.addEventListener("click", async () => {
-    const promptText = aiImagePrompt.value.trim();
-    if (!promptText) {
-      alert("Por favor escribe o sincroniza un prompt para la imagen.");
-      return;
+  // 8. Motor de Generación Cinemática de 3 Escenas con IA (DALL-E 3 / Flux HD)
+  async function generateSingleScene(promptText, sceneNum = 1, label = "Escena") {
+    let cleanPrompt = (promptText || "").trim();
+    if (!cleanPrompt) {
+      cleanPrompt = "Jesus Christ with compassionate loving eyes, gentle smile, holy warm golden light, cinematic 8k";
     }
 
-    if (typeof puter === "undefined" || !puter.ai || !puter.ai.txt2img) {
-      alert("El motor Puter DALL-E 3 no está cargado en el navegador. Por favor recarga la página.");
-      return;
+    let enhancedPrompt = cleanPrompt;
+    if (!enhancedPrompt.toLowerCase().includes("cinematic") && !enhancedPrompt.toLowerCase().includes("masterpiece")) {
+      enhancedPrompt = `Ultra-realistic cinematic 8k portrait of ${cleanPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus`;
     }
 
-    // Si aún no está conectado a Puter, abrir ventana de conexión
-    if (puter.auth && !puter.auth.isSignedIn()) {
-      btnGenerateAiImage.disabled = true;
-      btnGenerateAiImage.textContent = "🔑 Abriendo ventana de conexión Puter...";
+    let savedFilename = null;
+    let savedUrl = null;
+
+    // Intento 1: DALL-E 3 a través de Puter si está disponible y autenticado
+    let usedPuter = false;
+    if (typeof puter !== "undefined" && puter.ai && puter.ai.txt2img && puter.auth && puter.auth.isSignedIn()) {
       try {
-        await puter.auth.signIn({ attempt_temp_user_creation: true });
-        updatePuterStatus();
-      } catch (authErr) {
-        btnGenerateAiImage.disabled = false;
-        btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (DALL-E 3 - Alta Resolución)";
-        updatePuterStatus();
-        alert("Se requiere autorizar Puter para crear imágenes:\n" + extractError(authErr) + "\n\nTip: Asegúrate de permitir ventanas emergentes si tu navegador te lo solicita.");
-        return;
+        const imgElement = await puter.ai.txt2img(enhancedPrompt);
+        let blob;
+        if (imgElement instanceof HTMLImageElement || (imgElement && imgElement.src)) {
+          const response = await fetch(imgElement.src);
+          blob = await response.blob();
+        } else if (imgElement instanceof Blob) {
+          blob = imgElement;
+        }
+
+        if (blob) {
+          const file = new File([blob], `scene_${sceneNum}_${Date.now()}.png`, { type: "image/png" });
+          const formData = new FormData();
+          formData.append("file", file);
+          const uploadRes = await fetch("/api/upload-image", { method: "POST", body: formData });
+          if (uploadRes.ok) {
+            const upData = await uploadRes.json();
+            savedFilename = upData.filename;
+            savedUrl = upData.url;
+            usedPuter = true;
+          }
+        }
+      } catch (puterErr) {
+        console.warn("Fallo en Puter, recurriendo a motor Flux HD del servidor:", puterErr);
+        const pMsg = extractError(puterErr);
+        if (pMsg.toLowerCase().includes("credits") || pMsg.toLowerCase().includes("billing")) {
+          if (puterCreditAlert) puterCreditAlert.style.display = "block";
+        }
       }
     }
 
-    btnGenerateAiImage.disabled = true;
-    btnGenerateAiImage.textContent = "🎨 Generando imagen en máxima resolución (DALL-E 3)...";
-    if (puterCreditAlert) puterCreditAlert.style.display = "none";
+    // Intento 2 / Fallback: Servidor Flux HD (rápido, sin bloqueos ni requerir sesión)
+    if (!savedFilename) {
+      const res = await fetch("/api/generate-ai-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: enhancedPrompt, aspect_ratio: "9:16" })
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || "Error en el servidor de imágenes.");
+      }
+      const data = await res.json();
+      savedFilename = data.filename;
+      savedUrl = data.url;
+    }
+
+    // Asignación automática a la escena correspondiente
+    if (sceneNum === 1) {
+      selectedImageName = savedFilename;
+      stageSelectedImage.src = savedUrl;
+      const stageBlurBg = document.getElementById("stageBlurBg");
+      if (stageBlurBg) stageBlurBg.style.backgroundImage = `url('${savedUrl}')`;
+    } else if (sceneNum === 2) {
+      selectedImageName2 = savedFilename;
+    } else if (sceneNum === 3) {
+      selectedImageName3 = savedFilename;
+    }
+
+    return { filename: savedFilename, url: savedUrl, usedPuter };
+  }
+
+  // 8b. Generador en 1 Clic de las 3 Escenas (Crear y Asignar)
+  async function generateAll3Scenes() {
+    if (!btnGenerate3ScenesAi) return;
+    btnGenerate3ScenesAi.disabled = true;
+
+    // Asegurar que existan prompts para las 3 tomas
+    let p1 = scene1PromptInput ? scene1PromptInput.value.trim() : "";
+    let p2 = scene2PromptInput ? scene2PromptInput.value.trim() : "";
+    let p3 = scene3PromptInput ? scene3PromptInput.value.trim() : "";
+
+    if (!p1 || !p2 || !p3) {
+      await triggerSyncPrompt();
+      p1 = scene1PromptInput ? scene1PromptInput.value.trim() : "";
+      p2 = scene2PromptInput ? scene2PromptInput.value.trim() : "";
+      p3 = scene3PromptInput ? scene3PromptInput.value.trim() : "";
+    }
+
+    if (batchGenProgressBox) batchGenProgressBox.style.display = "block";
 
     try {
-      let enhancedPrompt = promptText;
-      if (!enhancedPrompt.toLowerCase().includes("cinematic") && !enhancedPrompt.toLowerCase().includes("masterpiece")) {
-        enhancedPrompt = `Ultra-realistic cinematic 8k portrait of ${enhancedPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, octane render, masterpiece, award winning photography, sharp focus`;
-      }
-
-      const imgElement = await puter.ai.txt2img(enhancedPrompt);
-
-      let blob;
-      if (imgElement instanceof HTMLImageElement || (imgElement && imgElement.src)) {
-        btnGenerateAiImage.textContent = "💾 Guardando imagen en tu galería...";
-        const response = await fetch(imgElement.src);
-        blob = await response.blob();
-      } else if (imgElement instanceof Blob) {
-        btnGenerateAiImage.textContent = "💾 Guardando imagen en tu galería...";
-        blob = imgElement;
-      } else {
-        throw new Error("Puter no devolvió una imagen válida.");
-      }
-
-      const file = new File([blob], `ai_${Date.now()}.png`, { type: "image/png" });
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadRes = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("Error al guardar la imagen en el servidor.");
-      }
-
-      const uploadData = await uploadRes.json();
-      selectedImageName = uploadData.filename;
-      stageSelectedImage.src = uploadData.url;
-      const stageBlurBg = document.getElementById("stageBlurBg");
-      if (stageBlurBg) {
-        stageBlurBg.style.backgroundImage = `url('${uploadData.url}')`;
-      }
-
+      // Paso 1: Toma 1 (Apertura)
+      if (batchGenProgressText) batchGenProgressText.textContent = "🎬 Generando Escena 1 de 3 (Apertura e Impacto)...";
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Creando iluminación dorada y encuadre inicial (0-3.2s)...";
+      await generateSingleScene(p1, 1, "Toma 1 (Apertura)");
       await loadImages();
-      showStageView();
-      alert("¡Imagen creada con éxito en ultra alta resolución (DALL-E 3) y añadida a tu galería!");
-    } catch (err) {
-      console.error("Error en generación con Puter:", err);
-      const errMessage = extractError(err);
+      updateSceneTabsUI();
 
-      if (errMessage.toLowerCase().includes("credits") || errMessage.toLowerCase().includes("billing") || errMessage.toLowerCase().includes("upgrade")) {
-        if (puterCreditAlert) puterCreditAlert.style.display = "block";
-        alert("⚠️ Créditos de esta cuenta de Puter agotados.\n\nHaz clic en 'Cambiar Cuenta' para iniciar con otro correo y renovar tus créditos gratuitos de DALL-E 3 de inmediato.");
-      } else {
-        alert("Aviso de Puter DALL-E 3: " + errMessage);
-      }
+      // Paso 2: Toma 2 (Intercesión)
+      if (batchGenProgressText) batchGenProgressText.textContent = "✨ Generando Escena 2 de 3 (Intercesión y Oración)...";
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Creando punto de inflexión de fe y presencia sagrada (3.2s-10s)...";
+      await generateSingleScene(p2, 2, "Toma 2 (Intercesión)");
+      await loadImages();
+      updateSceneTabsUI();
+
+      // Paso 3: Toma 3 (Victoria)
+      if (batchGenProgressText) batchGenProgressText.textContent = "🕊️ Generando Escena 3 de 3 (Victoria y Paz)...";
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Creando desenlace glorioso y promesa divina (10s al final)...";
+      await generateSingleScene(p3, 3, "Toma 3 (Victoria)");
+      await loadImages();
+      updateSceneTabsUI();
+
+      if (batchGenProgressText) batchGenProgressText.textContent = "✅ ¡Las 3 Escenas fueron creadas y asignadas en 1 clic!";
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Asignadas con éxito a las posiciones [1], [2] y [3] de tu Reel.";
+
+      showStageView();
+      setTimeout(() => {
+        if (batchGenProgressBox) batchGenProgressBox.style.display = "none";
+      }, 4000);
+
+    } catch (err) {
+      console.error("Error al generar las 3 escenas:", err);
+      alert("Aviso al crear las 3 escenas: " + extractError(err));
+      if (batchGenProgressBox) batchGenProgressBox.style.display = "none";
     } finally {
-      btnGenerateAiImage.disabled = false;
-      btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (DALL-E 3 - Alta Resolución)";
+      btnGenerate3ScenesAi.disabled = false;
+      btnGenerate3ScenesAi.textContent = "🚀 GENERAR LAS 3 ESCENAS CON IA EN 1 CLIC (CREAR Y ASIGNAR)";
     }
-  });
+  }
+
+  if (btnGenerate3ScenesAi) {
+    btnGenerate3ScenesAi.addEventListener("click", generateAll3Scenes);
+  }
+
+  // Generadores individuales para afinar tomas específicas
+  if (btnGenScene1Only) {
+    btnGenScene1Only.addEventListener("click", async () => {
+      btnGenScene1Only.disabled = true;
+      btnGenScene1Only.textContent = "⏳ Creando 1...";
+      try {
+        const p1 = scene1PromptInput ? scene1PromptInput.value.trim() : "";
+        await generateSingleScene(p1, 1, "Toma 1");
+        await loadImages();
+        updateSceneTabsUI();
+        showStageView();
+      } catch (e) { alert("Error: " + extractError(e)); }
+      finally {
+        btnGenScene1Only.disabled = false;
+        btnGenScene1Only.textContent = "🎨 Crear solo Toma 1";
+      }
+    });
+  }
+
+  if (btnGenScene2Only) {
+    btnGenScene2Only.addEventListener("click", async () => {
+      btnGenScene2Only.disabled = true;
+      btnGenScene2Only.textContent = "⏳ Creando 2...";
+      try {
+        const p2 = scene2PromptInput ? scene2PromptInput.value.trim() : "";
+        await generateSingleScene(p2, 2, "Toma 2");
+        await loadImages();
+        updateSceneTabsUI();
+      } catch (e) { alert("Error: " + extractError(e)); }
+      finally {
+        btnGenScene2Only.disabled = false;
+        btnGenScene2Only.textContent = "🎨 Crear solo Toma 2";
+      }
+    });
+  }
+
+  if (btnGenScene3Only) {
+    btnGenScene3Only.addEventListener("click", async () => {
+      btnGenScene3Only.disabled = true;
+      btnGenScene3Only.textContent = "⏳ Creando 3...";
+      try {
+        const p3 = scene3PromptInput ? scene3PromptInput.value.trim() : "";
+        await generateSingleScene(p3, 3, "Toma 3");
+        await loadImages();
+        updateSceneTabsUI();
+      } catch (e) { alert("Error: " + extractError(e)); }
+      finally {
+        btnGenScene3Only.disabled = false;
+        btnGenScene3Only.textContent = "🎨 Crear solo Toma 3";
+      }
+    });
+  }
+
+  if (btnGenerateAiImage) {
+    btnGenerateAiImage.addEventListener("click", async () => {
+      btnGenerateAiImage.disabled = true;
+      btnGenerateAiImage.textContent = "⏳ Creando...";
+      try {
+        const p = aiImagePrompt ? aiImagePrompt.value.trim() : "";
+        await generateSingleScene(p, currentSceneTab);
+        await loadImages();
+        updateSceneTabsUI();
+        showStageView();
+      } catch (e) { alert("Error: " + extractError(e)); }
+      finally {
+        btnGenerateAiImage.disabled = false;
+        btnGenerateAiImage.textContent = "🎨 Crear Imagen con IA (Alta Resolución)";
+      }
+    });
+  }
 
   // 9. Actualizar Vista Previa de Subtítulos al Cambiar Estilo
   function updateSubtitlePreview() {
@@ -1182,13 +1367,15 @@ function bootstrapJesusStudio() {
           subtitle_animation: animSelect ? animSelect.value : "pop",
           subtitle_position: subPosSelect ? subPosSelect.value : "bottom",
           camera_motion: camSelect ? camSelect.value : "none",
+          transition_style: transitionStyleSelect ? transitionStyleSelect.value : "fade",
           music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
           music_volume: volumeInput ? parseFloat(volumeInput.value) / 100.0 : 0.20,
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
           effect_type: effectSelect ? effectSelect.value : "cinematic_dust",
           theme_key: themeSelect ? themeSelect.value : "",
           hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : "",
-          micro_cta_text: microCtaInput ? microCtaInput.value.trim() : ""
+          hook_badge_style: hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_cinematic",
+          micro_cta_text: (chkEnableMicroCta && chkEnableMicroCta.checked && microCtaInput) ? microCtaInput.value.trim() : ""
         })
       });
 
@@ -1514,7 +1701,6 @@ function bootstrapJesusStudio() {
     updateAspectRatioPreview();
     startFxLoop();
     toggleVideoMode();
-    onAiEngineChange();
     updatePuterStatus();
     setTimeout(updatePuterStatus, 1000);
     setTimeout(updatePuterStatus, 3000);

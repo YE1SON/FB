@@ -342,23 +342,28 @@ function bootstrapJesusStudio() {
     }
   }
 
-  // 2c. Verificar estado de B-Roll (Pixabay API)
+  // 2c. Verificar estado de B-Roll (Pexels / Pixabay / Local)
   async function loadBrollStatus() {
     try {
       const res = await fetch("/api/broll-status");
       const status = await res.json();
       if (brollApiStatus) {
         if (status.available) {
-          brollApiStatus.textContent = `✅ Pixabay API conectada. ${status.cached_clips} clips en caché.`;
+          const provs = [];
+          if (status.pexels_configured) provs.push("Pexels HD");
+          if (status.pixabay_configured) provs.push("Pixabay");
+          if (status.cached_clips > 0) provs.push(`${status.cached_clips} en caché`);
+          if (status.local_library_clips > 0) provs.push(`${status.local_library_clips} locales`);
+          brollApiStatus.textContent = `✅ B-Roll Activo (${provs.join(" + ") || "Biblioteca Local"})`;
           brollApiStatus.style.color = "#2ecc71";
         } else {
-          brollApiStatus.textContent = "⚠️ PIXABAY_API_KEY no configurada. Configúrala en los Secrets del Space para usar B-Roll.";
-          brollApiStatus.style.color = "#e74c3c";
+          brollApiStatus.textContent = "⚠️ Sin API Keys (Usa Biblioteca Local / Respaldo Cinemático)";
+          brollApiStatus.style.color = "#f59e0b";
         }
       }
     } catch (e) {
       if (brollApiStatus) {
-        brollApiStatus.textContent = "⚠️ No se pudo verificar la conexión con Pixabay.";
+        brollApiStatus.textContent = "⚠️ Motor B-Roll en modo respaldo.";
       }
     }
   }
@@ -1009,40 +1014,36 @@ function bootstrapJesusStudio() {
 
   // 9. Actualizar Vista Previa de Subtítulos al Cambiar Estilo
   function updateSubtitlePreview() {
-    const style = subtitleStyleSelect.value;
-    const isLarge = subtitleSizeSelect.value === "large";
+    if (!liveSubPreview) return;
+    const style = subtitleStyleSelect ? subtitleStyleSelect.value : "karaoke";
+    const isLarge = subtitleSizeSelect && subtitleSizeSelect.value === "large";
+    const chkAllCaps = document.getElementById("chkSubtitlesAllCaps");
+    const isAllCaps = chkAllCaps ? chkAllCaps.checked : (style === "pop");
 
     liveSubPreview.style.fontSize = isLarge ? "28px" : "22px";
+    liveSubPreview.style.padding = "0";
+    liveSubPreview.style.background = "transparent";
 
-    if (style === "gold_highlight") {
-      liveSubPreview.innerHTML = `<span style="font-family: Impact, Anton, sans-serif; letter-spacing: 0.5px;">GOD IS <span class="highlight" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4);">WITH YOU</span></span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
-    } else if (style === "neon_cyan") {
-      liveSubPreview.innerHTML = `<span style="font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 1.5px; font-size: 1.15em;">GOD IS <span class="highlight" style="color: #00ffcc;">WITH YOU</span></span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
-    } else if (style === "holy_scripture") {
-      liveSubPreview.innerHTML = `<span style="font-family: 'Liberation Serif', Georgia, serif; font-style: italic; color: #f0f8ff;">THE LORD <span style="color: #ffd700; text-shadow: 0 2px 8px rgba(0,0,0,0.8);">IS WITH YOU</span></span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
-    } else if (style === "fire_coral") {
-      liveSubPreview.innerHTML = `<span style="font-family: Impact, Anton, sans-serif;">GOD IS <span class="highlight" style="color: #ff3b10;">WITH YOU</span></span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
-    } else if (style === "black_box") {
-      liveSubPreview.innerHTML = `<span style="font-family: Roboto, sans-serif; background: rgba(0,0,0,0.88); color: #ffff00; padding: 4px 12px; border-radius: 4px; font-weight: 800;">GOD IS WITH YOU</span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
-    } else if (style === "pure_minimal") {
-      liveSubPreview.innerHTML = `<span style="font-family: Roboto, sans-serif; color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.9); font-weight: 500;">GOD IS WITH YOU</span>`;
-      liveSubPreview.style.background = "transparent";
-      liveSubPreview.style.padding = "0";
+    const textPrimary = isAllCaps ? "GOD IS " : "God is ";
+    const textActive = isAllCaps ? "WITH YOU" : "with you";
+
+    if (style === "karaoke") {
+      liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.9); color: #ffffff;">${textPrimary}<span class="highlight" style="color: #ffd700; text-shadow: 0 0 12px rgba(255,215,0,0.6);">${textActive}</span></span>`;
+    } else if (style === "pop") {
+      liveSubPreview.innerHTML = `<span style="font-family: 'Anton', Impact, sans-serif; letter-spacing: 1px; color: #ffffff; text-shadow: 0 3px 8px rgba(0,0,0,0.9);">${textPrimary}<span class="highlight" style="color: #ffff00; font-size: 1.12em; display: inline-block; transform: scale(1.12); text-shadow: 0 0 14px rgba(255,255,0,0.8);">${textActive}</span></span>`;
+    } else if (style === "cinematic") {
+      liveSubPreview.innerHTML = `<span style="font-family: 'Cinzel', Georgia, serif; font-weight: 700; letter-spacing: 1.5px; color: #f4f4f4; text-shadow: 0 2px 10px rgba(0,0,0,0.9);">${textPrimary}<span style="color: #ffc030; text-shadow: 0 0 10px rgba(255,192,48,0.5);">${textActive}</span></span>`;
+    } else if (style === "clean") {
+      liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; background: rgba(10, 14, 26, 0.88); color: #ffffff; padding: 6px 14px; border-radius: 6px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.6);">${textPrimary}${textActive}</span>`;
+    } else {
+      liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; font-weight: 800; color: #ffffff;">${textPrimary}<span class="highlight" style="color: #ffd700;">${textActive}</span></span>`;
     }
   }
 
-  subtitleStyleSelect.addEventListener("change", updateSubtitlePreview);
-  subtitleSizeSelect.addEventListener("change", updateSubtitlePreview);
+  if (subtitleStyleSelect) subtitleStyleSelect.addEventListener("change", updateSubtitlePreview);
+  if (subtitleSizeSelect) subtitleSizeSelect.addEventListener("change", updateSubtitlePreview);
+  const chkSubtitlesAllCaps = document.getElementById("chkSubtitlesAllCaps");
+  if (chkSubtitlesAllCaps) chkSubtitlesAllCaps.addEventListener("change", updateSubtitlePreview);
 
   // ─── Canvas Particle & Visual Effects Engine ────────────────────────────────
   const fxCanvas = document.getElementById("fxCanvas");
@@ -1414,6 +1415,7 @@ function bootstrapJesusStudio() {
           cta: cta,
           voice_key: voiceSelect.value,
           rate: rateSelect.value,
+          video_mode: videoModeSelect ? videoModeSelect.value : "images",
           image_name: selectedImageName,
           image_name_2: selectedImageName2 || "none",
           image_name_3: selectedImageName3 || "none",
@@ -1421,15 +1423,18 @@ function bootstrapJesusStudio() {
           subtitle_size: subtitleSizeSelect.value,
           subtitle_animation: animSelect ? animSelect.value : "pop",
           subtitle_position: subPosSelect ? subPosSelect.value : "bottom",
-          camera_motion: camSelect ? camSelect.value : "none",
+          all_caps: !!(document.getElementById("chkSubtitlesAllCaps") && document.getElementById("chkSubtitlesAllCaps").checked),
+          camera_motion: camSelect ? camSelect.value : "zoom_in",
           transition_style: transitionStyleSelect ? transitionStyleSelect.value : "fade",
           music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
           music_volume: volumeInput ? parseFloat(volumeInput.value) / 100.0 : 0.20,
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
           effect_type: effectSelect ? effectSelect.value : "cinematic_dust",
-          theme_key: themeSelect ? themeSelect.value : "",
+          theme_key: themeSelect ? themeSelect.value : "morning_favor",
+          enable_hook_badge: !!(chkEnableHookBadge && chkEnableHookBadge.checked),
           hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : "",
           hook_badge_style: hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_cinematic",
+          enable_micro_cta: !!(chkEnableMicroCta && chkEnableMicroCta.checked),
           micro_cta_text: (chkEnableMicroCta && chkEnableMicroCta.checked && microCtaInput) ? microCtaInput.value.trim() : ""
         })
       });

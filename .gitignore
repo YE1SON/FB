@@ -20,3 +20,10 @@ venv/
 # OS files
 Thumbs.db
 .DS_Store
+
+# Large neural models & broll cache
+assets/kokoro/*.onnx
+assets/kokoro/*.bin
+assets/voices/*.onnx
+broll_cache/
+outputs/*.wav

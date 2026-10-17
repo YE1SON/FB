@@ -4,72 +4,15 @@ import os
 import re
 import sys
 import tempfile
-import wave
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional
 from engine.audio import sanitize_and_trim_audio
-
-# ─── Kokoro-82M Studio + Piper TTS + Faster-Whisper Word Alignment ───────────
-# 1. Kokoro-82M: Ultra-natural human neural voices (24,000 Hz, natural breathing).
-# 2. Piper TTS: Fast local model fallback and Brian voice preservation.
-# 3. Faster-Whisper: Aligns every word down to the millisecond for 0 subtitle desync.
-# 100% runs on-device on the VPS. Zero external API calls, zero 403 blocks.
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VOICES_DIR = os.path.join(BASE_DIR, "assets", "voices")
 KOKORO_DIR = os.path.join(BASE_DIR, "assets", "kokoro")
 
-VOICES = {
-    "adam": {
-        "id": "adam",
-        "engine": "kokoro",
-        "kokoro_voice": "am_adam",
-        "name": "Adam (Solemne, Profundo y Reverente — Voz de Jesús)",
-        "gender": "Hombre",
-        "base_speed": 0.90,
-    },
-    "brian": {
-        "id": "brian",
-        "engine": "piper",
-        "model": "en_US-bryce-medium",
-        "name": "Brian (Tranquilo, Cálido e Inspirador)",
-        "gender": "Hombre",
-        "rate_factor": 0.90,
-    },
-    "michael": {
-        "id": "michael",
-        "engine": "kokoro",
-        "kokoro_voice": "am_michael",
-        "name": "Michael (Emocional, Cercano y Apasionado)",
-        "gender": "Hombre",
-        "base_speed": 0.92,
-    },
-    "george": {
-        "id": "george",
-        "engine": "kokoro",
-        "kokoro_voice": "bm_george",
-        "name": "George (Elegante, Profético y Majestuoso)",
-        "gender": "Hombre",
-        "base_speed": 0.88,
-    },
-}
-
-LEGACY_VOICE_MAP = {
-    "christopher": "adam",
-    "en-US-ChristopherNeural": "adam",
-    "guy": "michael",
-    "en-US-GuyNeural": "michael",
-    "andrew": "michael",
-    "en-US-AndrewMultilingualNeural": "michael",
-    "jenny": "adam",
-    "en-US-JennyNeural": "adam",
-    "en-US-BrianNeural": "brian",
-}
-
-# Global singletons to avoid reload latency
-_whisper_model = None
-_kokoro_model = None
-
+# ─── Data Structure for Subtitle Cues ─────────────────────────────────────────
 
 @dataclass
 class CueItem:
@@ -77,16 +20,181 @@ class CueItem:
     end_sec: float
     text: str
 
+# ─── Voice Registry ───────────────────────────────────────────────────────────
+
+VOICES: Dict[str, Dict] = {
+    # ─── Kokoro-82M Neural Voices (Ultra-Natural Local 24kHz) ─────────────────
+    "adam": {
+        "id": "adam",
+        "engine": "kokoro",
+        "kokoro_voice": "am_adam",
+        "name": "Adam (Solemne, Profundo y Reverente — Kokoro Neural)",
+        "gender": "Hombre",
+        "base_speed": 0.90,
+    },
+    "michael": {
+        "id": "michael",
+        "engine": "kokoro",
+        "kokoro_voice": "am_michael",
+        "name": "Michael (Emocional, Cercano y Apasionado — Kokoro Neural)",
+        "gender": "Hombre",
+        "base_speed": 0.92,
+    },
+    "george": {
+        "id": "george",
+        "engine": "kokoro",
+        "kokoro_voice": "bm_george",
+        "name": "George (Elegante, Profético y Majestuoso — Kokoro Neural)",
+        "gender": "Hombre",
+        "base_speed": 0.88,
+    },
+    "sarah": {
+        "id": "sarah",
+        "engine": "kokoro",
+        "kokoro_voice": "af_sarah",
+        "name": "Sarah (Suave, Dulce y Reconfortante — Kokoro Neural)",
+        "gender": "Mujer",
+        "base_speed": 0.92,
+    },
+    "bella": {
+        "id": "bella",
+        "engine": "kokoro",
+        "kokoro_voice": "af_bella",
+        "name": "Bella (Tierna y Compasiva — Kokoro Neural)",
+        "gender": "Mujer",
+        "base_speed": 0.90,
+    },
+
+    # ─── Edge-TTS Online Neural Voices (Alta Fidelidad sin Costo) ──────────────
+    "christopher": {
+        "id": "christopher",
+        "engine": "edge",
+        "voice_name": "en-US-ChristopherNeural",
+        "name": "Christopher (Firme, Confiado y Cálido — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 1.0,
+    },
+    "brian": {
+        "id": "brian",
+        "engine": "edge",
+        "voice_name": "en-US-BrianNeural",
+        "name": "Brian (Tranquilo e Inspirador — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 1.0,
+    },
+    "guy": {
+        "id": "guy",
+        "engine": "edge",
+        "voice_name": "en-US-GuyNeural",
+        "name": "Guy (Conversacional y Empático — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 1.0,
+    },
+    "andrew": {
+        "id": "andrew",
+        "engine": "edge",
+        "voice_name": "en-US-AndrewMultilingualNeural",
+        "name": "Andrew (Dinámico y Conmovedor — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 1.0,
+    },
+    "jenny": {
+        "id": "jenny",
+        "engine": "edge",
+        "voice_name": "en-US-JennyNeural",
+        "name": "Jenny (Clara, Luminosa y Pacífica — Edge HD)",
+        "gender": "Mujer",
+        "base_speed": 1.0,
+    },
+
+    # ─── Piper Local TTS (Offline Fallback) ───────────────────────────────────
+    "bryce": {
+        "id": "bryce",
+        "engine": "piper",
+        "model": "en_US-bryce-medium",
+        "name": "Bryce (Cálido y Directo — Piper Local)",
+        "gender": "Hombre",
+        "rate_factor": 0.90,
+    },
+    "ryan": {
+        "id": "ryan",
+        "engine": "piper",
+        "model": "en_US-ryan-high",
+        "name": "Ryan (Profundo y Resonante — Piper Local HD)",
+        "gender": "Hombre",
+        "rate_factor": 0.90,
+    }
+}
+
+LEGACY_VOICE_MAP = {
+    "en-US-ChristopherNeural": "christopher",
+    "en-US-BrianNeural": "brian",
+    "en-US-GuyNeural": "guy",
+    "en-US-AndrewMultilingualNeural": "andrew",
+    "en-US-JennyNeural": "jenny",
+    "en_US-bryce-medium": "bryce",
+    "en_US-ryan-high": "ryan"
+}
+
+# Singletons
+_whisper_model = None
+_kokoro_model = None
+
+
+def check_engine_availability() -> Dict[str, bool]:
+    """Comprueba en tiempo de ejecución qué motores están verdaderamente disponibles."""
+    kokoro_ok = False
+    try:
+        from kokoro_onnx import Kokoro
+        m_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
+        v_path = os.path.join(KOKORO_DIR, "voices.bin")
+        import soundfile
+        kokoro_ok = os.path.exists(m_path) and os.path.exists(v_path)
+    except Exception:
+        kokoro_ok = False
+
+    edge_ok = False
+    try:
+        import edge_tts
+        edge_ok = True
+    except Exception:
+        edge_ok = False
+
+    piper_ok = False
+    try:
+        m_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx")
+        c_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx.json")
+        piper_ok = os.path.exists(m_path) and os.path.exists(c_path)
+    except Exception:
+        piper_ok = False
+
+    whisper_ok = False
+    try:
+        import faster_whisper
+        whisper_ok = True
+    except Exception:
+        whisper_ok = False
+
+    return {
+        "kokoro": kokoro_ok,
+        "edge": edge_ok,
+        "edge_tts": edge_ok,
+        "piper": piper_ok,
+        "whisper": whisper_ok,
+        "faster_whisper": whisper_ok
+    }
+
 
 def _get_whisper():
-    """Lazy load faster-whisper model (tiny.en runs on CPU in <1.5s)."""
+    """Lazy load faster-whisper singleton."""
     global _whisper_model
     if _whisper_model is None:
         try:
             from faster_whisper import WhisperModel
             _whisper_model = WhisperModel("tiny.en", device="cpu", compute_type="int8")
+            print("[TTS Engine] faster-whisper tiny.en cargado con éxito en CPU.")
         except Exception as e:
-            print(f"[Whisper] No se pudo inicializar faster-whisper: {e}")
+            print(f"[TTS Engine] No se pudo inicializar faster-whisper: {e}")
             _whisper_model = False
     return _whisper_model if _whisper_model is not False else None
 
@@ -97,37 +205,36 @@ def _get_kokoro():
     if _kokoro_model is None:
         try:
             from kokoro_onnx import Kokoro
-            model_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
-            voices_path = os.path.join(KOKORO_DIR, "voices.bin")
-            if os.path.exists(model_path) and os.path.exists(voices_path):
-                _kokoro_model = Kokoro(model_path, voices_path)
+            m_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
+            v_path = os.path.join(KOKORO_DIR, "voices.bin")
+            if os.path.exists(m_path) and os.path.exists(v_path):
+                _kokoro_model = Kokoro(m_path, v_path)
+                print("[TTS Engine] Kokoro-82M inicializado con éxito.")
             else:
                 _kokoro_model = False
         except Exception as e:
-            print(f"[Kokoro] No se pudo inicializar kokoro-onnx: {e}")
+            print(f"[TTS Engine] Fallo al inicializar Kokoro: {e}")
             _kokoro_model = False
     return _kokoro_model if _kokoro_model is not False else None
 
 
 def _parse_rate(rate_str: str) -> float:
-    """Convert rate string like '-12%' or '+8%' to a speed multiplier."""
+    """Convert rate string like '-10%' or '+8%' to speed multiplier."""
     if not rate_str:
         return 1.0
-    rate_str = rate_str.strip()
+    rate_str = str(rate_str).strip()
     try:
         if rate_str.startswith("+"):
-            pct = float(rate_str[1:].replace("%", ""))
-            return 1.0 + pct / 100.0
+            return 1.0 + float(rate_str[1:].replace("%", "")) / 100.0
         elif rate_str.startswith("-"):
-            pct = float(rate_str[1:].replace("%", ""))
-            return 1.0 - pct / 100.0
+            return 1.0 - float(rate_str[1:].replace("%", "")) / 100.0
     except Exception:
         pass
     return 1.0
 
 
 def _extract_whisper_word_cues(audio_path: str) -> Optional[List[CueItem]]:
-    """Extract precise millisecond word timestamps using faster-whisper."""
+    """Extrae marcas de tiempo de cada palabra con precisión de milisegundos usando faster-whisper."""
     model = _get_whisper()
     if model is None:
         return None
@@ -143,18 +250,18 @@ def _extract_whisper_word_cues(audio_path: str) -> Optional[List[CueItem]]:
                     cues.append(
                         CueItem(
                             start_sec=round(w.start, 2),
-                            end_sec=round(max(w.end, w.start + 0.18), 2),
+                            end_sec=round(max(w.end, w.start + 0.15), 2),
                             text=word_clean
                         )
                     )
         return cues if cues else None
     except Exception as e:
-        print(f"[Whisper Alignment Error] {e}")
+        print(f"[Whisper Alignment Error]: {e}")
         return None
 
 
 def _estimate_cues(text: str, total_duration: float) -> List[CueItem]:
-    """Fallback rhythm-based word cue estimator if Whisper is unavailable."""
+    """Alineación rítmica de respaldo basada en silabeo y longitud si Whisper no está disponible."""
     words = [w for w in text.split() if w.strip()]
     if not words:
         return [CueItem(start_sec=0.0, end_sec=total_duration, text=text)]
@@ -180,85 +287,129 @@ def _estimate_cues(text: str, total_duration: float) -> List[CueItem]:
     return cues
 
 
-async def synthesize_speech(text: str, voice_id: str, output_path: str, rate: str = "+0%") -> List[CueItem]:
+async def synthesize_speech(
+    text: str,
+    voice_id: str,
+    output_path: str,
+    rate: str = "+0%"
+) -> List[CueItem]:
     """
-    Synthesize ultra-natural speech using Kokoro-82M Studio or Piper TTS,
-    and align word timestamps down to the exact millisecond using faster-whisper.
+    Sintetiza la voz utilizando la mejor opción disponible en la jerarquía:
+    1. Kokoro-82M (Local Neural 24kHz)
+    2. Edge-TTS (Online Neural HD)
+    3. Piper TTS (Local Offline Fallback)
+    Aplica normalización y compresión acústica inmediata con FFmpeg,
+    y alinea cada palabra al milisegundo exacto con faster-whisper.
     """
-    voice_key = LEGACY_VOICE_MAP.get(voice_id, voice_id)
-    voice_cfg = VOICES.get(voice_key, VOICES["adam"])
+    clean_text = text.strip()
+    if not clean_text:
+        raise ValueError("El texto para síntesis de voz no puede estar vacío.")
 
+    voice_key = LEGACY_VOICE_MAP.get(voice_id, voice_id)
+    voice_cfg = VOICES.get(voice_key)
+
+    # Si la voz no existe, asignar la primera voz válida
+    if not voice_cfg:
+        voice_cfg = VOICES["adam"]
+
+    engine_pref = voice_cfg.get("engine", "kokoro")
     user_rate = _parse_rate(rate)
 
     tmp_wav = output_path.replace(".mp3", ".wav")
     if tmp_wav == output_path:
         tmp_wav = output_path + ".tmp.wav"
 
-    engine = voice_cfg.get("engine", "kokoro")
-    kokoro_instance = _get_kokoro() if engine == "kokoro" else None
+    kokoro_inst = _get_kokoro()
+    engine_used = None
 
-    if engine == "kokoro" and kokoro_instance is not None:
-        # Kokoro Ultra-Natural Neural Synthesis (24kHz Studio Quality)
-        base_speed = voice_cfg.get("base_speed", 0.90)
-        eff_speed = round(max(0.65, min(1.30, base_speed * user_rate)), 2)
-        k_voice = voice_cfg.get("kokoro_voice", "am_adam")
+    # ─── Intento 1: Kokoro si está solicitado y disponible ───────────────────
+    if engine_pref == "kokoro" and kokoro_inst:
+        try:
+            k_voice = voice_cfg.get("kokoro_voice", "am_adam")
+            base_speed = voice_cfg.get("base_speed", 0.90)
+            eff_speed = round(max(0.65, min(1.30, base_speed * user_rate)), 2)
 
-        def _run_kokoro():
-            import soundfile as sf
-            samples, sample_rate = kokoro_instance.create(
-                text, voice=k_voice, speed=eff_speed, lang="en-us"
-            )
-            sf.write(tmp_wav, samples, sample_rate)
+            def _run_kokoro():
+                import soundfile as sf
+                samples, sample_rate = kokoro_inst.create(
+                    clean_text, voice=k_voice, speed=eff_speed, lang="en-us"
+                )
+                sf.write(tmp_wav, samples, sample_rate)
 
-        await asyncio.to_thread(_run_kokoro)
-    else:
-        # Piper Local TTS (for Brian or local fallback)
-        model_name = voice_cfg.get("model", "en_US-bryce-medium")
-        model_path = os.path.join(VOICES_DIR, f"{model_name}.onnx")
-        config_path = os.path.join(VOICES_DIR, f"{model_name}.onnx.json")
+            await asyncio.to_thread(_run_kokoro)
+            if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
+                engine_used = "kokoro"
+        except Exception as e:
+            print(f"[TTS Fallback] Kokoro falló ({e}), intentando Edge-TTS...")
 
-        if not os.path.exists(model_path):
-            model_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx")
-            config_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx.json")
+    # ─── Intento 2: Edge-TTS (Excelente calidad neural sin costo) ─────────────
+    if not engine_used and (engine_pref == "edge" or engine_pref == "kokoro"):
+        try:
+            import edge_tts
+            v_name = voice_cfg.get("voice_name", "en-US-ChristopherNeural")
+            if engine_pref == "kokoro":
+                # Mapear voz masculina/femenina de Kokoro a Edge
+                v_name = "en-US-ChristopherNeural" if voice_cfg.get("gender") == "Hombre" else "en-US-JennyNeural"
 
-        if not os.path.exists(model_path):
-            model_path = os.path.join(VOICES_DIR, "en_US-ryan-high.onnx")
-            config_path = os.path.join(VOICES_DIR, "en_US-ryan-high.onnx.json")
+            rate_pct = int((user_rate - 1.0) * 100)
+            edge_rate_str = f"{rate_pct:+d}%"
 
-        if not os.path.exists(model_path):
-            raise RuntimeError(f"Modelo de voz no encontrado en {VOICES_DIR}.")
+            communicate = edge_tts.Communicate(clean_text, v_name, rate=edge_rate_str)
+            await communicate.save(tmp_wav)
+            if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
+                engine_used = "edge_tts"
+        except Exception as e:
+            print(f"[TTS Fallback] Edge-TTS falló ({e}), intentando Piper local...")
 
-        voice_factor = voice_cfg.get("rate_factor", 0.90)
-        effective_speed = max(0.65, min(1.30, user_rate * voice_factor))
-        length_scale = 1.0 / effective_speed
+    # ─── Intento 3: Piper Local TTS (Offline Fallback) ────────────────────────
+    if not engine_used:
+        try:
+            model_name = voice_cfg.get("model", "en_US-bryce-medium")
+            model_path = os.path.join(VOICES_DIR, f"{model_name}.onnx")
+            config_path = os.path.join(VOICES_DIR, f"{model_name}.onnx.json")
 
-        cmd = [
-            sys.executable, "-m", "piper",
-            "-m", model_path,
-            "-c", config_path,
-            "-f", tmp_wav,
-            "--length-scale", str(round(length_scale, 3)),
-            "--noise-scale", "0.667",
-            "--noise-w-scale", "0.8",
-        ]
+            if not os.path.exists(model_path):
+                # Probar cualquier modelo presente en assets/voices
+                models_present = [f for f in os.listdir(VOICES_DIR) if f.endswith(".onnx")] if os.path.exists(VOICES_DIR) else []
+                if models_present:
+                    model_path = os.path.join(VOICES_DIR, models_present[0])
+                    config_path = model_path + ".json"
 
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            cwd=BASE_DIR
-        )
-        stdout, stderr = await proc.communicate(input=text.encode("utf-8"))
+            if os.path.exists(model_path) and os.path.exists(config_path):
+                voice_factor = voice_cfg.get("rate_factor", 0.90)
+                eff_speed = max(0.65, min(1.30, user_rate * voice_factor))
+                length_scale = 1.0 / eff_speed
 
-        if proc.returncode != 0:
-            err = stderr.decode("utf-8", errors="replace")
-            raise RuntimeError(f"Piper TTS falló (código {proc.returncode}): {err[:400]}")
+                cmd = [
+                    sys.executable, "-m", "piper",
+                    "-m", model_path,
+                    "-c", config_path,
+                    "-f", tmp_wav,
+                    "--length-scale", str(round(length_scale, 3)),
+                    "--noise-scale", "0.667",
+                    "--noise-w-scale", "0.8"
+                ]
 
-    if not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) == 0:
-        raise RuntimeError("El sintetizador de voz no generó el archivo de audio WAV.")
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdin=asyncio.subprocess.PIPE,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=BASE_DIR
+                )
+                await proc.communicate(input=clean_text.encode("utf-8"))
+                if proc.returncode == 0 and os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
+                    engine_used = "piper"
+        except Exception as e:
+            print(f"[TTS Fallback] Piper local falló: {e}")
 
-    # Convert WAV -> MP3 while sanitizing initial silence (>20ms under -45dB) and compressing
+    # Si todo falló, generar error con diagnóstico claro
+    if not engine_used or not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 1000:
+        raise RuntimeError("No se pudo generar audio con ningún motor de voz (Kokoro, Edge-TTS ni Piper). Verifica la conexión a internet o los modelos locales.")
+
+    print(f"[TTS Synthesized] Motor: {engine_used} | Voz: {voice_cfg['name']} | Velocidad: {user_rate:.2f}x")
+
+    # Sanitizar silencios iniciales (>20ms bajo -45dB), masterizar presencia y convertir a MP3
     await asyncio.to_thread(sanitize_and_trim_audio, tmp_wav, output_path)
 
     try:
@@ -267,10 +418,10 @@ async def synthesize_speech(text: str, voice_id: str, output_path: str, rate: st
     except Exception:
         pass
 
-    # Extract EXACT word millisecond timestamps using faster-whisper
+    # Extraer marcas de tiempo exactas por palabra con faster-whisper
     cues = _extract_whisper_word_cues(output_path)
 
-    # If whisper was not available, measure audio duration and estimate
+    # Si whisper no devolvió marcas, estimar según duración total del audio
     if not cues:
         probe_cmd = [
             "ffprobe", "-v", "quiet",
@@ -285,16 +436,41 @@ async def synthesize_speech(text: str, voice_id: str, output_path: str, rate: st
         )
         probe_out, _ = await probe_proc.communicate()
         try:
-            duration = float(probe_out.decode().strip())
+            dur = float(probe_out.decode().strip())
         except Exception:
-            duration = 20.0
-        cues = _estimate_cues(text, duration)
+            dur = 20.0
+        cues = _estimate_cues(clean_text, dur)
 
     return cues
 
 
-def get_available_voices():
-    return [
-        {"key": k, "id": v["id"], "name": v["name"], "gender": v["gender"]}
-        for k, v in VOICES.items()
-    ]
+def get_available_voices() -> List[Dict]:
+    """Devuelve solo las voces operativas según los motores disponibles en el sistema."""
+    avail = check_engine_availability()
+    result = []
+    for k, v in VOICES.items():
+        engine = v.get("engine", "kokoro")
+        if (engine == "kokoro" and avail["kokoro"]) or \
+           (engine == "edge" and avail["edge"]) or \
+           (engine == "piper" and avail["piper"]):
+            result.append({
+                "key": k,
+                "id": v["id"],
+                "name": v["name"],
+                "gender": v["gender"],
+                "engine": engine
+            })
+
+    # Si ningún motor específico fue detectado, devolver al menos Edge-TTS si está instalado
+    if not result:
+        for k, v in VOICES.items():
+            if v.get("engine") == "edge":
+                result.append({
+                    "key": k,
+                    "id": v["id"],
+                    "name": v["name"],
+                    "gender": v["gender"],
+                    "engine": "edge"
+                })
+
+    return result

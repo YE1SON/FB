@@ -189,7 +189,7 @@
               </div>
               <div class="form-group col-5" style="margin-bottom: 0; display: flex; align-items: center; padding-top: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <input type="checkbox" id="chkEnableHookBadge" checked style="width: 17px; height: 17px; cursor: pointer;">
+                  <input type="checkbox" id="chkEnableHookBadge" style="width: 17px; height: 17px; cursor: pointer;">
                   <label for="chkEnableHookBadge" style="margin: 0; font-size: 12px; color: #cbd5e1; cursor: pointer; font-weight: 600;">
                     Mostrar Alerta
                   </label>
@@ -200,7 +200,7 @@
             <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.14);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <input type="checkbox" id="chkEnableMicroCta" checked style="width: 17px; height: 17px; cursor: pointer;">
+                  <input type="checkbox" id="chkEnableMicroCta" style="width: 17px; height: 17px; cursor: pointer;">
                   <label for="chkEnableMicroCta" style="margin: 0; font-size: 12.5px; font-weight: 700; color: #93c5fd; cursor: pointer;">
                     💬 Píldora de Micro-CTA Superior (Segundos 3.4 a 7.8)
                   </label>
@@ -300,8 +300,31 @@
             <span class="step-num">3</span>
             <div>
               <h2>Formato y Motor Visual Híbrido</h2>
-              <p>Partículas y efectos dinámicos sobre imágenes estáticas para superar el "Motion Score" de Facebook 2026.</p>
+              <p>Clips B-Roll o Escenas bíblicas con movimiento cinemático respetado para máxima retención en Meta 2026.</p>
             </div>
+          </div>
+
+          <!-- Selector de Modo Visual (B-Roll vs Imágenes) -->
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="videoModeSelect" style="font-weight: 700; color: #ffd700;">🎬 Modo de Fondo Visual</label>
+            <select id="videoModeSelect" class="form-control" style="font-size: 13px; font-weight: 600;">
+              <option value="images" selected>🖼️ Escenas Bíblicas Cinematográficas (Imágenes HD + Movimiento de Cámara)</option>
+              <option value="broll">🎬 Clips de Video B-Roll (Pexels / Pixabay / Biblioteca Local)</option>
+            </select>
+          </div>
+
+          <!-- Panel de Información B-Roll -->
+          <div id="brollInfo" style="display: none; background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 13px; font-weight: 700; color: #93c5fd;">🎬 Motor B-Roll Cinemático Automático</span>
+              <span id="brollApiStatus" class="badge" style="font-size: 11px; padding: 3px 8px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981;">Verificando...</span>
+            </div>
+            <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 6px 0; line-height: 1.4;">
+              El sistema seleccionará automáticamente 3 clips de video verticales en alta resolución (720p+), aplicando recorte inteligente, transiciones xfade y respaldo automático sobre imágenes cinematográficas.
+            </p>
+            <small style="font-size: 11px; color: #94a3b8;">
+              💡 <em>Opcional:</em> Puedes configurar <code>PEXELS_API_KEY</code> o <code>PIXABAY_API_KEY</code> en tu servidor para buscar clips ilimitados en línea.
+            </small>
           </div>
 
           <div class="form-row">
@@ -316,8 +339,8 @@
             <div class="form-group col-3">
               <label for="cameraMotionSelect">Movimiento Cámara</label>
               <select id="cameraMotionSelect" class="form-control">
-                <option value="none" selected>🔒 Fija / Estable</option>
-                <option value="zoom_in">🔍 Acercamiento (Zoom In)</option>
+                <option value="zoom_in" selected>🔍 Acercamiento (Zoom In)</option>
+                <option value="none">🔒 Fija / Estable</option>
                 <option value="zoom_out">🔭 Alejamiento (Zoom Out)</option>
                 <option value="pan_up">⬆️ Inclinación Cielo</option>
                 <option value="pan_down">⬇️ Revelación Divina</option>
@@ -503,12 +526,10 @@
             <div class="form-group col-7">
               <label for="subtitleStyleSelect">Diseño y Tipografía de Subtítulo</label>
               <select id="subtitleStyleSelect" class="form-control">
-                <option value="gold_highlight" selected>🌟 Oro Viral (Anton - Blanco y Oro)</option>
-                <option value="neon_cyan">⚡ Neón Eléctrico (Bebas Neue - Blanco y Lima)</option>
-                <option value="holy_scripture">📖 Escritura Sagrada (Serif Clásico Bíblico)</option>
-                <option value="fire_coral">🔥 Fuego & Pasión (Anton - Blanco y Fuego)</option>
-                <option value="black_box">🏷️ Cartela Moderna (Roboto en Caja Negra)</option>
-                <option value="pure_minimal">⚪ Cine Minimalista (Roboto Blanco Puro)</option>
+                <option value="karaoke" selected>🎤 KARAOKE (Resaltado Palabra por Palabra — CapCut)</option>
+                <option value="pop">💥 POP DINÁMICO (Salto Cinético y Destello en Palabra Activa)</option>
+                <option value="cinematic">🎬 CINEMATIC NOBLE (Tipografía Sagrada Cinzel con Fade)</option>
+                <option value="clean">🪟 CLEAN MODERNO (Caja Minimalista Oscura y Alta Legibilidad)</option>
               </select>
             </div>
             <div class="form-group col-5">
@@ -533,11 +554,17 @@
               </select>
             </div>
             <div class="form-group col-5">
-              <label for="subtitleSizeSelect">Tamaño de Texto</label>
-              <select id="subtitleSizeSelect" class="form-control">
-                <option value="normal" selected>Normal</option>
-                <option value="large">Grande</option>
-              </select>
+              <label for="subtitleSizeSelect">Tamaño & Formato</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="subtitleSizeSelect" class="form-control" style="flex: 1;">
+                  <option value="normal" selected>Normal</option>
+                  <option value="large">Grande</option>
+                </select>
+                <label style="margin: 0; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #cbd5e1; cursor: pointer; white-space: nowrap;">
+                  <input type="checkbox" id="chkSubtitlesAllCaps" style="width: 15px; height: 15px; cursor: pointer;">
+                  MAYÚS
+                </label>
+              </div>
             </div>
           </div>
         </div>

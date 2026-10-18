@@ -127,6 +127,13 @@ function bootstrapJesusStudio() {
   const btnCopyCardFeedPost = document.getElementById("btnCopyCardFeedPost");
   const btnCopyCardPinnedComment = document.getElementById("btnCopyCardPinnedComment");
   const cardFeedCopyText = document.getElementById("cardFeedCopyText");
+  const cardAiPrompt = document.getElementById("cardAiPrompt");
+  const cardAiProviderSelect = document.getElementById("cardAiProviderSelect");
+  const btnGenerateCardAiImage = document.getElementById("btnGenerateCardAiImage");
+  const chkAutoCardImage = document.getElementById("chkAutoCardImage");
+  const cardAiImageStatusBadge = document.getElementById("cardAiImageStatusBadge");
+  const cardOverlayTitle = document.getElementById("cardOverlayTitle");
+  const cardOverlayDesc = document.getElementById("cardOverlayDesc");
 
   let cardSelectedImageName = "jesus_healing_miracle.jpg";
   let cardCurrentPinnedComment = "";
@@ -1761,7 +1768,7 @@ function bootstrapJesusStudio() {
       if (tabModeReels) tabModeReels.classList.remove("active");
       if (tabModeFeedCards) tabModeFeedCards.classList.add("active");
       if (workspaceReels) workspaceReels.style.display = "none";
-      if (workspaceCards) workspaceCards.style.display = "grid";
+      if (workspaceCards) workspaceCards.style.display = "";
       if (!cardStudioInitialized) {
         syncCardTemplate(cardThemeSelect ? cardThemeSelect.value : "morning_favor");
         cardStudioInitialized = true;
@@ -1770,7 +1777,7 @@ function bootstrapJesusStudio() {
       if (tabModeFeedCards) tabModeFeedCards.classList.remove("active");
       if (tabModeReels) tabModeReels.classList.add("active");
       if (workspaceCards) workspaceCards.style.display = "none";
-      if (workspaceReels) workspaceReels.style.display = "grid";
+      if (workspaceReels) workspaceReels.style.display = "";
     }
   }
 
@@ -1798,12 +1805,19 @@ function bootstrapJesusStudio() {
       if (cardPrayerInput) cardPrayerInput.value = data.prayer_english || "";
       if (cardVerseInput) cardVerseInput.value = data.scripture || "";
       if (cardFeedCopyText) cardFeedCopyText.value = data.feed_copy || "";
+      if (cardAiPrompt) cardAiPrompt.value = data.image_prompt || "";
       cardCurrentPinnedComment = data.pinned_comment || "";
 
-      if (!useExistingImage && data.recommended_image) {
-        cardSelectedImageName = data.recommended_image;
-        if (cardResultImg) cardResultImg.src = `/assets/images/${cardSelectedImageName}`;
-        loadImages();
+      const shouldAutoAiImage = chkAutoCardImage && chkAutoCardImage.checked && !useExistingImage;
+      if (shouldAutoAiImage) {
+        await generateCardAiImage();
+      } else {
+        if (!useExistingImage && data.recommended_image) {
+          cardSelectedImageName = data.recommended_image;
+          if (cardResultImg) cardResultImg.src = `/assets/images/${cardSelectedImageName}`;
+          loadImages();
+        }
+        await renderCardImage();
       }
     } catch (err) {
       console.error("Error al sincronizar plantilla de tarjeta:", err);
@@ -1815,6 +1829,105 @@ function bootstrapJesusStudio() {
     }
   }
 
+  // Generador de Imagen Sagrada con IA Personalizada para la Tarjeta (4:5)
+  async function generateCardAiImage() {
+    const defaultPrompt = cardTitleInput ? `${cardTitleInput.value}, sacred golden light, serene divine presence, high contrast cinematic render --ar 4:5` : "A devout Christian praying with folded hands, warm glowing candlelight, sacred divine light, ultra realistic 4:5 --ar 4:5";
+    const promptText = (cardAiPrompt ? cardAiPrompt.value.trim() : "") || defaultPrompt;
+    const provider = cardAiProviderSelect ? cardAiProviderSelect.value : "auto";
+
+    if (btnGenerateCardAiImage) {
+      btnGenerateCardAiImage.disabled = true;
+      btnGenerateCardAiImage.textContent = "⏳ Generando Imagen IA 4:5...";
+    }
+    if (cardAiImageStatusBadge) {
+      cardAiImageStatusBadge.style.display = "inline-block";
+      cardAiImageStatusBadge.className = "badge tag-blue";
+      cardAiImageStatusBadge.textContent = "🎨 Creando Imagen IA...";
+    }
+    if (cardRenderOverlay) {
+      if (cardOverlayTitle) cardOverlayTitle.textContent = "Creando Imagen Sagrada con IA (4:5)...";
+      if (cardOverlayDesc) cardOverlayDesc.textContent = "Generando composición bíblica única para esta oración...";
+      cardRenderOverlay.style.display = "flex";
+    }
+
+    try {
+      let finalUrl = "";
+      let finalFilename = "";
+      let engineName = provider;
+
+      if (provider === "puter") {
+        if (typeof puter === "undefined" || !puter.ai) {
+          throw new Error("Puter.js no está inicializado o disponible en este navegador.");
+        }
+        const imgEl = await puter.ai.txt2img(promptText);
+        let blob;
+        if (imgEl && imgEl.src) {
+          const resp = await fetch(imgEl.src);
+          blob = await resp.blob();
+        } else {
+          throw new Error("Puter.js no devolvió una imagen válida.");
+        }
+        const fd = new FormData();
+        fd.append("file", blob, `card_puter_${Date.now()}.png`);
+        const upRes = await fetch("/api/upload-image", { method: "POST", body: fd });
+        const upData = await upRes.json();
+        finalUrl = upData.url;
+        finalFilename = upData.filename;
+        engineName = "Puter.js AI";
+      } else {
+        const hordeKey = (aiHordeKeyInput ? aiHordeKeyInput.value.trim() : "") || localStorage.getItem("aihorde_api_key") || "0000000000";
+        const hfTok = (hfTokenInput ? hfTokenInput.value.trim() : "") || localStorage.getItem("hf_token") || "";
+
+        const res = await fetch("/api/generate-ai-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: promptText,
+            aspect_ratio: "4:5",
+            provider: provider,
+            hf_token: hfTok || null,
+            aihorde_api_key: hordeKey || null
+          })
+        });
+        const data = await res.json();
+        if (!data.success || !data.filename) {
+          throw new Error(data.error || "Fallo al generar imagen con IA en el servidor.");
+        }
+        finalUrl = data.url;
+        finalFilename = data.filename;
+        engineName = data.engine_used || provider;
+      }
+
+      cardSelectedImageName = finalFilename;
+      if (cardResultImg) cardResultImg.src = finalUrl + "?t=" + Date.now();
+
+      if (cardAiImageStatusBadge) {
+        cardAiImageStatusBadge.className = "badge tag-green";
+        cardAiImageStatusBadge.textContent = `✅ Imagen Lista (${engineName})`;
+      }
+
+      // Recomponer la tarjeta final con la nueva imagen y textos
+      await renderCardImage();
+      await loadImages();
+    } catch (err) {
+      alert("Error al generar imagen con IA para la tarjeta: " + err.message);
+      if (cardAiImageStatusBadge) {
+        cardAiImageStatusBadge.className = "badge tag-gold";
+        cardAiImageStatusBadge.textContent = "⚠️ Error en imagen IA";
+      }
+    } finally {
+      if (btnGenerateCardAiImage) {
+        btnGenerateCardAiImage.disabled = false;
+        btnGenerateCardAiImage.textContent = "🎨 Generar Imagen IA (4:5)";
+      }
+      if (cardRenderOverlay) {
+        cardRenderOverlay.style.display = "none";
+        if (cardOverlayTitle) cardOverlayTitle.textContent = "Componiendo Tarjeta 4:5...";
+        if (cardOverlayDesc) cardOverlayDesc.textContent = "Aplicando marco dorado, tipografía noble y marca de agua...";
+      }
+    }
+  }
+
   async function renderCardImage() {
     const prayer = cardPrayerInput ? cardPrayerInput.value.trim() : "";
     if (!prayer) {
@@ -1822,7 +1935,11 @@ function bootstrapJesusStudio() {
       return;
     }
 
-    if (cardRenderOverlay) cardRenderOverlay.style.display = "flex";
+    if (cardRenderOverlay) {
+      if (cardOverlayTitle) cardOverlayTitle.textContent = "Componiendo Tarjeta 4:5...";
+      if (cardOverlayDesc) cardOverlayDesc.textContent = "Aplicando marco dorado, tipografía noble y marca de agua...";
+      cardRenderOverlay.style.display = "flex";
+    }
     if (btnRenderCard) {
       btnRenderCard.disabled = true;
       btnRenderCard.textContent = "⏳ COMPONIENDO TARJETA 4:5...";
@@ -1874,6 +1991,9 @@ function bootstrapJesusStudio() {
   }
   if (btnRerollCardPrayer) {
     btnRerollCardPrayer.addEventListener("click", () => syncCardTemplate(cardThemeSelect.value, true));
+  }
+  if (btnGenerateCardAiImage) {
+    btnGenerateCardAiImage.addEventListener("click", generateCardAiImage);
   }
   if (btnRenderCard) {
     btnRenderCard.addEventListener("click", renderCardImage);

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=5.6">
+  <link rel="stylesheet" href="/static/style.css?v=5.7">
   <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
   <script>
     (function() {
@@ -940,8 +940,8 @@
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <!-- 3. ESPACIO DE TRABAJO 2: TARJETAS DE ORACIÓN (FEED 4:5)             -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <main class="workspace-studio" id="workspaceCards" style="display: none;">
-      <section class="controls-panel" style="max-width: 720px; margin: 0 auto; width: 100%;">
+    <main class="workspace-prayer-cards" id="workspaceCards" style="display: none;">
+      <section class="controls-panel">
         <div class="stage-content-card active">
           <div class="stage-header-row">
             <div class="stage-header-left">
@@ -953,6 +953,7 @@
             </div>
           </div>
 
+          <!-- Selector de Tema Bíblico -->
           <div class="form-row mt-14">
             <div class="form-group col-8">
               <label for="cardThemeSelect">Tema Bíblico o Dolor Específico (26 Categorías)</label>
@@ -967,24 +968,88 @@
             </div>
           </div>
 
+          <!-- Título en Pantalla -->
           <div class="form-group">
             <label for="cardTitleInput">Título en Pantalla de la Tarjeta (En Inglés - Dorado)</label>
             <input type="text" id="cardTitleInput" class="form-control" placeholder="DIVINE HEALING & PEACE OVER YOUR HOME">
           </div>
 
+          <!-- Oración Devocional -->
           <div class="form-group">
             <div class="flex-between mb-4">
               <label for="cardPrayerInput" class="mb-0">Oración Devocional (En Inglés - Texto Central de Alto Impacto)</label>
               <button type="button" id="btnRerollCardPrayer" class="btn btn-outline btn-sm">🎲 Otra Oración</button>
             </div>
-            <textarea id="cardPrayerInput" rows="5" class="form-control" placeholder="Infuse divine strength into every cell..."></textarea>
+            <textarea id="cardPrayerInput" rows="4" class="form-control" placeholder="Infuse divine strength into every cell..."></textarea>
           </div>
 
+          <!-- Versículo Bíblico -->
           <div class="form-group">
             <label for="cardVerseInput">Versículo Bíblico al Pie de la Imagen</label>
             <input type="text" id="cardVerseInput" class="form-control" placeholder="Isaiah 53:5 — By his wounds we are healed.">
           </div>
 
+          <!-- ─── NUEVO: IMAGEN SAGRADA CON IA PERSONALIZADA PARA ESTA ORACIÓN ─── -->
+          <div class="subpanel-card mt-14" style="background: rgba(30, 41, 59, 0.5); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: var(--radius-md); padding: 14px;">
+            <div class="flex-between mb-6">
+              <div class="flex align-center gap-8">
+                <span style="font-size: 20px;">🎨</span>
+                <div>
+                  <strong style="color: var(--accent-gold); font-size: 13.5px;">Imagen Sagrada con IA Personalizada para esta Oración</strong>
+                  <div class="text-xs text-muted">Crea una imagen única en 4:5 que coincide exactamente con las palabras de esta oración.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mt-8">
+              <label for="cardAiPrompt" class="text-xs" style="font-weight: 600;">Prompt Artístico Sagrado (Generado automáticamente para esta oración):</label>
+              <textarea id="cardAiPrompt" rows="2" class="form-control text-xs" placeholder="Prompt para generar la imagen sagrada con IA en 4:5..."></textarea>
+            </div>
+
+            <div class="form-row mt-8">
+              <div class="form-group col-5">
+                <label for="cardAiProviderSelect" class="text-xs" style="font-weight: 600;">Motor de IA:</label>
+                <select id="cardAiProviderSelect" class="form-control text-xs" style="height: 38px;">
+                  <option value="auto" selected>✨ Automático (Recomendado)</option>
+                  <option value="z_image">⚡ Z-Image Turbo HD</option>
+                  <option value="puter">💎 Puter.js (Calidad Máxima)</option>
+                  <option value="flux_schnell">🌪️ FLUX.1 Schnell</option>
+                  <option value="aihorde">🌐 AI Horde (Gratis)</option>
+                </select>
+              </div>
+              <div class="form-group col-7 flex align-end">
+                <button type="button" id="btnGenerateCardAiImage" class="btn btn-warning-gradient btn-block" style="height: 38px; font-weight: 700; font-size: 12px;">
+                  🎨 Generar Imagen IA (4:5)
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-8 flex-between">
+              <label class="chk-label text-xs">
+                <input type="checkbox" id="chkAutoCardImage">
+                <span>⚡ Auto-generar imagen IA al cambiar o sincronizar oración</span>
+              </label>
+              <span id="cardAiImageStatusBadge" class="badge tag-green" style="display:none; font-size: 10px;"></span>
+            </div>
+          </div>
+
+          <!-- Selector de Galería Existente / Subir Propia (Opcional) -->
+          <details class="subpanel-card mt-12" style="background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-main); border-radius: var(--radius-sm); padding: 10px;">
+            <summary style="cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-muted);">
+              📁 O elegir imagen de fondo de tu biblioteca / subir archivo propio
+            </summary>
+            <div class="image-gallery-picker mt-8" id="cardGalleryPicker">
+              <!-- Inyectado dinámicamente -->
+            </div>
+            <div class="upload-wrapper mt-8">
+              <label class="btn-upload" for="cardImageUpload">
+                📁 Subir Fondo Propio desde tu Dispositivo
+              </label>
+              <input type="file" id="cardImageUpload" accept="image/*" style="display:none;">
+            </div>
+          </details>
+
+          <!-- Marca de Agua -->
           <div class="card-watermark-box subpanel-card mt-12">
             <div class="flex-between mb-4">
               <label class="chk-label">
@@ -996,20 +1061,8 @@
             <input type="text" id="cardWatermarkInput" class="form-control" placeholder="@JesusDailyFaith">
           </div>
 
-          <div class="form-group mt-14">
-            <label>Selecciona la Imagen de Fondo Sagrada</label>
-            <div class="image-gallery-picker" id="cardGalleryPicker">
-              <!-- Inyectado dinámicamente -->
-            </div>
-            <div class="upload-wrapper mt-8">
-              <label class="btn-upload" for="cardImageUpload">
-                📁 O Subir Fondo Propio desde tu Dispositivo
-              </label>
-              <input type="file" id="cardImageUpload" accept="image/*" style="display:none;">
-            </div>
-          </div>
-
-          <button type="button" id="btnRenderCard" class="btn btn-primary-gradient btn-large btn-block mt-16">
+          <!-- Botón de Renderizado de la Tarjeta Final -->
+          <button type="button" id="btnRenderCard" class="btn btn-primary-gradient btn-large btn-block mt-16" style="font-weight: 800; letter-spacing: 0.5px;">
             ✨ RENDERIZAR TARJETA DE ORACIÓN 4:5 (FEED HD)
           </button>
         </div>
@@ -1019,31 +1072,31 @@
       <section class="preview-panel" id="cardPreviewSection">
         <div class="preview-sticky-wrap">
           <div class="preview-top-bar">
-            <span class="preview-title">🖼️ Vista Previa Tarjeta 4:5</span>
+            <span class="preview-title">🖼️ Vista Previa Tarjeta 4:5 HD</span>
           </div>
 
-          <div class="feed-card-mockup" style="width: 100%; max-width: 360px; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; position: relative; background: #000; margin: 0 auto; box-shadow: var(--shadow-card);">
+          <div class="feed-card-mockup" style="width: 100%; max-width: 380px; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; position: relative; background: #000; margin: 0 auto; box-shadow: var(--shadow-card); border: 1px solid var(--border-main);">
             <img id="cardResultImg" src="/assets/images/jesus_healing_miracle.jpg" alt="Tarjeta de Oración 4:5" style="width: 100%; height: 100%; object-fit: cover; display: block;">
             
             <div id="cardRenderOverlay" style="display: none; position: absolute; inset: 0; background: rgba(11, 14, 20, 0.94); flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; backdrop-filter: blur(4px); z-index: 20;">
               <div class="spinner"></div>
-              <h3 style="font-size: 15px; margin-bottom: 6px; color: var(--gold);">Componiendo Tarjeta 4:5...</h3>
-              <p style="font-size: 12px; color: var(--text-muted);">Aplicando marco dorado, tipografía noble y marca de agua...</p>
+              <h3 style="font-size: 15px; margin-bottom: 6px; color: var(--gold);" id="cardOverlayTitle">Componiendo Tarjeta 4:5...</h3>
+              <p style="font-size: 12px; color: var(--text-muted);" id="cardOverlayDesc">Aplicando marco dorado, tipografía noble y marca de agua...</p>
             </div>
           </div>
 
-          <div class="card-actions-box mt-14" id="cardActionsBox" style="width: 100%; max-width: 360px;">
-            <a id="btnDownloadCard" href="#" download="prayer_card_4_5.jpg" class="btn btn-success btn-large btn-block">
+          <div class="card-actions-box mt-14" id="cardActionsBox" style="width: 100%; max-width: 380px; margin: 0 auto;">
+            <a id="btnDownloadCard" href="#" download="prayer_card_4_5.jpg" class="btn btn-success btn-large btn-block" style="font-weight: 700;">
               ⬇️ Descargar Tarjeta JPG (1080x1350)
             </a>
-            <button type="button" id="btnCopyCardFeedPost" class="btn btn-primary btn-block mt-10">
+            <button type="button" id="btnCopyCardFeedPost" class="btn btn-primary btn-block mt-10" style="font-weight: 600;">
               📋 Copiar Publicación Completa para Facebook
             </button>
-            <button type="button" id="btnCopyCardPinnedComment" class="btn btn-gold-outline btn-block mt-10">
+            <button type="button" id="btnCopyCardPinnedComment" class="btn btn-gold-outline btn-block mt-10" style="font-weight: 600;">
               📌 Copiar Comentario Fijado de la Tarjeta
             </button>
             <div class="subpanel-card mt-10">
-              <div class="text-xs font-bold text-gold mb-4">📝 Copy de Publicación para el Feed:</div>
+              <div class="text-xs font-bold text-gold mb-4">📝 Copy Viral de Publicación para el Feed:</div>
               <textarea id="cardFeedCopyText" rows="4" class="form-control text-xs" placeholder="El copy viral para pegar en Facebook aparecerá aquí..."></textarea>
             </div>
           </div>
@@ -1072,6 +1125,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=5.6"></script>
+  <script src="/static/app.js?v=5.7"></script>
 </body>
 </html>

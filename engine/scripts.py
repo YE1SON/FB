@@ -1570,6 +1570,8 @@ def get_card_template_for_theme(theme_key: str) -> Dict[str, str]:
 
 {" ".join(hashtags)}"""
 
+    ai_prompt = generate_image_prompt_for_script(chosen_key, devotional_prayer).replace("--ar 9:16", "--ar 4:5")
+
     return {
         "theme_key": chosen_key,
         "theme_title_es": theme["title"],
@@ -1577,6 +1579,7 @@ def get_card_template_for_theme(theme_key: str) -> Dict[str, str]:
         "prayer_english": devotional_prayer,
         "scripture": scripture,
         "recommended_image": rec_img,
+        "image_prompt": ai_prompt,
         "feed_copy": feed_copy,
         "pinned_comment": theme.get("pinned_comments", ["Drop your first name below so we can cover you in prayer! 🙏"])[0]
     }

@@ -78,6 +78,7 @@ function bootstrapJesusStudio() {
   const btnPreviewShowHook = document.getElementById("btnPreviewShowHook");
   const btnPreviewShowCta = document.getElementById("btnPreviewShowCta");
   const formatPillGroup = document.getElementById("formatPillGroup");
+  const aspectRatioSelect = document.getElementById("aspectRatioSelect");
   const btnRerollMagneticComment = document.getElementById("btnRerollMagneticComment");
   const transitionStyleSelect = document.getElementById("transitionStyleSelect");
 
@@ -1571,14 +1572,6 @@ function bootstrapJesusStudio() {
     }
 
     setTimeout(initParticles, 150);
-  }
-
-  const aspectRatioSelect = document.getElementById("aspectRatioSelect");
-  if (aspectRatioSelect) {
-    aspectRatioSelect.addEventListener("change", () => {
-      updateAspectRatioPreview();
-      showStageView();
-    });
   }
 
   // ─── Control de Modo de Vista Previa (Diseño vs Video) ─────────────────────

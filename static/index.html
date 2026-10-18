@@ -63,36 +63,66 @@
 </head>
 <body>
   <div class="app-layout">
-    <!-- Encabezado Principal -->
+    <!-- Encabezado Principal Moderno (Estilo Estudio Profesional) -->
     <header class="app-header">
       <div class="brand">
         <span class="cross-icon" aria-hidden="true">✝</span>
         <div>
-          <h1>JesusReels <span>Studio</span></h1>
+          <div class="brand-title-wrap">
+            <h1>JesusReels <span>Studio</span></h1>
+            <span class="badge badge-version">v4.0 PRO</span>
+          </div>
           <p class="tagline">Creador de Reels y Videos Cristianos de Alta Retención para Facebook (Público de EE. UU.)</p>
         </div>
       </div>
-      <div class="header-badges">
-        <button type="button" id="btnOpenDailyBatch" class="btn btn-sm btn-gold-outline" style="font-weight: 700; margin-right: 8px;">
-          📅 Planificador Diario (3 Videos)
+
+      <!-- Pestañas de Navegación del Header -->
+      <nav class="header-nav-tabs">
+        <button type="button" id="tabModeReels" class="header-nav-tab active">
+          🎬 Editor de Reels (9:16)
+        </button>
+        <button type="button" id="tabModeFeedCards" class="header-nav-tab">
+          🖼️ Tarjetas Feed (4:5)
+        </button>
+        <button type="button" id="btnOpenDailyBatch" class="header-nav-tab">
+          📅 Lote Diario (3 Videos)
+        </button>
+      </nav>
+
+      <!-- Botones de Acción y Selector de Modo Claro/Oscuro -->
+      <div class="header-right-actions">
+        <button type="button" id="btnToggleTheme" class="btn btn-sm btn-theme-toggle" title="Cambiar entre modo claro y oscuro">
+          ☀️ <span class="theme-text">Modo Claro</span>
         </button>
         <span class="badge badge-free">100% Gratuito</span>
         <span class="badge badge-hd">Meta 2026 Ready</span>
       </div>
     </header>
 
-    <!-- Selector de Modo de Producción (Reels 9:16 vs Tarjetas Feed 4:5) -->
-    <div class="production-mode-bar">
-      <button type="button" id="tabModeReels" class="prod-mode-tab active">
-        🎬 Creador de Reels Virales (Video 9:16)
-      </button>
-      <button type="button" id="tabModeFeedCards" class="prod-mode-tab">
-        🖼️ Creador de Tarjetas de Oración (Feed 4:5)
-      </button>
-      <button type="button" id="btnOpenDailyBatchTop" class="prod-mode-tab prod-mode-batch">
-        📅 Lote Diario (3 Videos del Día)
-      </button>
-    </div>
+    <!-- Sub-Barra de Herramientas del Proyecto (Estilo Editor por Capas) -->
+    <section class="project-subbar">
+      <div class="subbar-left">
+        <span class="subbar-title">⚡ Editor de Reels Cristianos</span>
+        <span class="subbar-meta">9:16 Vertical HD (1080x1920) • Auto-guardado local</span>
+      </div>
+      <div class="subbar-right">
+        <button type="button" id="btnQuickSync" class="btn btn-sm btn-subbar" title="Sincronizar las 3 escenas con el guion actual">
+          🪄 Sincronizar Guion
+        </button>
+        <button type="button" id="btnQuickReroll" class="btn btn-sm btn-subbar" title="Generar otras 3 variantes de tomas">
+          🎲 Otras 3 Tomas
+        </button>
+        <button type="button" id="btnQuickAiKeys" class="btn btn-sm btn-subbar" title="Configurar Tokens de IA">
+          ⚙️ Claves IA
+        </button>
+        <button type="button" id="btnQuickRender" class="btn btn-sm btn-primary-gradient" style="font-weight: 700;" title="Renderizar Reel en MP4">
+          🚀 Exportar Reel MP4
+        </button>
+      </div>
+    </section>
+
+    <!-- Botón oculto para compatibilidad hacia atrás -->
+    <button type="button" id="btnOpenDailyBatchTop" style="display: none;"></button>
 
     <!-- Botón Flotante / Acceso Rápido Móvil para saltar al reproductor -->
     <div class="mobile-quick-nav">
@@ -168,52 +198,52 @@
           </div>
 
           <!-- Gancho Visual de Emergencia (Segundos 0 a 3 — Siempre en la Parte Superior) -->
-          <div class="hook-badge-config-box" style="margin-top: 15px; background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(255, 215, 0, 0.45); border-radius: 10px; padding: 14px;">
+          <div class="hook-badge-config-box" style="margin-top: 15px; background: var(--bg-card-header); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 13px; font-weight: 700; color: #ffd700;">⚡ Gancho Visual de Impacto (0.0s a 3.2s — Superior)</span>
+              <span style="font-size: 13px; font-weight: 700; color: var(--accent-gold);">⚡ Gancho Visual de Impacto (0.0s a 3.2s — Superior)</span>
               <button type="button" id="btnRerollHookBadge" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px;">
                 🎲 Otra Alerta
               </button>
             </div>
-            <input type="text" id="hookBadgeInput" class="form-control" style="font-weight: 900; font-family: 'Cinzel', serif; letter-spacing: 1.2px; text-transform: uppercase; font-size: 13.5px;" placeholder="PRAYER FOR YOUR CHILDREN">
+            <input type="text" id="hookBadgeInput" class="form-control" style="font-weight: 800; font-family: 'Montserrat', sans-serif; letter-spacing: 1.2px; text-transform: uppercase; font-size: 13.5px;" placeholder="PRAYER FOR YOUR CHILDREN">
             
             <div class="form-row" style="margin-top: 8px;">
               <div class="form-group col-7" style="margin-bottom: 0;">
-                <label for="hookBadgeStyleSelect" style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 3px; display: block;">🎨 Diseño y Tipografía de la Insignia</label>
-                <select id="hookBadgeStyleSelect" class="form-control" style="font-size: 12px; height: 34px;">
-                  <option value="gold_cinematic" selected>🌟 Oro Sagrado Cinematográfico (Cinzel + Marco Dorado)</option>
-                  <option value="urgency_red">🔥 Urgencia Santa de Fe (Oswald + Borde Ámbar)</option>
-                  <option value="royal_navy">👑 Nube de Gloria y Majestad (Azul Profundo + Platino)</option>
-                  <option value="clean_glass">🪟 Cristal Oscuro Minimalista (Montserrat Moderno)</option>
+                <label for="hookBadgeStyleSelect" style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 3px; display: block;">🎨 Diseño y Tipografía de la Insignia</label>
+                <select id="hookBadgeStyleSelect" class="form-control" style="font-size: 12px; height: 36px;">
+                  <option value="clean_glass" selected>🪟 Cristal Oscuro Minimalista (Píldora Moderna)</option>
+                  <option value="gold_luxury">🌟 Oro Sagrado Elegante (Píldora Minimalista)</option>
+                  <option value="viral_indigo">⚡ Indigo Moderno (Estilo Estudio Viral)</option>
+                  <option value="editorial_white">📰 Editorial Blanco (Alto Contraste)</option>
                 </select>
               </div>
               <div class="form-group col-5" style="margin-bottom: 0; display: flex; align-items: center; padding-top: 16px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <input type="checkbox" id="chkEnableHookBadge" style="width: 17px; height: 17px; cursor: pointer;">
-                  <label for="chkEnableHookBadge" style="margin: 0; font-size: 12px; color: #cbd5e1; cursor: pointer; font-weight: 600;">
+                  <label for="chkEnableHookBadge" style="margin: 0; font-size: 12px; color: var(--text-main); cursor: pointer; font-weight: 600;">
                     Mostrar Alerta
                   </label>
                 </div>
               </div>
             </div>
             
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.14);">
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <input type="checkbox" id="chkEnableMicroCta" style="width: 17px; height: 17px; cursor: pointer;">
-                  <label for="chkEnableMicroCta" style="margin: 0; font-size: 12.5px; font-weight: 700; color: #93c5fd; cursor: pointer;">
-                    💬 Píldora de Micro-CTA Superior (Segundos 3.4 a 7.8)
+                  <label for="chkEnableMicroCta" style="margin: 0; font-size: 12.5px; font-weight: 700; color: var(--primary); cursor: pointer;">
+                    💬 Píldora de Invitación a Comentar (Aviso discreto en el segundo 3.4)
                   </label>
                 </div>
-                <small style="font-size: 11px; color: #94a3b8;">Fade-in suave sin tapar subtítulos</small>
+                <small style="font-size: 11px; color: var(--text-muted);">Fade-in suave sin tapar subtítulos</small>
               </div>
               <input type="text" id="microCtaInput" class="form-control" style="font-size: 13px; margin-top: 4px;" placeholder="💬 Leave their first name below">
-              <small class="text-muted block mt-5" style="font-size: 11px; color: #94a3b8; line-height: 1.4;">
-                💡 <strong>¿Qué es la Píldora Micro-CTA?</strong> Es un aviso flotante y discreto arriba que invita a comentar nombres en el segundo 3.4 mientras se escucha la oración. Puedes desmarcar la casilla si prefieres que no aparezca en tu video.
+              <small class="text-muted block mt-5" style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                💡 <strong>¿Qué es la Píldora de Invitación?</strong> Es un aviso flotante y discreto arriba que invita a comentar nombres en el segundo 3.4 mientras se escucha la oración. Puedes desmarcar la casilla si prefieres que no aparezca en tu video.
               </small>
             </div>
 
-            <small class="text-muted block mt-5" style="font-size: 11.5px; color: #94a3b8;">
+            <small class="text-muted block mt-5" style="font-size: 11.5px; color: var(--text-muted);">
               📌 <strong>Diseño Seguro Anti-Colisiones:</strong> Ambas insignias se anclan estrictamente en la <strong>parte superior (\an8)</strong> para que <u>nunca</u> se monten sobre tus subtítulos.
             </small>
           </div>

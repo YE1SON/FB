@@ -233,7 +233,7 @@ function bootstrapJesusStudio() {
   ];
   function updateHookBadgeStyle() {
     if (!stageHookBadge) return;
-    const style = hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_cinematic";
+    const style = hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "clean_glass";
     stageHookBadge.className = "stage-hook-badge";
     stageHookBadge.classList.add(`hook-style-${style}`);
   }
@@ -550,11 +550,11 @@ function bootstrapJesusStudio() {
       const tKey = (themeSelect.value || "").toLowerCase();
       if (hookBadgeStyleSelect) {
         if (tKey.includes("warfare") || tKey.includes("fear") || tKey.includes("addiction") || tKey.includes("court") || tKey.includes("debt")) {
-          hookBadgeStyleSelect.value = "urgency_red";
+          hookBadgeStyleSelect.value = "viral_indigo";
         } else if (tKey.includes("majesty") || tKey.includes("glory") || tKey.includes("praise") || tKey.includes("harvest") || tKey.includes("favor")) {
-          hookBadgeStyleSelect.value = "royal_navy";
+          hookBadgeStyleSelect.value = "gold_luxury";
         } else {
-          hookBadgeStyleSelect.value = "gold_cinematic";
+          hookBadgeStyleSelect.value = "clean_glass";
         }
         updateHookBadgeStyle();
       }
@@ -1960,7 +1960,7 @@ function bootstrapJesusStudio() {
     });
   }
 
-  // Inicialización de Eventos
+  // Inicialización de Eventos Principales
   btnGenerateScript.addEventListener("click", triggerGenerateScript);
   btnSyncScriptToImage.addEventListener("click", triggerSyncPrompt);
   btnPreviewAudio.addEventListener("click", triggerAudioPreview);
@@ -1968,6 +1968,52 @@ function bootstrapJesusStudio() {
   themeSelect.addEventListener("change", triggerGenerateScript);
   if (videoModeSelect) {
     videoModeSelect.addEventListener("change", toggleVideoMode);
+  }
+
+  // Modo Claro y Modo Oscuro (Toggle Dinámico)
+  const btnToggleTheme = document.getElementById("btnToggleTheme");
+  function applyAppTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("jesusreels_theme", theme);
+    if (btnToggleTheme) {
+      btnToggleTheme.innerHTML = theme === "dark" 
+        ? '☀️ <span class="theme-text">Modo Claro</span>' 
+        : '🌙 <span class="theme-text">Modo Oscuro</span>';
+    }
+  }
+  const currentSavedTheme = localStorage.getItem("jesusreels_theme") || "light";
+  applyAppTheme(currentSavedTheme);
+  if (btnToggleTheme) {
+    btnToggleTheme.addEventListener("click", () => {
+      const activeTheme = document.documentElement.getAttribute("data-theme") || "light";
+      applyAppTheme(activeTheme === "dark" ? "light" : "dark");
+    });
+  }
+
+  // Botones de Acceso Rápido en la Sub-barra del Proyecto
+  const btnQuickSync = document.getElementById("btnQuickSync");
+  if (btnQuickSync) {
+    btnQuickSync.addEventListener("click", () => {
+      triggerSyncPrompt();
+    });
+  }
+  const btnQuickReroll = document.getElementById("btnQuickReroll");
+  if (btnQuickReroll) {
+    btnQuickReroll.addEventListener("click", () => {
+      if (btnRerollPrompt) btnRerollPrompt.click();
+    });
+  }
+  const btnQuickAiKeys = document.getElementById("btnQuickAiKeys");
+  if (btnQuickAiKeys) {
+    btnQuickAiKeys.addEventListener("click", () => {
+      if (btnToggleAiSettings) btnToggleAiSettings.click();
+    });
+  }
+  const btnQuickRender = document.getElementById("btnQuickRender");
+  if (btnQuickRender) {
+    btnQuickRender.addEventListener("click", () => {
+      triggerRenderVideo();
+    });
   }
 
   async function loadAiProviderKeys() {

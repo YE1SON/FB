@@ -82,13 +82,66 @@ SUBTITLE_STYLES: Dict[str, Dict] = {
     }
 }
 
-# Palabras de fe para resalte inteligente en modo Cinematic
-FAITH_KEYWORDS = {
-    "god", "jesus", "lord", "christ", "amen", "pray", "prayer", "faith",
-    "peace", "healing", "grace", "love", "mercy", "home", "family", "children",
-    "strength", "comfort", "rest", "promise", "light", "hope", "presence",
-    "freedom", "healed", "forgiven", "safe", "shelter", "victory"
+# Presets de Insignia Superior (Hook Badge) — Modernos, tipo píldora / glassmorphic, sin tipografías anticuadas
+HOOK_BADGE_PRESETS: Dict[str, Dict] = {
+    "clean_glass": {
+        "name": "🪟 Cristal Oscuro Minimalista (Píldora Moderna)",
+        "font": "Montserrat",
+        "fontsize": 42,
+        "primary": "&H00FFFFFF&",    # Blanco puro
+        "outline": "&H00302824&",
+        "back_color": "&HA015111E&", # Píldora oscura translúcida
+        "bold": -1,
+        "outline_w": 2,
+        "shadow_w": 0,
+        "spacing": 2,
+        "border_style": 3            # Cartela tipo píldora
+    },
+    "gold_luxury": {
+        "name": "🌟 Oro Sagrado Elegante (Píldora Minimalista)",
+        "font": "Montserrat",
+        "fontsize": 42,
+        "primary": "&H0025D4F5&",    # Oro cálido (#F5D425 en BGR)
+        "outline": "&H00000000&",
+        "back_color": "&HB00A0A0E&", # Píldora obsidiana profunda
+        "bold": -1,
+        "outline_w": 2,
+        "shadow_w": 0,
+        "spacing": 2,
+        "border_style": 3
+    },
+    "viral_indigo": {
+        "name": "⚡ Indigo Moderno (Estilo Estudio Viral)",
+        "font": "Montserrat",
+        "fontsize": 42,
+        "primary": "&H00FFFFFF&",
+        "outline": "&H00F16663&",    # Borde índigo/violeta
+        "back_color": "&H95552070&", # Píldora violeta moderna
+        "bold": -1,
+        "outline_w": 2,
+        "shadow_w": 0,
+        "spacing": 2,
+        "border_style": 3
+    },
+    "editorial_white": {
+        "name": "📰 Editorial Blanco (Alto Contraste)",
+        "font": "Montserrat",
+        "fontsize": 40,
+        "primary": "&H000F172A&",    # Texto oscuro slate
+        "outline": "&H00FFFFFF&",
+        "back_color": "&H15FFFFFF&", # Píldora blanca pura
+        "bold": -1,
+        "outline_w": 2,
+        "shadow_w": 0,
+        "spacing": 2,
+        "border_style": 3
+    }
 }
+
+# Mapeo de compatibilidad hacia atrás
+HOOK_BADGE_PRESETS["gold_cinematic"] = HOOK_BADGE_PRESETS["gold_luxury"]
+HOOK_BADGE_PRESETS["urgency_red"] = HOOK_BADGE_PRESETS["viral_indigo"]
+HOOK_BADGE_PRESETS["royal_navy"] = HOOK_BADGE_PRESETS["clean_glass"]
 
 
 def format_ass_time(seconds: float) -> str:
@@ -199,9 +252,21 @@ def generate_viral_ass(
     # Estilos de insignias superiores (solo si están habilitadas)
     badge_styles_block = ""
     if enable_hook_badge or enable_micro_cta:
+        b_cfg = HOOK_BADGE_PRESETS.get(hook_badge_style, HOOK_BADGE_PRESETS["clean_glass"])
+        b_font = b_cfg["font"]
+        b_size = b_cfg["fontsize"]
+        b_prim = b_cfg["primary"]
+        b_out = b_cfg["outline"]
+        b_bg = b_cfg["back_color"]
+        b_bord = b_cfg["border_style"]
+        b_ow = b_cfg["outline_w"]
+        b_sh = b_cfg["shadow_w"]
+        b_sp = b_cfg["spacing"]
+        b_margin_v = 125 if play_res_y > 1080 else 45
+
         badge_styles_block = (
-            f"\nStyle: HookBadge,Cinzel,42,&H00FFFFFF,&H000000FF,&H0000D7FF,&HE60A0E1A,-1,0,0,0,100,100,2,0,3,3,2,8,60,60,110,1"
-            f"\nStyle: MicroCTABadge,Montserrat,34,&H00E0E0E0,&H000000FF,&H00808080,&HC00D1520,1,0,0,0,100,100,1,0,3,2,1,8,60,60,110,1"
+            f"\nStyle: HookBadge,{b_font},{b_size},{b_prim},&H000000FF&,{b_out},{b_bg},-1,0,0,0,100,100,{b_sp},0,{b_bord},{b_ow},{b_sh},8,60,60,{b_margin_v},1"
+            f"\nStyle: MicroCTABadge,Montserrat,34,&H00E0E0E0,&H000000FF,&H00403020,&HB0121B2A,1,0,0,0,100,100,1,0,3,1,0,8,60,60,{b_margin_v + 58},1"
         )
 
     header = f"""[Script Info]
@@ -225,7 +290,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         clean_hook = re.sub(r'^[^\w]+', '', hook_text).strip()
         if clean_hook:
             events.append(
-                f"Dialogue: 3,0:00:00.00,0:00:03.20,HookBadge,,0,0,0,,{{\\an8\\fad(80,200)}}{clean_hook}"
+                f"Dialogue: 3,0:00:00.00,0:00:03.20,HookBadge,,0,0,0,,{{\\an8\\fad(80,200)}}{clean_hook.upper()}"
             )
 
     if enable_micro_cta and micro_cta_text:
@@ -271,7 +336,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 line_text = " ".join(formatted_words)
                 events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{line_text}")
 
-        # ─── MODO 2: POP (Salto cinético con escala y destello de color) ───────
+        # ─── MODO 2: POP (Salto cinético con destello de color, base estable sin jitter) ───────
         elif style_key == "pop":
             for active_idx, active_cue in enumerate(chunk):
                 w_start = active_cue.start_sec
@@ -286,7 +351,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 for idx, item in enumerate(chunk):
                     txt = item.text.upper() if use_caps else item.text
                     if idx == active_idx:
-                        formatted_words.append(f"{{\\fscx112\\fscy112\\t(0,70,\\fscx100\\fscy100)\\c{c_high}\\bord{outline_w+1}}}{txt}{{\\c{c_prim}\\bord{outline_w}}}")
+                        # Resalte de alta visibilidad: destello de color y borde de glow,
+                        # manteniendo estricto \fscy100 para evitar cualquier salto vertical o jitter
+                        formatted_words.append(f"{{\\c{c_high}\\bord{outline_w+2}\\3c{c_high}}}{txt}{{\\c{c_prim}\\bord{outline_w}\\3c{outline}}}")
                     else:
                         formatted_words.append(txt)
 

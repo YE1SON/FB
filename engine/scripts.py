@@ -1164,22 +1164,239 @@ def generate_image_prompt_for_script(
     return f"{base_scene}{custom_cue}, {style}, dynamic framing, sacred golden light, hyper-detailed, masterpiece --ar 9:16"
 
 
+# =============================================================================
+# 3-SCENE DYNAMIC PROMPT CONFIGURATIONS (Meta 2026 3-Shot Narrative Arc)
+# Scene 1: Apertura & Gancho Emocional (0.0s - 3.2s)
+# Scene 2: Intercesión & Punto de Dolor / Oración en Fe (3.2s - 10.0s)
+# Scene 3: Victoria, Consuelo & Encuentro con Jesús (10.0s al final)
+# =============================================================================
+
+THEME_3SCENE_CONFIGS: Dict[str, Dict[str, List[str]]] = {
+    "lost_child": {
+        "s1": [
+            "Cinematic atmospheric opening: a worried parent sitting quietly near a window at dusk looking outside, soft warm interior lamp, deep emotion and longing",
+            "Cinematic opening: an empty doorway with warm light spilling onto a quiet path, a parent holding a family photo in prayerful reflection",
+            "Cinematic opening: a solitary figure standing on a peaceful evening porch, looking at the distant horizon with faithful hope"
+        ],
+        "s2": [
+            "Emotional intercession: a mother or father kneeling in fervent heartfelt prayer with closed eyes, soft candle glow, deep intercession and love",
+            "Emotional intercession: open Holy Bible on a rustic table with gentle golden light illuminating verses of redemption and promise",
+            "Emotional intercession: hands gently clasped over a worn Bible, quiet tears of faith, ethereal warm golden rays surrounding the prayer"
+        ],
+        "s3": [
+            "Jesus Christ with tender outstretched hands welcoming a lost traveler home, celestial golden hour aura, divine compassion",
+            "Jesus Christ placing His sacred comforting hand upon a young person's shoulder, radiant divine peace and forgiveness",
+            "A joyful heartfelt embrace bathed in brilliant celestial light, Jesus watching over them with serene loving victory"
+        ]
+    },
+    "family_protection": {
+        "s1": [
+            "Cinematic atmospheric opening: a warm cozy home at twilight with soft glowing windows, gentle peaceful sky, a sanctuary of safety",
+            "Cinematic opening: a loving family gathered together in a peaceful living room bathed in gentle warm evening light",
+            "Cinematic opening: silhouette of a home surrounded by serene mountain valleys and warm sunset hues, atmosphere of quiet peace"
+        ],
+        "s2": [
+            "Emotional intercession: a family holding hands in quiet devout prayer around a rustic wooden table, soft candlelight and reverent warmth",
+            "Emotional intercession: open Holy Bible resting on a wooden altar, sacred golden rays shining downward, symbol of protection and covenant",
+            "Emotional intercession: a father and mother praying together in faith over their resting home, divine golden atmosphere"
+        ],
+        "s3": [
+            "Jesus Christ standing protectively with raised hands blessing a peaceful home, celestial golden light radiating outward",
+            "Jesus Christ surrounded by holy golden glory, outstretched arms releasing divine shield and eternal peace over the family",
+            "Majestic silhouette of Jesus on a tranquil mountain overlooking the valley, serene golden dawn and victorious grace"
+        ]
+    },
+    "medical_fear": {
+        "s1": [
+            "Cinematic atmospheric opening: a weary person sitting quietly in emotional contemplation, soft window light piercing through shadow, poignant atmosphere",
+            "Cinematic opening: gentle hands resting on a bedside with quiet vulnerability, soft dawn light creeping through curtains",
+            "Cinematic opening: a person holding a small cross in a quiet room, finding quiet strength amidst vulnerability, dramatic chiaroscuro"
+        ],
+        "s2": [
+            "Emotional intercession: a faithful person in intense emotional prayer with closed eyes, single tear of surrender, glowing sacred candle light",
+            "Emotional intercession: open Bible on a bedside table with morning sunbeams touching the sacred text, atmosphere of divine comfort and hope",
+            "Emotional intercession: hands raised in quiet surrender and faith, surrounded by warm volumetric chiaroscuro God rays"
+        ],
+        "s3": [
+            "Jesus Christ placing His divine healing hand upon the head of a faithful soul, glowing golden warmth, supernatural peace and healing",
+            "Jesus Christ with compassionate eyes, radiant celestial light flowing from His sacred hands, bringing life and victory",
+            "Jesus standing in glorious divine sunlight, smiling with tender love and compassion, triumph over pain and fear"
+        ]
+    },
+    "zero_balance": {
+        "s1": [
+            "Cinematic atmospheric opening: a person sitting at a rustic wooden table in quiet thought, looking out an open window toward the morning horizon",
+            "Cinematic opening: hands resting on an empty table with an open Bible, soft morning dawn beginning to break through mist",
+            "Cinematic opening: a solitary honest worker taking a quiet breath of faith at dawn, beautiful serene landscape in background"
+        ],
+        "s2": [
+            "Emotional intercession: faithful prayer with open hands resting upward on an open Bible, bathed in golden sunlight, trust in divine provision",
+            "Emotional intercession: devout person praying in quiet humility, soft golden volumetric light pouring through a window, serene trust",
+            "Emotional intercession: open scriptures illuminated by radiant sunbeams, ancient promise of God's daily bread and faithfulness"
+        ],
+        "s3": [
+            "Jesus Christ opening a majestic golden doorway of light, beaming with supernatural abundance, peace, and open doors",
+            "Jesus Christ smiling with boundless grace, outstretched hands overflowing with divine blessing and radiant morning light",
+            "Jesus walking beside a faithful person on a path illuminated by brilliant golden sunlight, victory and favor"
+        ]
+    },
+    "night_anxiety": {
+        "s1": [
+            "Cinematic atmospheric opening: a quiet bedroom at midnight, starry night sky visible through an open window, soft warm bedside lamp",
+            "Cinematic opening: a person sitting up on the edge of the bed looking peacefully out the window into a starlit serene night",
+            "Cinematic opening: gentle silhouette in quiet stillness during the night, soft moonbeams resting on an open Bible"
+        ],
+        "s2": [
+            "Emotional intercession: a person taking a deep breath of relief, praying with closed eyes and relaxed shoulders, gentle warm golden glow",
+            "Emotional intercession: open Bible on a bedside table illuminated by soft soothing amber lamp light, tranquil sacred atmosphere",
+            "Emotional intercession: hands folded gently in prayer, dark shadows dissolving into warm golden ethereal light, sweet quiet surrender"
+        ],
+        "s3": [
+            "Jesus Christ standing beside the resting person, placing a gentle comforting hand of peace on their head, calming aura",
+            "Jesus Christ calming the restless winds with serene outstretched hands, celestial golden glow, deep tranquil peace",
+            "Jesus Christ with loving compassionate eyes, whispering peace into the quiet night, brilliant soft golden atmosphere"
+        ]
+    },
+    "morning_favor": {
+        "s1": [
+            "Cinematic atmospheric opening: glorious golden sunrise streaming through an open window, illuminating an open Holy Bible on a wooden table, warm steam",
+            "Cinematic opening: panoramic dawn over a peaceful green valley, vibrant golden hour sunburst, fresh morning devotion",
+            "Cinematic opening: a person opening window shutters to a breathtaking golden sunrise, taking in fresh morning air with joyful gratitude"
+        ],
+        "s2": [
+            "Emotional intercession: devout Christian smiling in morning devotion, hands lifted in joyful praise, radiant morning sunbeams pouring in",
+            "Emotional intercession: close-up of open Bible pages glowing under pristine morning sunlight, reverent golden atmosphere",
+            "Emotional intercession: heartfelt morning prayer of gratitude and expectation, golden light dancing in the room, pure peace"
+        ],
+        "s3": [
+            "Jesus Christ standing in radiant dawn sunlight with welcoming open arms, bestowing daily favor and victory",
+            "Jesus Christ walking along a bright sunlit pathway, inviting the believer forward with a tender smile of victory",
+            "Jesus surrounded by triumphant celestial morning glow, outstretched hands releasing divine blessing over the day"
+        ]
+    },
+    "marriage_healing": {
+        "s1": [
+            "Cinematic atmospheric opening: two empty chairs at a quiet wooden table bathed in soft twilight, a delicate moment of quiet longing for reconciliation",
+            "Cinematic opening: a person looking out a window into the soft rain, reflecting on love and forgiveness with tender vulnerability",
+            "Cinematic opening: hands resting near wedding rings on a wooden table beside an open Bible, soft atmospheric light"
+        ],
+        "s2": [
+            "Emotional intercession: two hands gently reaching out to touch in heartfelt forgiveness and prayer, surrounded by warm golden candlelight",
+            "Emotional intercession: husband and wife praying together with bowed heads and gentle embrace, soft sacred rays of healing light",
+            "Emotional intercession: open Bible showing verses of love and patience, bathed in warm ethereal glow, restoration and peace"
+        ],
+        "s3": [
+            "Jesus Christ placing His sacred hands over the united hands of a couple, radiant celestial light of reconciliation",
+            "Jesus Christ blessing a home with warm golden aura, smiling upon restored love, peace and unbreakable covenant",
+            "Couple walking together on a peaceful sunlit path, Jesus walking beside them with loving guidance and joy"
+        ]
+    },
+    "healing_depression": {
+        "s1": [
+            "Cinematic atmospheric opening: a solitary person sitting in a dimly lit room as a single bright ray of golden sunlight breaks through the window",
+            "Cinematic opening: a weary figure looking up towards the morning sky, shadows gently dissolving into dawn light",
+            "Cinematic opening: a person holding an open Bible to their chest in the quiet dawn, finding quiet solace and breath"
+        ],
+        "s2": [
+            "Emotional intercession: a devout believer weeping tears of relief in heartfelt prayer, surrounded by sudden warm volumetric golden rays",
+            "Emotional intercession: hands lifted from heavy shadows into brilliant heavenly light, atmosphere of sacred deliverance and emotional release",
+            "Emotional intercession: open Bible on a wooden bench in a tranquil garden, golden sunbeams piercing through ancient olive trees"
+        ],
+        "s3": [
+            "Jesus Christ kneeling beside the weary person, gently lifting their chin with infinite tenderness and loving eyes",
+            "Jesus Christ wrapping warm, radiant celestial arms around the person, banishing every shadow with divine joy and light",
+            "Jesus standing with outstretched hands in a sea of peaceful golden wildflowers, victorious sunrise and renewed life"
+        ]
+    },
+    "peace_in_storm": {
+        "s1": [
+            "Cinematic atmospheric opening: dramatic dark stormy sky over turbulent waters, with a sudden majestic beam of golden heavenly light piercing through",
+            "Cinematic opening: a solitary silhouette standing calm and steadfast on a shoreline as waves crash and clouds part",
+            "Cinematic opening: a warm beacon of light shining from a peaceful coastal sanctuary amidst crashing ocean waves"
+        ],
+        "s2": [
+            "Emotional intercession: a faithful person praying with profound stillness and unshakable peace amidst swirling winds, surrounded by holy golden glow",
+            "Emotional intercession: open Bible held steady against the storm, illuminated with radiant celestial light, rock of refuge",
+            "Emotional intercession: hands folded calmly in prayer, eyes closed in profound serenity, volumetric God-rays cutting through dark clouds"
+        ],
+        "s3": [
+            "Jesus Christ commanding the raging waves to be still, majestic outstretched arms, storm parting into glorious golden calm",
+            "Jesus Christ walking on the turbulent waters with calm sovereign authority, extending His hand to pull you up to safety",
+            "Jesus Christ surrounded by brilliant serene celestial daylight, ocean completely tranquil and glassy, absolute victory"
+        ]
+    },
+    "strength_weary": {
+        "s1": [
+            "Cinematic atmospheric opening: a tired traveler pausing along a mountain trail at dusk, leaning gently on a walking staff, taking a deep breath",
+            "Cinematic opening: a hardworking person resting hands on a wooden workbench, soft golden sunset streaming across the room",
+            "Cinematic opening: a weary soul sitting quietly under a grand ancient oak tree, finding shade and quiet stillness"
+        ],
+        "s2": [
+            "Emotional intercession: a person lifting tired hands in prayer, receiving sudden renewed warmth and ethereal golden light from above",
+            "Emotional intercession: devout prayer in quiet humility, face illuminated with newfound peace and supernatural stamina, golden chiaroscuro",
+            "Emotional intercession: open scriptures illuminated by radiant sunbeams, promising that those who wait on the Lord will soar like eagles"
+        ],
+        "s3": [
+            "Jesus Christ extending His strong comforting hand to lift up the weary person, brilliant golden sunrise of strength",
+            "Jesus Christ placing His hand on the shoulder of the believer, infusing divine power and peace, radiant celestial aura",
+            "Jesus walking alongside the rejuvenated person, both looking toward a victorious bright horizon filled with hope"
+        ]
+    }
+}
+
+
 def generate_3scene_prompts_for_script(
     theme_key: Optional[str] = None,
     script_text: str = "",
     custom_topic: Optional[str] = None
 ) -> Dict[str, str]:
-    """Genera 3 prompts sincronizados para las 3 tomas del Reel."""
+    """Genera 3 prompts sincronizados, dinámicos y diferenciados para las 3 tomas del Reel."""
     t_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else "morning_favor"
     theme = VIRAL_THEMES.get(t_key, VIRAL_THEMES["morning_favor"])
-    topic_str = f" for {_translate_topic(custom_topic)}" if (custom_topic and custom_topic.strip()) else ""
+    
+    # Resolver tema personalizado si existe
+    custom_trans = _translate_topic(custom_topic) if (custom_topic and custom_topic.strip()) else ""
+    topic_cue = f", spiritually touching theme of {custom_trans}" if custom_trans else ""
 
-    p1 = f"Cinematic atmospheric opening: an open Holy Bible on a wooden table beside gentle morning light{topic_str}, warm golden glow, award-winning photography --ar 9:16"
-    p2 = f"Emotional intercession: a faithful person in quiet heartfelt prayer{topic_str}, dramatic volumetric chiaroscuro lighting, deep reverence, 8k --ar 9:16"
-    p3 = f"Jesus Christ with compassionate outstretched hands, golden hour celestial aura, divine peace and victory{topic_str}, masterpiece --ar 9:16"
+    # Estilos fotográficos cinemáticos variables para asegurar unicidad
+    style1 = random.choice([
+        "cinematic 35mm photography, soft morning dawn light, photorealistic 8k, masterpiece",
+        "intimate emotional atmosphere, atmospheric chiaroscuro lighting, anamorphic lens, 8k",
+        "fine art photography, volumetric warm God-rays, sacred realism, award-winning shot"
+    ])
+    style2 = random.choice([
+        "dramatic chiaroscuro lighting, volumetric golden rays, photorealistic 8k, emotional depth",
+        "sacred golden candlelight, soft bokeh background, hyper-detailed portrait of faith, 8k",
+        "hyper-realistic Unreal Engine 5 render, radiant atmospheric glow, high fidelity"
+    ])
+    style3 = random.choice([
+        "golden hour celestial aura, heavenly volumetric sunbeams, transcendent victory, masterpiece 8k",
+        "sacred celestial radiance, tender compassionate eyes, epic cinematic composition, 8k",
+        "majestic golden sunrise, warm divine atmosphere, hyper-detailed, masterpiece"
+    ])
+
+    if t_key in THEME_3SCENE_CONFIGS:
+        cfg = THEME_3SCENE_CONFIGS[t_key]
+        raw_p1 = random.choice(cfg["s1"])
+        raw_p2 = random.choice(cfg["s2"])
+        raw_p3 = random.choice(cfg["s3"])
+    else:
+        # Fallback temático derivado de los mapeos del tema
+        candidate_scenarios = THEME_TO_SCENARIO_MAP.get(t_key, ["holy_bible", "people_praying", "jesus_comforting"])
+        s1_pool = SCENARIO_POOLS.get(candidate_scenarios[0], SCENARIO_POOLS["holy_bible"])
+        s2_pool = SCENARIO_POOLS.get(candidate_scenarios[1] if len(candidate_scenarios) > 1 else "people_praying", SCENARIO_POOLS["people_praying"])
+        s3_pool = SCENARIO_POOLS.get("jesus_comforting", SCENARIO_POOLS["jesus_comforting"])
+
+        raw_p1 = f"Cinematic atmospheric opening: {random.choice(s1_pool)}"
+        raw_p2 = f"Emotional intercession: {random.choice(s2_pool)}"
+        raw_p3 = f"Sacred divine victory: {random.choice(s3_pool)}"
+
+    p1 = f"{raw_p1}{topic_cue}, {style1} --ar 9:16"
+    p2 = f"{raw_p2}{topic_cue}, {style2} --ar 9:16"
+    p3 = f"{raw_p3}{topic_cue}, {style3} --ar 9:16"
 
     return {
-        "prompt": generate_image_prompt_for_script(theme_key, script_text, custom_topic),
+        "prompt": p1,
         "scene_1_prompt": p1,
         "scene_2_prompt": p2,
         "scene_3_prompt": p3

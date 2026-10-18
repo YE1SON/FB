@@ -298,6 +298,7 @@ function bootstrapJesusStudio() {
     stageHookBadge.classList.add(`hook-font-${font}`);
     stageHookBadge.classList.add(`hook-size-${size}`);
   }
+  const updateHookBadgeStyle = updateHookBadgeAppearance;
 
   if (hookBadgeStyleSelect) {
     hookBadgeStyleSelect.addEventListener("change", updateHookBadgeAppearance);
@@ -696,7 +697,7 @@ function bootstrapJesusStudio() {
         } else {
           hookBadgeStyleSelect.value = "clean_glass";
         }
-        updateHookBadgeStyle();
+        updateHookBadgeAppearance();
       }
       updateCharCounters();
       updateProjectTitle();

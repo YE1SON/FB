@@ -7,7 +7,7 @@ import shutil
 import random
 import requests
 from io import BytesIO
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 from PIL import Image
 from gradio_client import Client
 

@@ -117,6 +117,23 @@ def build_3scene_video_filter(
     tf2 = max(int(dur2 * fps), 30)
     tf3 = max(int(dur3 * fps), 30)
 
+    # Función auxiliar para encuadre inteligente sin recortes en 1:1
+    def _get_scene_base_filter(idx: int, motion_expr: str) -> str:
+        if w == h:
+            # Encuadre inteligente 1:1 (Square Feed): Fondo con resplandor difuminado + primer plano completo sin cortes
+            return (
+                f"[{idx}:v]split=2[bg_raw_{idx}][fg_raw_{idx}];"
+                f"[bg_raw_{idx}]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},gblur=sigma=22,eq=brightness=-0.12[bg_{idx}];"
+                f"[fg_raw_{idx}]scale={w}:{h}:force_original_aspect_ratio=decrease[fg_{idx}];"
+                f"[bg_{idx}][fg_{idx}]overlay=(W-w)/2:(H-h)/2,setsar=1,"
+                f"{motion_expr}"
+            )
+        else:
+            return (
+                f"[{idx}:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
+                f"{motion_expr}"
+            )
+
     # Procesar entrada 1
     if _is_video_file(inputs[0]):
         s1 = (
@@ -126,9 +143,9 @@ def build_3scene_video_filter(
         )
     else:
         motion_expr_1 = _get_zoompan_expr(camera_motion, tf1, w, h, fps)
+        base_1 = _get_scene_base_filter(0, motion_expr_1)
         s1 = (
-            f"[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
-            f"{motion_expr_1},"
+            f"{base_1},"
             f"split=2[v1_sharp][v1_blur_in];"
             f"[v1_blur_in]gblur=sigma=10[v1_blurred];"
             f"[v1_sharp][v1_blurred]blend=all_expr='if(lt(T,0.30), B*(1-T/0.30)+A*(T/0.30), A)',"
@@ -147,10 +164,7 @@ def build_3scene_video_filter(
         # Alternar movimiento cinemático para escena 2
         alt_motion = "pan_up" if camera_motion == "zoom_in" else "zoom_in"
         motion_expr_2 = _get_zoompan_expr(alt_motion, tf2, w, h, fps)
-        s2 = (
-            f"[1:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
-            f"{motion_expr_2}[v2]"
-        )
+        s2 = f"{_get_scene_base_filter(1, motion_expr_2)}[v2]"
     filters.append(s2)
 
     # Procesar entrada 3
@@ -162,10 +176,7 @@ def build_3scene_video_filter(
         )
     else:
         motion_expr_3 = _get_zoompan_expr(camera_motion, tf3, w, h, fps)
-        s3 = (
-            f"[2:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
-            f"{motion_expr_3}[v3]"
-        )
+        s3 = f"{_get_scene_base_filter(2, motion_expr_3)}[v3]"
     filters.append(s3)
 
     # Transiciones encadenadas xfade

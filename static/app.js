@@ -702,10 +702,14 @@ function bootstrapJesusStudio() {
 
   // 6. Preescucha de Audio
   async function triggerAudioPreview() {
-    const fullText = `${scriptHook.value} ${scriptBody.value} ${scriptCta.value}`.trim();
-    if (!fullText) {
-      alert("Primero genera o escribe un guion.");
-      return;
+    let previewText = `${scriptHook.value} ${scriptBody.value}`.trim();
+    if (!previewText) {
+      previewText = "The Lord is your shepherd and your shield today. Grace and peace be over your home.";
+    }
+    // Para que la preescucha sea instantánea y ágil (< 2 segundos), tomar hasta 25 palabras
+    const words = previewText.split(/\s+/);
+    if (words.length > 25) {
+      previewText = words.slice(0, 25).join(" ") + "...";
     }
 
     btnPreviewAudio.disabled = true;
@@ -715,17 +719,17 @@ function bootstrapJesusStudio() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: fullText,
+          text: previewText,
           voice_key: voiceSelect.value,
           rate: rateSelect.value
         })
       });
       const data = await res.json();
-      audioPreviewPlayer.src = data.audio_url;
+      audioPreviewPlayer.src = `${data.audio_url}?t=${Date.now()}`;
       audioPreviewPlayer.style.display = "block";
-      audioPreviewPlayer.play();
+      await audioPreviewPlayer.play().catch(() => {});
     } catch (e) {
-      alert("Error al reproducir audio: " + e.message);
+      alert("Aviso al reproducir audio: " + e.message);
     } finally {
       btnPreviewAudio.disabled = false;
       btnPreviewAudio.textContent = "🔊 Escuchar Previa del Audio";
@@ -985,7 +989,9 @@ function bootstrapJesusStudio() {
           aspect_ratio: "9:16",
           provider: activeProvider,
           hf_token: hfTok,
-          aihorde_api_key: hordeKey
+          aihorde_api_key: hordeKey,
+          scene_num: sceneNum,
+          used_images: [selectedImageName, selectedImageName2, selectedImageName3].filter(Boolean)
         })
       });
       if (!res.ok) {
@@ -1389,15 +1395,27 @@ function bootstrapJesusStudio() {
   const stageOverlay = document.getElementById("stageOverlay");
 
   function updateSubtitlePosition() {
-    if (!stageOverlay || !subtitlePositionSelect) return;
-    stageOverlay.classList.remove("pos-bottom", "pos-center", "pos-top");
-    stageOverlay.classList.add(`pos-${subtitlePositionSelect.value}`);
+    const pos = subtitlePositionSelect ? subtitlePositionSelect.value : "bottom";
+    if (stageOverlay) {
+      stageOverlay.classList.remove("pos-bottom", "pos-center", "pos-top");
+      stageOverlay.classList.add(`pos-${pos}`);
+    }
+    if (liveSubPreview) {
+      liveSubPreview.classList.remove("pos-bottom", "pos-center", "pos-top");
+      liveSubPreview.classList.add(`pos-${pos}`);
+    }
   }
 
   function updateSubtitleAnimation() {
-    if (!stagePlaceholder || !subtitleAnimationSelect) return;
-    stagePlaceholder.classList.remove("anim-pop", "anim-fade", "anim-scale_slow", "anim-none");
-    stagePlaceholder.classList.add(`anim-${subtitleAnimationSelect.value}`);
+    const anim = subtitleAnimationSelect ? subtitleAnimationSelect.value : "pop";
+    if (stagePlaceholder) {
+      stagePlaceholder.classList.remove("anim-pop", "anim-glow", "anim-fade", "anim-scale_slow", "anim-none");
+      stagePlaceholder.classList.add(`anim-${anim}`);
+    }
+    if (liveSubPreview) {
+      liveSubPreview.classList.remove("anim-pop", "anim-glow", "anim-fade", "anim-scale_slow", "anim-none");
+      liveSubPreview.classList.add(`anim-${anim}`);
+    }
   }
 
   if (subtitlePositionSelect) {
@@ -1425,25 +1443,34 @@ function bootstrapJesusStudio() {
   function updateAspectRatioPreview() {
     const aspectSelect = document.getElementById("aspectRatioSelect");
     const phoneMockup = document.querySelector(".phone-mockup");
+    const phoneScreen = document.querySelector(".phone-screen");
+    const badgeRatio = document.querySelector(".badge-ratio");
     const stageBlurBg = document.getElementById("stageBlurBg");
-    if (!aspectSelect || !phoneMockup) return;
+    const stageImg = document.getElementById("stageSelectedImage");
+    if (!aspectSelect) return;
 
-    if (stageBlurBg) {
-      stageBlurBg.style.backgroundImage = `url('/assets/images/${selectedImageName}')`;
+    const val = aspectSelect.value;
+    if (badgeRatio) badgeRatio.textContent = val;
+
+    if (stageBlurBg && selectedImageName) {
+      const activeBg = (selectedImageName.startsWith("data:") || selectedImageName.startsWith("blob:") || selectedImageName.startsWith("http"))
+        ? selectedImageName
+        : `/assets/images/${selectedImageName}`;
+      stageBlurBg.style.backgroundImage = `url('${activeBg}')`;
     }
 
-    if (aspectSelect.value === "9:16") {
-      phoneMockup.style.aspectRatio = "9/16";
-      phoneMockup.style.maxWidth = "320px";
-      stagePlaceholder.classList.remove("fit-contain");
-    } else if (aspectSelect.value === "1:1") {
-      phoneMockup.style.aspectRatio = "1/1";
-      phoneMockup.style.maxWidth = "380px";
-      stagePlaceholder.classList.add("fit-contain");
-    } else if (aspectSelect.value === "16:9") {
-      phoneMockup.style.aspectRatio = "16/9";
-      phoneMockup.style.maxWidth = "480px";
-      stagePlaceholder.classList.add("fit-contain");
+    if (val === "9:16") {
+      if (phoneMockup) phoneMockup.style.maxWidth = "320px";
+      if (phoneScreen) phoneScreen.style.aspectRatio = "9 / 16";
+      if (stageImg) stageImg.style.objectFit = "cover";
+    } else if (val === "1:1") {
+      if (phoneMockup) phoneMockup.style.maxWidth = "360px";
+      if (phoneScreen) phoneScreen.style.aspectRatio = "1 / 1";
+      if (stageImg) stageImg.style.objectFit = "contain";
+    } else if (val === "16:9") {
+      if (phoneMockup) phoneMockup.style.maxWidth = "440px";
+      if (phoneScreen) phoneScreen.style.aspectRatio = "16 / 9";
+      if (stageImg) stageImg.style.objectFit = "contain";
     }
 
     setTimeout(initParticles, 150);

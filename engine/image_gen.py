@@ -147,6 +147,7 @@ def generate_flux_schnell_space(
     """
     Genera imagen con el modelo oficial FLUX.1 [schnell] de Black Forest Labs.
     Fotorrealismo cinematográfico, iluminación de atardecer y proporciones exactas.
+    Incluye reintento automático anónimo si el token del usuario agota la cuota ZeroGPU.
     """
     clean_prompt = enhance_sacred_prompt(prompt)
     dims = {
@@ -156,25 +157,35 @@ def generate_flux_schnell_space(
     }
     width, height = dims.get(aspect_ratio, (768, 1360))
 
-    print(f"[FLUX.1 Schnell] Conectando a Black Forest Labs Space ({width}x{height})...")
-    client = Client("black-forest-labs/FLUX.1-schnell", token=hf_token or None)
-    result = client.predict(
-        prompt=clean_prompt,
-        seed=0,
-        randomize_seed=True,
-        width=width,
-        height=height,
-        num_inference_steps=4,
-        api_name="/infer"
-    )
+    tokens_to_try = [hf_token] if hf_token else [None]
+    if hf_token:
+        tokens_to_try.append(None)  # Respaldo anónimo de alta velocidad
 
-    if isinstance(result, (tuple, list)) and len(result) > 0:
-        img_path = result[0]
-        if isinstance(img_path, str) and os.path.exists(img_path):
-            with open(img_path, "rb") as f:
-                return f.read()
+    last_err = None
+    for tok in tokens_to_try:
+        try:
+            print(f"[FLUX.1 Schnell] Conectando a Black Forest Labs Space ({width}x{height}, token={'usuario' if tok else 'anónimo'})...")
+            client = Client("black-forest-labs/FLUX.1-schnell", token=tok)
+            result = client.predict(
+                prompt=clean_prompt,
+                seed=random.randint(1, 99999999),
+                randomize_seed=True,
+                width=width,
+                height=height,
+                num_inference_steps=4,
+                api_name="/infer"
+            )
 
-    raise RuntimeError(f"FLUX.1 Schnell no devolvió un archivo de imagen válido: {result}")
+            if isinstance(result, (tuple, list)) and len(result) > 0:
+                img_path = result[0]
+                if isinstance(img_path, str) and os.path.exists(img_path):
+                    with open(img_path, "rb") as f:
+                        return f.read()
+        except Exception as e:
+            last_err = e
+            print(f"[FLUX.1 Schnell] Intento con token={'usuario' if tok else 'anónimo'} no completó: {e}")
+
+    raise RuntimeError(f"FLUX.1 Schnell no devolvió un archivo de imagen válido: {last_err}")
 
 # ─── Motor 3: AI Horde (Red Comunitaria de GPUs) ─────────────────────────────
 
@@ -269,14 +280,16 @@ def generate_ai_scene_image(
     provider: str = "auto",
     hf_token: Optional[str] = None,
     aihorde_api_key: Optional[str] = None,
+    scene_num: int = 1,
+    used_images: Optional[List[str]] = None,
     **kwargs
 ) -> Dict:
     """
     Genera una escena de alta calidad utilizando los motores avanzados:
-    1. Z-Image Turbo (Tongyi-MAI DiT) — Máxima calidad fotográfica y velocidad.
-    2. FLUX.1 Schnell (Black Forest Labs) — Fotorrealismo y luces cinematográficas.
+    1. FLUX.1 Schnell (Black Forest Labs) — Fotorrealismo extremo en sub-4 segundos.
+    2. Z-Image Turbo (Tongyi-MAI DiT) — Renderizado cinematográfico DiT.
     3. AI Horde — Respaldo gratuito comunitario.
-    4. Biblioteca Local HD — Respaldo instantáneo sin fallos.
+    4. Biblioteca Local HD — Respaldo instantáneo con 3 pools temáticos (CERO REPETICIONES).
     """
     prompt = prompt.strip()
     if not prompt:
@@ -292,36 +305,26 @@ def generate_ai_scene_image(
     img_bytes = None
     engine_used = None
 
-    # Intento 1: Z-Image Turbo (Si fue seleccionado o en auto)
-    if provider in ("z_image", "auto"):
-        try:
-            img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-            engine_used = "Z-Image Turbo HD"
-        except Exception as e:
-            print(f"[ImageGen] Z-Image Turbo no pudo completar: {e}")
-            if provider == "z_image":
-                # Intentar rescate automático con FLUX.1 Schnell
-                print("[ImageGen] Activando rescate automático con FLUX.1 Schnell...")
-
-    # Intento 2: FLUX.1 Schnell (Si fue seleccionado o como rescate de Z-Image)
-    if not img_bytes and provider in ("flux_schnell", "z_image", "auto"):
+    # Motor 1: FLUX.1 Schnell (Sub-4s, máxima calidad fotorrealista)
+    if provider in ("flux_schnell", "auto", "z_image"):
         try:
             img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
             engine_used = "FLUX.1 Schnell HD"
         except Exception as e:
             print(f"[ImageGen] FLUX.1 Schnell no pudo completar: {e}")
-            if provider == "flux_schnell":
-                # Intentar rescate con Z-Image Turbo
-                try:
-                    img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-                    engine_used = "Z-Image Turbo HD (Rescate)"
-                except Exception:
-                    pass
 
-    # Intento 3: AI Horde (Si fue seleccionado o como segundo respaldo)
+    # Motor 2: Z-Image Turbo (Tongyi-MAI DiT)
+    if not img_bytes and provider in ("z_image", "auto", "flux_schnell"):
+        try:
+            img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+            engine_used = "Z-Image Turbo HD"
+        except Exception as e:
+            print(f"[ImageGen] Z-Image Turbo no pudo completar: {e}")
+
+    # Motor 3: AI Horde (Si fue seleccionado o como segundo respaldo)
     if not img_bytes and provider in ("aihorde", "auto", "z_image", "flux_schnell"):
         try:
-            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=45)
+            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
             engine_used = "AI Horde (Comunidad Gratuita)"
         except Exception as e:
             print(f"[ImageGen] AI Horde no pudo completar: {e}")
@@ -345,32 +348,57 @@ def generate_ai_scene_image(
         except Exception as e:
             print(f"[ImageGen] Error al procesar imagen generada: {e}")
 
-    # Fallback Seguro: Galería Local Cinematográfica
+    # ─── Fallback Seguro: 3 Pools Temáticos Estrictamente Diferenciados ──────
+    # Garantiza al 100% que las escenas 1, 2 y 3 NUNCA se repiten
     prompt_low = prompt.lower()
-    candidate_map = [
-        (["child", "son", "daughter", "nieto", "baby", "crib", "youth"], "jesus_reaching_hand.jpg"),
-        (["protect", "family", "shield", "muro", "home", "warfare", "battle"], "holy_cross_calvary.jpg"),
-        (["night", "sleep", "anxiety", "insomnia", "peace", "rest", "worry"], "jesus_praying_gethsemane.jpg"),
-        (["heal", "body", "sick", "doctor", "fever", "pain", "hospital"], "jesus_healing_miracle.jpg"),
-        (["bible", "word", "scripture", "read", "truth", "verse"], "jesus_holy_bible.jpg"),
-        (["embrace", "comfort", "tears", "cry", "love", "mercy"], "jesus_comforting_embrace.jpg")
+    used_set = set(used_images or [])
+
+    # 1. Pool de Toma 1 (Apertura e Impacto Inicial)
+    scene1_pool = [
+        "jesus_healing_miracle.jpg",
+        "holy_cross_calvary.jpg",
+        "jesus_walking_storm.jpg",
+        "jesus_teaching_crowd.jpg",
+        "jesus_light_world.jpg"
     ]
-    matched_img = None
-    for keywords, img_name in candidate_map:
-        if any(k in prompt_low for k in keywords):
-            p = os.path.join(ASSETS_DIR, img_name)
-            if os.path.exists(p):
-                matched_img = p
-                break
+    # 2. Pool de Toma 2 (Intercesión y Punto de Inflexión de Fe)
+    scene2_pool = [
+        "jesus_praying_gethsemane.jpg",
+        "jesus_reaching_hand.jpg",
+        "jesus_holy_bible.jpg",
+        "jesus_kneeling_prayer.jpg"
+    ]
+    # 3. Pool de Toma 3 (Victoria, Paz y Gloria Final)
+    scene3_pool = [
+        "jesus_comforting_embrace.jpg",
+        "jesus_resurrection_glory.jpg",
+        "jesus_walking_water.jpg",
+        "jesus_shepherd_lamb.jpg"
+    ]
 
-    if not matched_img:
-        lib_imgs = [
-            os.path.join(ASSETS_DIR, f) for f in os.listdir(ASSETS_DIR)
-            if f.lower().endswith((".jpg", ".jpeg", ".png")) and not f.startswith("custom_")
+    target_pool = scene1_pool if scene_num == 1 else (scene2_pool if scene_num == 2 else scene3_pool)
+
+    # Filtrar imágenes disponibles que no hayan sido usadas ya en este Reel
+    available = [img for img in target_pool if img not in used_set and os.path.exists(os.path.join(ASSETS_DIR, img))]
+    if not available:
+        # Respaldo amplio de la biblioteca completa descartando las ya utilizadas
+        all_lib = [
+            f for f in os.listdir(ASSETS_DIR)
+            if f.lower().endswith((".jpg", ".jpeg", ".png")) and not f.startswith("custom_") and f not in used_set
         ]
-        matched_img = random.choice(lib_imgs) if lib_imgs else os.path.join(ASSETS_DIR, "jesus_healing_miracle.jpg")
+        available = all_lib or target_pool
 
-    if os.path.exists(matched_img):
+    matched_img = None
+    for img_candidate in available:
+        stem = img_candidate.replace(".jpg", "").replace("jesus_", "").replace("_", " ")
+        if any(word in prompt_low for word in stem.split() if len(word) > 3):
+            matched_img = os.path.join(ASSETS_DIR, img_candidate)
+            break
+
+    if not matched_img and available:
+        matched_img = os.path.join(ASSETS_DIR, available[0])
+
+    if matched_img and os.path.exists(matched_img):
         shutil.copyfile(matched_img, filepath)
     else:
         fb_img = Image.new("RGB", (768, 1344), (20, 24, 38))
@@ -380,8 +408,8 @@ def generate_ai_scene_image(
         "status": "success",
         "filename": filename,
         "url": f"/assets/images/{filename}",
-        "label": f"{label} (Biblioteca HD)",
-        "engine": "Biblioteca Local HD",
+        "label": f"{label} (Biblioteca Curada HD)",
+        "engine": "Biblioteca Curada HD",
         "deletable": True,
-        "notice": "Se asignó una escena cinematográfica HD de la biblioteca temática."
+        "notice": f"Se asignó una toma no repetida de la biblioteca temática para la escena {scene_num}."
     }

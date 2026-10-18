@@ -84,6 +84,8 @@ class GenerateAiImageRequest(BaseModel):
     provider: str = "auto"
     hf_token: Optional[str] = None
     aihorde_api_key: Optional[str] = None
+    scene_num: int = 1
+    used_images: Optional[List[str]] = None
 
 class BatchGenerateAiImageRequest(BaseModel):
     prompts: List[str]
@@ -292,10 +294,12 @@ def api_generate_ai_image(req: GenerateAiImageRequest):
         return generate_ai_scene_image(
             prompt=req.prompt,
             aspect_ratio=req.aspect_ratio,
-            label="IA Cinemática HD",
+            label=f"Escena {req.scene_num} IA",
             provider=req.provider,
             hf_token=req.hf_token,
-            aihorde_api_key=req.aihorde_api_key
+            aihorde_api_key=req.aihorde_api_key,
+            scene_num=req.scene_num,
+            used_images=req.used_images
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con IA: {str(e)}")

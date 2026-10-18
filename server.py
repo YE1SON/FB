@@ -124,7 +124,9 @@ class RenderRequest(BaseModel):
     camera_motion: str = "zoom_in"
     transition_style: Optional[str] = "fade"
     hook_text: str = ""
-    hook_badge_style: Optional[str] = "gold_cinematic"
+    hook_badge_style: Optional[str] = "gold_luxury"
+    hook_badge_font: Optional[str] = "Montserrat"
+    hook_badge_size: Optional[str] = "normal"
     micro_cta_text: Optional[str] = ""
 
 class ImageCardRequest(BaseModel):
@@ -392,7 +394,9 @@ async def api_render_video(req: RenderRequest):
             margin_v=margin_v,
             hook_text=req.hook_text,
             micro_cta_text=req.micro_cta_text or "",
-            hook_badge_style=req.hook_badge_style or "gold_cinematic",
+            hook_badge_style=req.hook_badge_style or "gold_luxury",
+            hook_badge_font=req.hook_badge_font or "Montserrat",
+            hook_badge_size=req.hook_badge_size or "normal",
             animation_type=req.subtitle_animation,
             position=req.subtitle_position,
             effect_type=req.effect_type,

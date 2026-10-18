@@ -305,31 +305,61 @@ def generate_ai_scene_image(
     img_bytes = None
     engine_used = None
 
-    # Motor 1: FLUX.1 Schnell (Sub-4s, máxima calidad fotorrealista)
-    if provider in ("flux_schnell", "auto", "z_image"):
+    # ─── Ejecución Estricta y Aislada por Proveedor Seleccionado ──────────────
+    if provider == "z_image":
         try:
-            img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-            engine_used = "FLUX.1 Schnell HD"
-        except Exception as e:
-            print(f"[ImageGen] FLUX.1 Schnell no pudo completar: {e}")
-
-    # Motor 2: Z-Image Turbo (Tongyi-MAI DiT)
-    if not img_bytes and provider in ("z_image", "auto", "flux_schnell"):
-        try:
+            print(f"[ImageGen] Ejecutando exclusivamente Z-Image Turbo para escena {scene_num}...")
             img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
             engine_used = "Z-Image Turbo HD"
         except Exception as e:
             print(f"[ImageGen] Z-Image Turbo no pudo completar: {e}")
+            raise RuntimeError(f"Fallo en Z-Image Turbo: {e}")
 
-    # Motor 3: AI Horde (Si fue seleccionado o como segundo respaldo)
-    if not img_bytes and provider in ("aihorde", "auto", "z_image", "flux_schnell"):
+    elif provider == "flux_schnell":
         try:
-            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
+            print(f"[ImageGen] Ejecutando exclusivamente FLUX.1 Schnell para escena {scene_num}...")
+            img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+            engine_used = "FLUX.1 Schnell HD"
+        except Exception as e:
+            print(f"[ImageGen] FLUX.1 Schnell no pudo completar: {e}")
+            raise RuntimeError(f"Fallo en FLUX.1 Schnell: {e}")
+
+    elif provider == "aihorde":
+        try:
+            print(f"[ImageGen] Ejecutando exclusivamente AI Horde para escena {scene_num}...")
+            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=30)
             engine_used = "AI Horde (Comunidad Gratuita)"
         except Exception as e:
             print(f"[ImageGen] AI Horde no pudo completar: {e}")
-            if provider == "aihorde":
-                raise
+            raise RuntimeError(f"Fallo en AI Horde: {e}")
+
+    elif provider in ("curated", "library"):
+        print(f"[ImageGen] Seleccionando toma de la Biblioteca Curada HD para escena {scene_num}...")
+        img_bytes = None
+        engine_used = "Biblioteca Curada HD"
+
+    else:
+        # provider == "auto": Cascada Inteligente (FLUX.1 -> Z-Image -> Horde)
+        print(f"[ImageGen] Modo Auto: Intentando FLUX.1 Schnell...")
+        try:
+            img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+            engine_used = "FLUX.1 Schnell HD (Auto)"
+        except Exception as e:
+            print(f"[ImageGen] Auto: FLUX.1 no completó ({e}), intentando Z-Image Turbo...")
+
+        if not img_bytes:
+            try:
+                img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+                engine_used = "Z-Image Turbo HD (Auto)"
+            except Exception as e:
+                print(f"[ImageGen] Auto: Z-Image no completó ({e}), intentando AI Horde...")
+
+        if not img_bytes:
+            try:
+                img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=15)
+                engine_used = "AI Horde (Auto)"
+            except Exception as e:
+                print(f"[ImageGen] Auto: AI Horde no completó: {e}")
 
     # Procesar y guardar bytes generados
     if img_bytes:

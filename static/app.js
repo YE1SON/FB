@@ -71,8 +71,13 @@ function bootstrapJesusStudio() {
   const hookBadgeInput = document.getElementById("hookBadgeInput");
   const chkEnableHookBadge = document.getElementById("chkEnableHookBadge");
   const hookBadgeStyleSelect = document.getElementById("hookBadgeStyleSelect");
+  const hookBadgeFontSelect = document.getElementById("hookBadgeFontSelect");
+  const hookBadgeSizeSelect = document.getElementById("hookBadgeSizeSelect");
   const btnRerollHookBadge = document.getElementById("btnRerollHookBadge");
   const stageHookBadge = document.getElementById("stageHookBadge");
+  const btnPreviewShowHook = document.getElementById("btnPreviewShowHook");
+  const btnPreviewShowCta = document.getElementById("btnPreviewShowCta");
+  const formatPillGroup = document.getElementById("formatPillGroup");
   const btnRerollMagneticComment = document.getElementById("btnRerollMagneticComment");
   const transitionStyleSelect = document.getElementById("transitionStyleSelect");
 
@@ -261,6 +266,7 @@ function bootstrapJesusStudio() {
   }
 
   // Hook Badge Presets (Estrictamente intercesores y de fe - Cero frases prohibidas)
+  let hookPresetIdx = 0;
   const HOOK_BADGE_PRESETS = [
     "⚡ PRAYER FOR YOUR CHILDREN TONIGHT",
     "🙏 HEALING OVER YOUR TIRED MIND",
@@ -268,23 +274,71 @@ function bootstrapJesusStudio() {
     "🕊️ PEACE SURROUNDS YOUR HOME NOW",
     "✝️ JESUS HEALS WHAT NO ONE SEES",
     "🔥 THE LORD FIGHTS THIS BATTLE FOR YOU",
-    "👑 HIS MERCIES ARE RENEWED RIGHT NOW"
+    "👑 HIS MERCIES ARE RENEWED RIGHT NOW",
+    "✨ PROMISES OF RESTORATION FOR YOUR HOME",
+    "🛡️ NO WEAPON FORMED AGAINST YOU SHALL PROSPER",
+    "🌿 GRACE AND PROTECTION OVER YOUR HEALTH",
+    "💧 AN END TO ANXIETY AND SILENT TEARS",
+    "⚔️ GOD HAS ALREADY DECLARED YOUR VICTORY",
+    "🌅 JOY COMES IN THE MORNING",
+    "🙌 YOUR FAMILY IS IN GOD'S HANDS",
+    "📖 HE WHO BEGAN A GOOD WORK WILL COMPLETE IT",
+    "🕊️ UNCONDITIONAL FORGIVENESS AND NEW LIFE"
   ];
-  function updateHookBadgeStyle() {
+
+  function updateHookBadgeAppearance() {
     if (!stageHookBadge) return;
-    const style = hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "clean_glass";
+    const style = hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_luxury";
+    const font = hookBadgeFontSelect ? hookBadgeFontSelect.value.replace(/\s+/g, "_") : "Montserrat";
+    const size = hookBadgeSizeSelect ? hookBadgeSizeSelect.value : "normal";
+
     stageHookBadge.className = "stage-hook-badge";
     stageHookBadge.classList.add(`hook-style-${style}`);
+    stageHookBadge.classList.add(`hook-font-${font}`);
+    stageHookBadge.classList.add(`hook-size-${size}`);
   }
 
   if (hookBadgeStyleSelect) {
-    hookBadgeStyleSelect.addEventListener("change", updateHookBadgeStyle);
-    updateHookBadgeStyle();
+    hookBadgeStyleSelect.addEventListener("change", updateHookBadgeAppearance);
+  }
+  if (hookBadgeFontSelect) {
+    hookBadgeFontSelect.addEventListener("change", updateHookBadgeAppearance);
+  }
+  if (hookBadgeSizeSelect) {
+    hookBadgeSizeSelect.addEventListener("change", updateHookBadgeAppearance);
+  }
+  updateHookBadgeAppearance();
+
+  // Selector de Capas en la Vista Previa (Gancho vs Píldora - Desfasadas en tiempo)
+  if (btnPreviewShowHook) {
+    btnPreviewShowHook.addEventListener("click", () => {
+      btnPreviewShowHook.classList.add("active");
+      if (btnPreviewShowCta) btnPreviewShowCta.classList.remove("active");
+      if (stageHookBadge) {
+        stageHookBadge.style.display = (chkEnableHookBadge && chkEnableHookBadge.checked) ? "block" : "none";
+      }
+      if (stageMicroCtaBadge) {
+        stageMicroCtaBadge.style.display = "none";
+      }
+    });
+  }
+
+  if (btnPreviewShowCta) {
+    btnPreviewShowCta.addEventListener("click", () => {
+      btnPreviewShowCta.classList.add("active");
+      if (btnPreviewShowHook) btnPreviewShowHook.classList.remove("active");
+      if (stageMicroCtaBadge) {
+        stageMicroCtaBadge.style.display = (chkEnableMicroCta && chkEnableMicroCta.checked) ? "block" : "none";
+      }
+      if (stageHookBadge) {
+        stageHookBadge.style.display = "none";
+      }
+    });
   }
 
   if (chkEnableMicroCta) {
     chkEnableMicroCta.addEventListener("change", () => {
-      if (stageMicroCtaBadge) {
+      if (stageMicroCtaBadge && btnPreviewShowCta && btnPreviewShowCta.classList.contains("active")) {
         stageMicroCtaBadge.style.display = chkEnableMicroCta.checked ? "block" : "none";
       }
     });
@@ -302,8 +356,15 @@ function bootstrapJesusStudio() {
     btnRerollHookBadge.addEventListener("click", () => {
       hookPresetIdx = (hookPresetIdx + 1) % HOOK_BADGE_PRESETS.length;
       const nextBadge = HOOK_BADGE_PRESETS[hookPresetIdx];
-      if (hookBadgeInput) hookBadgeInput.value = nextBadge;
-      if (stageHookBadge) stageHookBadge.textContent = nextBadge;
+      if (hookBadgeInput) {
+        hookBadgeInput.value = nextBadge;
+      }
+      if (stageHookBadge) {
+        stageHookBadge.textContent = nextBadge;
+        stageHookBadge.style.animation = "none";
+        void stageHookBadge.offsetWidth;
+        stageHookBadge.style.animation = "badgePop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+      }
     });
   }
 
@@ -318,9 +379,37 @@ function bootstrapJesusStudio() {
 
   if (chkEnableHookBadge) {
     chkEnableHookBadge.addEventListener("change", () => {
-      if (stageHookBadge) {
+      if (stageHookBadge && (!btnPreviewShowCta || !btnPreviewShowCta.classList.contains("active"))) {
         stageHookBadge.style.display = chkEnableHookBadge.checked ? "block" : "none";
       }
+    });
+  }
+
+  // Sincronización del Selector de Formato Inicial (Píldoras 9:16 / 1:1 / 16:9)
+  if (formatPillGroup) {
+    const pills = formatPillGroup.querySelectorAll(".btn-format-pill");
+    pills.forEach(pill => {
+      pill.addEventListener("click", () => {
+        pills.forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+        const ratio = pill.dataset.ratio || "9:16";
+        if (aspectRatioSelect) {
+          aspectRatioSelect.value = ratio;
+        }
+        updateAspectRatioPreview(ratio);
+      });
+    });
+  }
+  if (aspectRatioSelect) {
+    aspectRatioSelect.addEventListener("change", () => {
+      const val = aspectRatioSelect.value;
+      if (formatPillGroup) {
+        const pills = formatPillGroup.querySelectorAll(".btn-format-pill");
+        pills.forEach(p => {
+          p.classList.toggle("active", p.dataset.ratio === val);
+        });
+      }
+      updateAspectRatioPreview(val);
     });
   }
 
@@ -946,8 +1035,14 @@ function bootstrapJesusStudio() {
     let savedUrl = null;
     let usedPuter = false;
 
-    // Intento 1: Puter si el usuario lo seleccionó
-    if (activeProvider === "puter" && typeof puter !== "undefined" && puter.ai && puter.ai.txt2img && puter.auth && puter.auth.isSignedIn()) {
+    // Ejecución Estricta según el Motor Elegido por el Usuario
+    if (activeProvider === "puter") {
+      if (typeof puter === "undefined" || !puter.ai || !puter.ai.txt2img) {
+        throw new Error("Puter AI no está disponible en este navegador. Revisa tu conexión o usa Z-Image Turbo.");
+      }
+      if (!puter.auth || !puter.auth.isSignedIn()) {
+        await puter.auth.signIn({ attempt_temp_user_creation: true });
+      }
       try {
         let enhancedPuterPrompt = cleanPrompt;
         if (!enhancedPuterPrompt.toLowerCase().includes("cinematic")) {
@@ -962,31 +1057,33 @@ function bootstrapJesusStudio() {
           blob = imgElement;
         }
 
-        if (blob) {
-          const file = new File([blob], `scene_${sceneNum}_${Date.now()}.png`, { type: "image/png" });
-          const formData = new FormData();
-          formData.append("file", file);
-          const uploadRes = await fetch("/api/upload-image", { method: "POST", body: formData });
-          if (uploadRes.ok) {
-            const upData = await uploadRes.json();
-            savedFilename = upData.filename;
-            savedUrl = upData.url;
-            usedPuter = true;
-          }
+        if (!blob) {
+          throw new Error("Puter no devolvió un formato de imagen compatible.");
         }
-      } catch (puterErr) {
-        console.warn("Fallo en Puter, recurriendo a Z-Image Turbo / FLUX del servidor:", puterErr);
-      }
-    }
 
-    // Intento 2: Z-Image Turbo, FLUX.1 Schnell o AI Horde (del servidor)
-    if (!savedFilename) {
+        const file = new File([blob], `scene_${sceneNum}_${Date.now()}.png`, { type: "image/png" });
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch("/api/upload-image", { method: "POST", body: formData });
+        if (!uploadRes.ok) {
+          throw new Error("Error al guardar en el servidor la imagen generada por Puter.");
+        }
+        const upData = await uploadRes.json();
+        savedFilename = upData.filename;
+        savedUrl = upData.url;
+        usedPuter = true;
+      } catch (puterErr) {
+        console.error("Fallo estricto en Puter AI:", puterErr);
+        throw new Error("Puter AI falló o agotó sus créditos gratuitos: " + (puterErr.message || puterErr) + ". Puedes conectar otra cuenta de Puter o elegir Z-Image Turbo / FLUX.1 Schnell.");
+      }
+    } else {
+      // Motor de Servidor (Z-Image Turbo, FLUX.1 Schnell, AI Horde, Auto, Biblioteca)
       const res = await fetch("/api/generate-ai-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: cleanPrompt,
-          aspect_ratio: "9:16",
+          aspect_ratio: aspectRatioSelect ? aspectRatioSelect.value : "9:16",
           provider: activeProvider,
           hf_token: hfTok,
           aihorde_api_key: hordeKey,
@@ -1594,7 +1691,9 @@ function bootstrapJesusStudio() {
           theme_key: themeSelect ? themeSelect.value : "morning_favor",
           enable_hook_badge: !!(chkEnableHookBadge && chkEnableHookBadge.checked),
           hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : "",
-          hook_badge_style: hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_cinematic",
+          hook_badge_style: hookBadgeStyleSelect ? hookBadgeStyleSelect.value : "gold_luxury",
+          hook_badge_font: hookBadgeFontSelect ? hookBadgeFontSelect.value : "Montserrat",
+          hook_badge_size: hookBadgeSizeSelect ? hookBadgeSizeSelect.value : "normal",
           enable_micro_cta: !!(chkEnableMicroCta && chkEnableMicroCta.checked),
           micro_cta_text: (chkEnableMicroCta && chkEnableMicroCta.checked && microCtaInput) ? microCtaInput.value.trim() : ""
         })

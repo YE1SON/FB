@@ -135,6 +135,19 @@ HOOK_BADGE_PRESETS: Dict[str, Dict] = {
         "shadow_w": 0,
         "spacing": 2,
         "border_style": 3
+    },
+    "sacred_fire": {
+        "name": "🔥 Fuego Sagrado & Devoción",
+        "font": "Cinzel",
+        "fontsize": 44,
+        "primary": "&H00F5F5FF&",    # Blanco cálido
+        "outline": "&H001050E0&",    # Borde dorado ámbar
+        "back_color": "&H90101580&", # Rojo carmesí profundo
+        "bold": -1,
+        "outline_w": 2,
+        "shadow_w": 0,
+        "spacing": 2,
+        "border_style": 3
     }
 }
 
@@ -197,6 +210,8 @@ def generate_viral_ass(
     hook_text: str = "",
     micro_cta_text: str = "",
     hook_badge_style: str = "gold_cinematic",
+    hook_badge_font: Optional[str] = None,
+    hook_badge_size: Optional[str] = "normal",
     animation_type: str = "pop",
     position: str = "bottom",
     effect_type: str = "cinematic_dust",
@@ -210,7 +225,9 @@ def generate_viral_ass(
     Genera un archivo .ass optimizado para Facebook Reels:
     - 4 estilos animados reales: KARAOKE, POP, CINEMATIC, CLEAN.
     - Zonas seguras respetadas (MarginV por defecto 440 en 1080x1920).
-    - Insignias superiores desactivadas por defecto (activables si el usuario lo desea).
+    - Insignias superiores con temporalidad separada:
+      * Gancho Visual: 0.0s a 3.5s (Apertura)
+      * Píldora de Comentario: 4.5s a 9.5s (Segundo tercio)
     - Subtítulos siempre sincronizados palabra por palabra.
     """
     if not cues:
@@ -253,8 +270,17 @@ def generate_viral_ass(
     badge_styles_block = ""
     if enable_hook_badge or enable_micro_cta:
         b_cfg = HOOK_BADGE_PRESETS.get(hook_badge_style, HOOK_BADGE_PRESETS["clean_glass"])
-        b_font = b_cfg["font"]
+        b_font = hook_badge_font or b_cfg["font"]
         b_size = b_cfg["fontsize"]
+        
+        # Ajuste por tamaño seleccionado
+        if hook_badge_size == "small":
+            b_size = int(b_size * 0.85)
+        elif hook_badge_size == "large":
+            b_size = int(b_size * 1.22)
+        elif hook_badge_size == "xlarge":
+            b_size = int(b_size * 1.45)
+
         b_prim = b_cfg["primary"]
         b_out = b_cfg["outline"]
         b_bg = b_cfg["back_color"]
@@ -262,11 +288,11 @@ def generate_viral_ass(
         b_ow = b_cfg["outline_w"]
         b_sh = b_cfg["shadow_w"]
         b_sp = b_cfg["spacing"]
-        b_margin_v = 125 if play_res_y > 1080 else 45
+        b_margin_v = 130 if play_res_y > 1080 else 48
 
         badge_styles_block = (
             f"\nStyle: HookBadge,{b_font},{b_size},{b_prim},&H000000FF&,{b_out},{b_bg},-1,0,0,0,100,100,{b_sp},0,{b_bord},{b_ow},{b_sh},8,60,60,{b_margin_v},1"
-            f"\nStyle: MicroCTABadge,Montserrat,34,&H00E0E0E0,&H000000FF,&H00403020,&HB0121B2A,1,0,0,0,100,100,1,0,3,1,0,8,60,60,{b_margin_v + 58},1"
+            f"\nStyle: MicroCTABadge,Montserrat,36,&H00E0E0E0,&H000000FF,&H00403020,&HB0121B2A,1,0,0,0,100,100,1,0,3,1,0,8,60,60,{b_margin_v},1"
         )
 
     header = f"""[Script Info]
@@ -285,19 +311,21 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     events: List[str] = []
 
-    # 1. Insignias Opcionales
+    # 1. Insignias Opcionales con Temporalidad Desfasada (Cero saturación visual)
+    # Gancho Visual: Segundos 0.0s a 3.5s (Apertura Scroll-Stopper)
     if enable_hook_badge and hook_text:
         clean_hook = re.sub(r'^[^\w]+', '', hook_text).strip()
         if clean_hook:
             events.append(
-                f"Dialogue: 3,0:00:00.00,0:00:03.20,HookBadge,,0,0,0,,{{\\an8\\fad(80,200)}}{clean_hook.upper()}"
+                f"Dialogue: 3,0:00:00.00,0:00:03.50,HookBadge,,0,0,0,,{{\\an8\\fad(80,250)}}{clean_hook.upper()}"
             )
 
+    # Píldora de Invitación a Comentar (Micro-CTA): Segundos 4.5s a 9.5s (Segundo tercio)
     if enable_micro_cta and micro_cta_text:
         clean_cta = re.sub(r'^[^\w]+', '', micro_cta_text).strip()
         if clean_cta:
             events.append(
-                f"Dialogue: 3,0:00:03.40,0:00:07.50,MicroCTABadge,,0,0,0,,{{\\an8\\fad(200,200)}}{clean_cta}"
+                f"Dialogue: 3,0:00:04.50,0:00:09.50,MicroCTABadge,,0,0,0,,{{\\an8\\fad(250,250)}}{clean_cta}"
             )
 
     # 2. Generación Dinámica según Estilo

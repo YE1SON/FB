@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=5.3">
+  <link rel="stylesheet" href="/static/style.css?v=5.4">
   <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
   <script>
     (function() {
@@ -219,6 +219,31 @@
             </div>
           </div>
 
+          <!-- ─── Formato y Lienzo del Video (Paso Inicial) ─────────────── -->
+          <div class="video-format-strip mb-12">
+            <div class="format-strip-header">
+              <span class="strip-icon">📐</span>
+              <div>
+                <strong>Formato del Video (Lienzo Inicial)</strong>
+                <span class="text-muted text-xs">Configura cómo quedará tu video desde el principio</span>
+              </div>
+            </div>
+            <div class="format-pill-group" id="formatPillGroup">
+              <button type="button" class="btn-format-pill active" data-ratio="9:16">
+                <span class="pill-ratio">9:16</span>
+                <span class="pill-label">📱 Reels / TikTok / Shorts</span>
+              </button>
+              <button type="button" class="btn-format-pill" data-ratio="1:1">
+                <span class="pill-ratio">1:1</span>
+                <span class="pill-label">⏹️ Post Cuadrado Facebook</span>
+              </button>
+              <button type="button" class="btn-format-pill" data-ratio="16:9">
+                <span class="pill-ratio">16:9</span>
+                <span class="pill-label">🖥️ Horizontal YouTube / TV</span>
+              </button>
+            </div>
+          </div>
+
           <div class="form-row mt-12">
             <div class="form-group col-7">
               <label for="themeSelect">Selecciona un tema</label>
@@ -275,24 +300,54 @@
             <!-- Caja 4: Gancho Visual de Impacto (Superior) -->
             <div class="script-box badge-box">
               <div class="box-head">
-                <span class="box-title">⚡ Gancho Visual de Impacto</span>
+                <span class="box-title">⚡ Gancho Visual de Impacto (0.0s – 3.5s)</span>
                 <span class="char-count" id="badgeCharCount">0/500</span>
               </div>
-              <small class="box-desc">0.0s a 3.2s — Píldora superior nítida</small>
-              <input type="text" id="hookBadgeInput" class="form-control" placeholder="PRAYER FOR YOUR CHILDREN">
+              <small class="box-desc">Scroll-stopper superior: Tipografía y estilo personalizable</small>
+              <div class="input-with-action">
+                <input type="text" id="hookBadgeInput" class="form-control" placeholder="PRAYER FOR YOUR CHILDREN">
+                <button type="button" id="btnRerollHookBadge" class="btn btn-sm btn-outline btn-reroll-badge" title="Generar otra frase de gancho">🎲 Otra Frase</button>
+              </div>
               
-              <div class="badge-mini-row mt-6">
-                <select id="hookBadgeStyleSelect" class="form-control form-control-sm" style="flex: 2;">
-                  <option value="clean_glass" selected>🪟 Cristal Oscuro Minimalista</option>
-                  <option value="gold_luxury">🌟 Oro Sagrado Elegante</option>
-                  <option value="viral_indigo">⚡ Indigo Moderno</option>
-                  <option value="editorial_white">📰 Editorial Blanco</option>
-                </select>
-                <label class="chk-label" style="flex: 1;">
-                  <input type="checkbox" id="chkEnableHookBadge">
-                  <span>Activar</span>
-                </label>
-                <button type="button" id="btnRerollHookBadge" class="btn btn-sm btn-outline" title="Otra frase de gancho">🎲</button>
+              <div class="badge-custom-row mt-8">
+                <!-- Estilo Visual -->
+                <div class="badge-col">
+                  <label class="text-xs text-muted" for="hookBadgeStyleSelect">Estilo</label>
+                  <select id="hookBadgeStyleSelect" class="form-control form-control-sm">
+                    <option value="gold_luxury" selected>👑 Oro Sagrado & Resplandor</option>
+                    <option value="clean_glass">💎 Cristal Glassmorphism Pro</option>
+                    <option value="viral_indigo">⚡ Neón Púrpura Viral</option>
+                    <option value="sacred_fire">🔥 Fuego Sagrado & Devoción</option>
+                    <option value="editorial_white">📰 Editorial Blanco Minimalista</option>
+                  </select>
+                </div>
+                <!-- Tipografía -->
+                <div class="badge-col">
+                  <label class="text-xs text-muted" for="hookBadgeFontSelect">Fuente</label>
+                  <select id="hookBadgeFontSelect" class="form-control form-control-sm">
+                    <option value="Montserrat" selected>Montserrat (Moderna / Fuerte)</option>
+                    <option value="Cinzel">Cinzel (Sagrada / Clásica)</option>
+                    <option value="Plus Jakarta Sans">Plus Jakarta (Limpia / Tech)</option>
+                    <option value="Impact">Impact (Máximo Impacto)</option>
+                  </select>
+                </div>
+                <!-- Tamaño -->
+                <div class="badge-col">
+                  <label class="text-xs text-muted" for="hookBadgeSizeSelect">Tamaño</label>
+                  <select id="hookBadgeSizeSelect" class="form-control form-control-sm">
+                    <option value="small">Pequeño</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="large">Grande</option>
+                    <option value="xlarge">Extra Grande</option>
+                  </select>
+                </div>
+                <!-- Activar Checkbox -->
+                <div class="badge-col badge-col-chk">
+                  <label class="chk-label mt-14">
+                    <input type="checkbox" id="chkEnableHookBadge" checked>
+                    <span>Activar</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -420,10 +475,12 @@
             <div class="form-group col-8 mb-0">
               <label for="aiImageProviderSelect">🤖 Motor de Generación IA</label>
               <select id="aiImageProviderSelect" class="form-control" style="font-weight: 600;">
-                <option value="z_image" selected>🥇 Z-Image Turbo (Recomendado — Fotorrealismo DiT)</option>
-                <option value="flux_schnell">🥈 FLUX.1 Schnell (Black Forest Labs HD)</option>
-                <option value="aihorde">🥉 AI Horde (Comunidad Gratuita)</option>
+                <option value="z_image" selected>🥇 Z-Image Turbo (Exclusivo — Fotorrealismo DiT)</option>
+                <option value="flux_schnell">🥈 FLUX.1 Schnell (Exclusivo — Black Forest Labs HD)</option>
                 <option value="puter">💻 Puter AI (DALL-E 3 — Conexión Navegador)</option>
+                <option value="aihorde">🥉 AI Horde (Comunidad Gratuita Descentralizada)</option>
+                <option value="auto">⚡ Cascada Inteligente Auto (FLUX ➔ Z-Image ➔ Horde)</option>
+                <option value="curated">🏛️ Biblioteca Curada HD (Instantáneo, Sin Cuotas)</option>
               </select>
             </div>
             <div class="form-group col-4 mb-0">
@@ -784,6 +841,16 @@
             </div>
           </div>
 
+          <!-- Selector de Capas Superiores Desfasadas (Nunca se superponen) -->
+          <div class="preview-badge-switcher mb-6">
+            <button type="button" class="btn-badge-toggle active" id="btnPreviewShowHook">
+              🎣 Gancho Visual (0.0s – 3.5s)
+            </button>
+            <button type="button" class="btn-badge-toggle" id="btnPreviewShowCta">
+              💬 Píldora de Comentario (4.5s – 9.5s)
+            </button>
+          </div>
+
           <!-- Mockup del Teléfono Móvil -->
           <div class="phone-mockup">
             <div class="phone-screen">
@@ -794,13 +861,13 @@
                 <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
                 <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
 
-                <!-- Recuadro de Alerta Superior (Hook Badge) — Siempre Arriba -->
-                <div id="stageHookBadge" class="stage-hook-badge hook-style-clean_glass" style="display: block;">
+                <!-- Recuadro de Alerta Superior (Hook Badge) — 0s a 3.5s -->
+                <div id="stageHookBadge" class="stage-hook-badge hook-style-gold_luxury" style="display: block;">
                   PRAYER FOR YOUR CHILDREN
                 </div>
 
-                <!-- Píldora de Micro-CTA Superior — Vista Previa en Vivo -->
-                <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: block;">
+                <!-- Píldora de Micro-CTA Superior — 4.5s a 9.5s (Desfasada, nunca simultánea) -->
+                <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: none;">
                   💬 Leave their first name below
                 </div>
 
@@ -1005,6 +1072,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=5.3"></script>
+  <script src="/static/app.js?v=5.4"></script>
 </body>
 </html>

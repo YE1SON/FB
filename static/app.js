@@ -126,6 +126,43 @@ function bootstrapJesusStudio() {
   let cardCurrentPinnedComment = "";
   let cardStudioInitialized = false;
 
+  function updateShelfThumbnails() {
+    const t1 = document.getElementById("previewThumbScene1");
+    const t2 = document.getElementById("previewThumbScene2");
+    const t3 = document.getElementById("previewThumbScene3");
+    const img1 = document.getElementById("shelfImgScene1");
+    const img2 = document.getElementById("shelfImgScene2");
+    const img3 = document.getElementById("shelfImgScene3");
+
+    if (img1 && selectedImageName) {
+      img1.src = (selectedImageName.startsWith("data:") || selectedImageName.startsWith("blob:") || selectedImageName.startsWith("http")) 
+        ? selectedImageName 
+        : `/assets/images/${selectedImageName}`;
+    }
+    if (img2) {
+      if (selectedImageName2) {
+        img2.src = (selectedImageName2.startsWith("data:") || selectedImageName2.startsWith("blob:") || selectedImageName2.startsWith("http"))
+          ? selectedImageName2
+          : `/assets/images/${selectedImageName2}`;
+      } else {
+        img2.src = "/assets/images/jesus_reaching_hand.jpg";
+      }
+    }
+    if (img3) {
+      if (selectedImageName3) {
+        img3.src = (selectedImageName3.startsWith("data:") || selectedImageName3.startsWith("blob:") || selectedImageName3.startsWith("http"))
+          ? selectedImageName3
+          : `/assets/images/${selectedImageName3}`;
+      } else {
+        img3.src = "/assets/images/jesus_walking_storm.jpg";
+      }
+    }
+
+    if (t1) t1.classList.toggle("active", currentSceneTab === 1);
+    if (t2) t2.classList.toggle("active", currentSceneTab === 2);
+    if (t3) t3.classList.toggle("active", currentSceneTab === 3);
+  }
+
   function updateSceneTabsUI() {
     const tabs = [
       { tab: 1, btn: btnTabScene1 },
@@ -168,6 +205,8 @@ function bootstrapJesusStudio() {
         }
       }
     }
+
+    updateShelfThumbnails();
   }
 
   if (btnTabScene1) {
@@ -299,6 +338,16 @@ function bootstrapJesusStudio() {
     });
   }
 
+  function updateProjectTitle() {
+    const currentProjectTitle = document.getElementById("currentProjectTitle");
+    if (currentProjectTitle && themeSelect && themeSelect.selectedIndex >= 0) {
+      const selectedOption = themeSelect.options[themeSelect.selectedIndex];
+      if (selectedOption) {
+        currentProjectTitle.textContent = `Reel: ${selectedOption.textContent}`;
+      }
+    }
+  }
+
   // 1. Cargar Temas Virales
   async function loadThemes() {
     try {
@@ -309,6 +358,7 @@ function bootstrapJesusStudio() {
         .join("");
       if (themeSelect) themeSelect.innerHTML = optionsHtml;
       if (cardThemeSelect) cardThemeSelect.innerHTML = optionsHtml;
+      updateProjectTitle();
     } catch (e) {
       console.error("Error al cargar temas:", e);
     }
@@ -558,11 +608,13 @@ function bootstrapJesusStudio() {
         }
         updateHookBadgeStyle();
       }
+      updateCharCounters();
+      updateProjectTitle();
     } catch (e) {
       alert("Error al generar guion: " + e.message);
     } finally {
       btnGenerateScript.disabled = false;
-      btnGenerateScript.textContent = "✨ Generar Guion de Alta Retención (en Inglés)";
+      btnGenerateScript.textContent = "✨ Generar Guion con IA";
     }
   }
 
@@ -1965,28 +2017,338 @@ function bootstrapJesusStudio() {
   btnSyncScriptToImage.addEventListener("click", triggerSyncPrompt);
   btnPreviewAudio.addEventListener("click", triggerAudioPreview);
   btnRenderVideo.addEventListener("click", triggerRenderVideo);
-  themeSelect.addEventListener("change", triggerGenerateScript);
+  themeSelect.addEventListener("change", () => {
+    updateProjectTitle();
+    triggerGenerateScript();
+  });
   if (videoModeSelect) {
     videoModeSelect.addEventListener("change", toggleVideoMode);
   }
 
-  // Modo Claro y Modo Oscuro (Toggle Dinámico)
+  // ─── 1. SISTEMA DE NAVEGACIÓN POR ETAPAS (1 A 6) ───────────────────
+  // Regla de Oro: Cambiar de etapa NUNCA borra los datos de los inputs
+  const navStageButtons = [
+    document.getElementById("navStage1"),
+    document.getElementById("navStage2"),
+    document.getElementById("navStage3"),
+    document.getElementById("navStage4"),
+    document.getElementById("navStage5"),
+    document.getElementById("navStage6")
+  ];
+
+  const stagePanels = [
+    document.getElementById("stagePanel1"),
+    document.getElementById("stagePanel2"),
+    document.getElementById("stagePanel3"),
+    document.getElementById("stagePanel4"),
+    document.getElementById("stagePanel5"),
+    document.getElementById("stagePanel6")
+  ];
+
+  let currentActiveStage = 1;
+
+  function switchStage(stageNum) {
+    if (stageNum < 1 || stageNum > 6) return;
+    currentActiveStage = stageNum;
+
+    // Actualizar sidebar visualmente
+    navStageButtons.forEach((btn, idx) => {
+      if (btn) {
+        if (idx + 1 === stageNum) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      }
+    });
+
+    // Mostrar panel activo y ocultar los demás (sin perder ningún input)
+    stagePanels.forEach((panel, idx) => {
+      if (panel) {
+        if (idx + 1 === stageNum) {
+          panel.style.display = "flex";
+          panel.classList.add("active");
+        } else {
+          panel.style.display = "none";
+          panel.classList.remove("active");
+        }
+      }
+    });
+
+    // Desplazar el panel central hacia arriba
+    const centerPanel = document.getElementById("centerStagePanel");
+    if (centerPanel) {
+      centerPanel.scrollTop = 0;
+    }
+  }
+
+  // Asignar clics a los botones de navegación del sidebar
+  navStageButtons.forEach((btn, idx) => {
+    if (btn) {
+      btn.addEventListener("click", () => switchStage(idx + 1));
+    }
+  });
+
+  // Botones de Siguiente y Anterior entre etapas
+  const btnNavToStage2 = document.getElementById("btnNavToStage2");
+  if (btnNavToStage2) btnNavToStage2.addEventListener("click", () => switchStage(2));
+
+  const btnNavBackTo1 = document.getElementById("btnNavBackTo1");
+  if (btnNavBackTo1) btnNavBackTo1.addEventListener("click", () => switchStage(1));
+
+  const btnNavToStage3 = document.getElementById("btnNavToStage3");
+  if (btnNavToStage3) btnNavToStage3.addEventListener("click", () => switchStage(3));
+
+  const btnNavBackTo2 = document.getElementById("btnNavBackTo2");
+  if (btnNavBackTo2) btnNavBackTo2.addEventListener("click", () => switchStage(2));
+
+  const btnNavToStage4 = document.getElementById("btnNavToStage4");
+  if (btnNavToStage4) btnNavToStage4.addEventListener("click", () => switchStage(4));
+
+  const btnNavBackTo3 = document.getElementById("btnNavBackTo3");
+  if (btnNavBackTo3) btnNavBackTo3.addEventListener("click", () => switchStage(3));
+
+  const btnNavToStage5 = document.getElementById("btnNavToStage5");
+  if (btnNavToStage5) btnNavToStage5.addEventListener("click", () => switchStage(5));
+
+  const btnNavBackTo4 = document.getElementById("btnNavBackTo4");
+  if (btnNavBackTo4) btnNavBackTo4.addEventListener("click", () => switchStage(4));
+
+  const btnNavToStage6 = document.getElementById("btnNavToStage6");
+  if (btnNavToStage6) btnNavToStage6.addEventListener("click", () => switchStage(6));
+
+  const btnNavBackTo5 = document.getElementById("btnNavBackTo5");
+  if (btnNavBackTo5) btnNavBackTo5.addEventListener("click", () => switchStage(5));
+
+  // Botones de acceso rápido del sidebar
+  const btnSidebarMyReels = document.getElementById("btnSidebarMyReels");
+  if (btnSidebarMyReels) {
+    btnSidebarMyReels.addEventListener("click", () => {
+      switchProductionMode("reels");
+      switchStage(6);
+    });
+  }
+
+  const btnSidebarPrayerCards = document.getElementById("btnSidebarPrayerCards");
+  if (btnSidebarPrayerCards) {
+    btnSidebarPrayerCards.addEventListener("click", () => {
+      switchProductionMode("cards");
+    });
+  }
+
+  const btnSidebarDailyBatch = document.getElementById("btnSidebarDailyBatch");
+  if (btnSidebarDailyBatch) {
+    btnSidebarDailyBatch.addEventListener("click", openDailyBatchModal);
+  }
+
+  const btnNewProjectSidebar = document.getElementById("btnNewProjectSidebar");
+  if (btnNewProjectSidebar) {
+    btnNewProjectSidebar.addEventListener("click", () => {
+      switchStage(1);
+      triggerGenerateScript();
+    });
+  }
+
+  const btnTopNewProject = document.getElementById("btnTopNewProject");
+  if (btnTopNewProject) {
+    btnTopNewProject.addEventListener("click", () => {
+      switchStage(1);
+      triggerGenerateScript();
+    });
+  }
+
+  // ─── 2. CONTADORES DE CARACTERES EN VIVO (4 CAJAS DE GUION) ────────
+  const hookCharCount = document.getElementById("hookCharCount");
+  const bodyCharCount = document.getElementById("bodyCharCount");
+  const ctaCharCount = document.getElementById("ctaCharCount");
+  const badgeCharCount = document.getElementById("badgeCharCount");
+
+  function updateCharCounters() {
+    if (hookCharCount && scriptHook) {
+      hookCharCount.textContent = `${scriptHook.value.length}/500`;
+    }
+    if (bodyCharCount && scriptBody) {
+      bodyCharCount.textContent = `${scriptBody.value.length}/500`;
+    }
+    if (ctaCharCount && scriptCta) {
+      ctaCharCount.textContent = `${scriptCta.value.length}/500`;
+    }
+    if (badgeCharCount && hookBadgeInput) {
+      badgeCharCount.textContent = `${hookBadgeInput.value.length}/500`;
+    }
+  }
+
+  if (scriptHook) scriptHook.addEventListener("input", updateCharCounters);
+  if (scriptBody) scriptBody.addEventListener("input", updateCharCounters);
+  if (scriptCta) scriptCta.addEventListener("input", updateCharCounters);
+  if (hookBadgeInput) hookBadgeInput.addEventListener("input", updateCharCounters);
+
+  // Botón para limpiar campos del guion
+  const btnClearScriptFields = document.getElementById("btnClearScriptFields");
+  if (btnClearScriptFields) {
+    btnClearScriptFields.addEventListener("click", () => {
+      if (confirm("¿Deseas vaciar los campos de guion y gancho?")) {
+        if (scriptHook) scriptHook.value = "";
+        if (scriptBody) scriptBody.value = "";
+        if (scriptCta) scriptCta.value = "";
+        if (hookBadgeInput) hookBadgeInput.value = "";
+        if (customTopic) customTopic.value = "";
+        updateCharCounters();
+      }
+    });
+  }
+
+  // ─── 3. SELECTOR DE TEMA DE 3 ESTADOS (CLARO / AUTO / OSCURO) ───────
+  const btnThemeLight = document.getElementById("btnThemeLight");
+  const btnThemeAuto = document.getElementById("btnThemeAuto");
+  const btnThemeDark = document.getElementById("btnThemeDark");
   const btnToggleTheme = document.getElementById("btnToggleTheme");
-  function applyAppTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("jesusreels_theme", theme);
+
+  function getSystemTheme() {
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+
+  function applyAppThemeMode(mode) {
+    let effectiveTheme = mode;
+    if (mode === "auto") {
+      effectiveTheme = getSystemTheme();
+    }
+    document.documentElement.setAttribute("data-theme", effectiveTheme);
+    localStorage.setItem("jesusreels_theme_mode", mode);
+
+    if (btnThemeLight) btnThemeLight.classList.toggle("active", mode === "light");
+    if (btnThemeAuto) btnThemeAuto.classList.toggle("active", mode === "auto");
+    if (btnThemeDark) btnThemeDark.classList.toggle("active", mode === "dark");
+
     if (btnToggleTheme) {
-      btnToggleTheme.innerHTML = theme === "dark" 
+      btnToggleTheme.innerHTML = effectiveTheme === "dark" 
         ? '☀️ <span class="theme-text">Modo Claro</span>' 
         : '🌙 <span class="theme-text">Modo Oscuro</span>';
     }
   }
-  const currentSavedTheme = localStorage.getItem("jesusreels_theme") || "light";
-  applyAppTheme(currentSavedTheme);
+
+  const savedThemeMode = localStorage.getItem("jesusreels_theme_mode") || "dark";
+  applyAppThemeMode(savedThemeMode);
+
+  if (btnThemeLight) btnThemeLight.addEventListener("click", () => applyAppThemeMode("light"));
+  if (btnThemeAuto) btnThemeAuto.addEventListener("click", () => applyAppThemeMode("auto"));
+  if (btnThemeDark) btnThemeDark.addEventListener("click", () => applyAppThemeMode("dark"));
+
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      const currentMode = localStorage.getItem("jesusreels_theme_mode") || "dark";
+      if (currentMode === "auto") {
+        applyAppThemeMode("auto");
+      }
+    });
+  }
+
   if (btnToggleTheme) {
     btnToggleTheme.addEventListener("click", () => {
-      const activeTheme = document.documentElement.getAttribute("data-theme") || "light";
-      applyAppTheme(activeTheme === "dark" ? "light" : "dark");
+      const active = document.documentElement.getAttribute("data-theme") || "dark";
+      applyAppThemeMode(active === "dark" ? "light" : "dark");
+    });
+  }
+
+  // ─── 4. ESTANTE DE ESCENAS Y VISTA PREVIA DERECHA ──────────────────
+  const previewThumbScene1 = document.getElementById("previewThumbScene1");
+  const previewThumbScene2 = document.getElementById("previewThumbScene2");
+  const previewThumbScene3 = document.getElementById("previewThumbScene3");
+  const btnRightRender = document.getElementById("btnRightRender");
+
+  if (previewThumbScene1) {
+    previewThumbScene1.addEventListener("click", () => {
+      if (btnTabScene1) btnTabScene1.click();
+    });
+  }
+  if (previewThumbScene2) {
+    previewThumbScene2.addEventListener("click", () => {
+      if (btnTabScene2) btnTabScene2.click();
+    });
+  }
+  if (previewThumbScene3) {
+    previewThumbScene3.addEventListener("click", () => {
+      if (btnTabScene3) btnTabScene3.click();
+    });
+  }
+
+  if (btnRightRender) {
+    btnRightRender.addEventListener("click", () => {
+      triggerRenderVideo();
+    });
+  }
+
+  // Controles del Reproductor de Teléfono Móvil
+  const btnLivePlayPause = document.getElementById("btnLivePlayPause");
+  const btnLiveMute = document.getElementById("btnLiveMute");
+  const btnLiveFullscreen = document.getElementById("btnLiveFullscreen");
+
+  if (btnLivePlayPause) {
+    btnLivePlayPause.addEventListener("click", () => {
+      if (finalVideoPlayer && finalVideoPlayer.style.display !== "none") {
+        if (finalVideoPlayer.paused) {
+          finalVideoPlayer.play();
+          btnLivePlayPause.textContent = "⏸";
+        } else {
+          finalVideoPlayer.pause();
+          btnLivePlayPause.textContent = "▶";
+        }
+      } else if (audioPreviewPlayer) {
+        if (audioPreviewPlayer.src && !audioPreviewPlayer.paused) {
+          audioPreviewPlayer.pause();
+          btnLivePlayPause.textContent = "▶";
+        } else if (audioPreviewPlayer.src) {
+          audioPreviewPlayer.play();
+          btnLivePlayPause.textContent = "⏸";
+        } else {
+          triggerAudioPreview();
+        }
+      }
+    });
+  }
+
+  if (btnLiveMute) {
+    btnLiveMute.addEventListener("click", () => {
+      const isMuted = (finalVideoPlayer && finalVideoPlayer.muted) || (audioPreviewPlayer && audioPreviewPlayer.muted);
+      const newMute = !isMuted;
+      if (finalVideoPlayer) finalVideoPlayer.muted = newMute;
+      if (audioPreviewPlayer) audioPreviewPlayer.muted = newMute;
+      btnLiveMute.textContent = newMute ? "🔇" : "🔊";
+    });
+  }
+
+  if (btnLiveFullscreen) {
+    btnLiveFullscreen.addEventListener("click", () => {
+      const screen = document.querySelector(".phone-screen");
+      if (screen) {
+        if (!document.fullscreenElement) {
+          if (screen.requestFullscreen) screen.requestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+        }
+      }
+    });
+  }
+
+  // ─── 5. BOTONES DE UTILIDAD EN ENCABEZADO ───────────────────────────
+  const btnHeaderHelp = document.getElementById("btnHeaderHelp");
+  if (btnHeaderHelp) {
+    btnHeaderHelp.addEventListener("click", () => {
+      alert("✨ Consejos para Reels Virales en Meta 2026:\n\n1. Gancho (0-3s): Capta la atención de inmediato con preguntas o declaraciones de fe directas.\n2. Inflexión (3-10s): Presenta la promesa de Dios o solución bíblica.\n3. Victoria y CTA (10s al final): Pide nombres de oración en comentarios para disparar el algoritmo de conversación.\n4. Calidad Fotorrealista: Usa Z-Image Turbo o FLUX.1 Schnell con iluminación celestial dorada.");
+    });
+  }
+
+  const btnHeaderNotif = document.getElementById("btnHeaderNotif");
+  if (btnHeaderNotif) {
+    btnHeaderNotif.addEventListener("click", () => {
+      alert("🔔 Estado del Estudio:\n\n• Motor de Render: FFmpeg H.264 1080x1920 MP4 Activo\n• Síntesis de Voz: Edge TTS Neuronal (Inglés Reverente)\n• Subtítulos: Montserrat / Cinzel con Resalte Activo Dinámico\n• 3 Escenas: Apertura (0-3.2s), Intercesión (3.2-10s) y Victoria");
+    });
+  }
+
+  const btnHeaderSettings = document.getElementById("btnHeaderSettings");
+  if (btnHeaderSettings) {
+    btnHeaderSettings.addEventListener("click", () => {
+      switchStage(5);
     });
   }
 

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>JesusReels Studio - Creador de Videos Cristianos para Facebook</title>
+  <title>JesusReels Studio - Creador Profesional de Reels Cristianos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cinzel:wght@700;800;900&family=Montserrat:wght@700;800;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=5.2">
   <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
   <script>
     (function() {
@@ -63,98 +63,171 @@
 </head>
 <body>
   <div class="app-layout">
-    <!-- Encabezado Principal Moderno (Estilo Estudio Profesional) -->
+    
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- 1. ENCABEZADO SUPERIOR COMPACTO (STUDIO NAVBAR)                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
     <header class="app-header">
-      <div class="brand">
-        <span class="cross-icon" aria-hidden="true">✝</span>
-        <div>
-          <div class="brand-title-wrap">
-            <h1>JesusReels <span>Studio</span></h1>
-            <span class="badge badge-version">v4.0 PRO</span>
-          </div>
-          <p class="tagline">Creador de Reels y Videos Cristianos de Alta Retención para Facebook (Público de EE. UU.)</p>
+      <div class="header-left">
+        <button type="button" class="btn-top-add" id="btnTopNewProject" title="Crear Nuevo Proyecto">+</button>
+        <div class="brand">
+          <div class="brand-title">JesusReels <span class="brand-accent">Studio</span></div>
+          <div class="brand-sub">Creador de Reels y Videos Cristianos de Alta Retención</div>
         </div>
       </div>
 
-      <!-- Pestañas de Navegación del Header -->
-      <nav class="header-nav-tabs">
-        <button type="button" id="tabModeReels" class="header-nav-tab active">
-          🎬 Editor de Reels (9:16)
+      <!-- Pestañas Centrales de Modo -->
+      <nav class="header-center-tabs">
+        <button type="button" id="tabModeReels" class="header-tab active">
+          🎬 Creador de Reels
         </button>
-        <button type="button" id="tabModeFeedCards" class="header-nav-tab">
-          🖼️ Tarjetas Feed (4:5)
+        <button type="button" id="tabModeFeedCards" class="header-tab">
+          ☑️ Tarjetas de Oración
         </button>
-        <button type="button" id="btnOpenDailyBatch" class="header-nav-tab">
-          📅 Lote Diario (3 Videos)
+        <button type="button" id="btnOpenDailyBatch" class="header-tab">
+          📁 Lote Diario
+        </button>
+        <button type="button" id="btnOpenDailyBatchTop" class="header-tab">
+          📅 Planificador Diario (3 Videos)
         </button>
       </nav>
 
-      <!-- Botones de Acción y Selector de Modo Claro/Oscuro -->
-      <div class="header-right-actions">
-        <button type="button" id="btnToggleTheme" class="btn btn-sm btn-theme-toggle" title="Cambiar entre modo claro y oscuro">
-          ☀️ <span class="theme-text">Modo Claro</span>
-        </button>
-        <span class="badge badge-free">100% Gratuito</span>
-        <span class="badge badge-hd">Meta 2026 Ready</span>
+      <!-- Utilidades a la Derecha (Notificaciones, Ayuda, Selector de Tema de 3 Estados, Configuración, Avatar) -->
+      <div class="header-right">
+        <button type="button" class="header-icon-btn" title="Notificaciones" id="btnHeaderNotif">🔔</button>
+        <button type="button" class="header-icon-btn" title="Ayuda y Consejos" id="btnHeaderHelp">❓</button>
+        
+        <!-- Selector de Tema de 3 Estados: Claro / Auto / Oscuro -->
+        <div class="theme-switch-pill" id="themeSwitchPill">
+          <button type="button" class="theme-pill-btn" id="btnThemeLight" title="Modo Claro">☀️</button>
+          <button type="button" class="theme-pill-btn" id="btnThemeAuto" title="Automático según Sistema">🔵</button>
+          <button type="button" class="theme-pill-btn active" id="btnThemeDark" title="Modo Oscuro">🌙</button>
+        </div>
+
+        <button type="button" class="header-icon-btn" title="Configurar Tokens y Claves IA" id="btnHeaderSettings">⚙️</button>
+        <div class="header-avatar" title="JesusReels Studio">✝️</div>
+
+        <!-- Botón legado para compatibilidad con scripts existentes -->
+        <button type="button" id="btnToggleTheme" style="display:none;"></button>
       </div>
     </header>
 
-    <!-- Sub-Barra de Herramientas del Proyecto (Estilo Editor por Capas) -->
-    <section class="project-subbar">
-      <div class="subbar-left">
-        <span class="subbar-title">⚡ Editor de Reels Cristianos</span>
-        <span class="subbar-meta">9:16 Vertical HD (1080x1920) • Auto-guardado local</span>
-      </div>
-      <div class="subbar-right">
-        <button type="button" id="btnQuickSync" class="btn btn-sm btn-subbar" title="Sincronizar las 3 escenas con el guion actual">
-          🪄 Sincronizar Guion
-        </button>
-        <button type="button" id="btnQuickReroll" class="btn btn-sm btn-subbar" title="Generar otras 3 variantes de tomas">
-          🎲 Otras 3 Tomas
-        </button>
-        <button type="button" id="btnQuickAiKeys" class="btn btn-sm btn-subbar" title="Configurar Tokens de IA">
-          ⚙️ Claves IA
-        </button>
-        <button type="button" id="btnQuickRender" class="btn btn-sm btn-primary-gradient" style="font-weight: 700;" title="Renderizar Reel en MP4">
-          🚀 Exportar Reel MP4
-        </button>
-      </div>
-    </section>
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- 2. ESPACIO DE TRABAJO PRINCIPAL: REELS (3 COLUMNAS / STUDIO DOCK)   -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <main class="workspace-studio" id="workspaceReels">
+      
+      <!-- ─── COLUMNA 1: SIDEBAR / DOCK DE ETAPAS ─────────────────────── -->
+      <aside class="sidebar-nav">
+        <div class="stage-nav-list">
+          <button type="button" class="stage-nav-item active" data-stage="1" id="navStage1">
+            <span class="stage-num">1</span>
+            <span class="stage-icon">📑</span>
+            <div class="stage-info">
+              <span class="stage-name">Guion y Tema</span>
+              <span class="stage-desc">Genera el mensaje</span>
+            </div>
+          </button>
 
-    <!-- Botón oculto para compatibilidad hacia atrás -->
-    <button type="button" id="btnOpenDailyBatchTop" style="display: none;"></button>
+          <button type="button" class="stage-nav-item" data-stage="2" id="navStage2">
+            <span class="stage-num">2</span>
+            <span class="stage-icon">🎙️</span>
+            <div class="stage-info">
+              <span class="stage-name">Voz y Música</span>
+              <span class="stage-desc">Elige la locución</span>
+            </div>
+          </button>
 
-    <!-- Botón Flotante / Acceso Rápido Móvil para saltar al reproductor -->
-    <div class="mobile-quick-nav">
-      <a href="#previewSection" class="btn btn-outline btn-sm">
-        📱 Ver Vista Previa del Móvil ↓
-      </a>
-    </div>
+          <button type="button" class="stage-nav-item" data-stage="3" id="navStage3">
+            <span class="stage-num">3</span>
+            <span class="stage-icon">🖼️</span>
+            <div class="stage-info">
+              <span class="stage-name">Imágenes y Movimiento</span>
+              <span class="stage-desc">Crea las escenas</span>
+            </div>
+          </button>
 
-    <!-- Área de Trabajo Principal (Reels 9:16) -->
-    <main class="workspace" id="workspaceReels">
-      <!-- Columna Izquierda: Controles y Creador -->
-      <section class="controls-panel">
-        
-        <!-- Paso 1: Guion y Psicología de Retención -->
-        <div class="card card-step">
-          <div class="card-header">
-            <span class="step-num">1</span>
-            <div>
-              <h2>Tema Viral y Generador de Guion (Meta 2026)</h2>
-              <p>Ganchos Scroll-Stopper (0-3s), alta retención y llamados a la acción para disparar guardados y comentarios de oración.</p>
+          <button type="button" class="stage-nav-item" data-stage="4" id="navStage4">
+            <span class="stage-num">4</span>
+            <span class="stage-icon">🔤</span>
+            <div class="stage-info">
+              <span class="stage-name">Subtítulos</span>
+              <span class="stage-desc">Personaliza el estilo</span>
+            </div>
+          </button>
+
+          <div class="sidebar-divider"></div>
+
+          <button type="button" class="stage-nav-item" data-stage="5" id="navStage5">
+            <span class="stage-icon">⚙️</span>
+            <div class="stage-info">
+              <span class="stage-name">Configuración Avanzada</span>
+              <span class="stage-desc">Formato y cámara</span>
+            </div>
+          </button>
+
+          <button type="button" class="stage-nav-item" data-stage="6" id="navStage6">
+            <span class="stage-icon">📥</span>
+            <div class="stage-info">
+              <span class="stage-name">Exportar Video</span>
+              <span class="stage-desc">Renderizar MP4</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Tarjeta de Proyecto Actual -->
+        <div class="project-card-mini">
+          <div class="project-mini-header">
+            <span class="proj-icon">📁</span>
+            <strong>Proyecto Actual</strong>
+          </div>
+          <div class="proj-title" id="currentProjectTitle">Reel: Por el hijo/hija que se alejó</div>
+          <div class="proj-meta">
+            <span class="dot-green"></span>
+            <span id="currentProjectStatus">Guardado hace un momento</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline btn-block mt-8" id="btnNewProjectSidebar">+ Nuevo Proyecto</button>
+        </div>
+
+        <!-- Enlaces Rápidos a Bibliotecas y Recursos -->
+        <div class="sidebar-library-list">
+          <div class="lib-heading">Biblioteca</div>
+          <button type="button" class="lib-item" id="btnSidebarMyReels">🎬 Mis Reels Recientes</button>
+          <button type="button" class="lib-item" id="btnSidebarPrayerCards">🖼️ Tarjetas de Oración</button>
+          <button type="button" class="lib-item" id="btnSidebarDailyBatch">📅 Lotes Diarios</button>
+        </div>
+      </aside>
+
+      <!-- ─── COLUMNA 2: PANEL CENTRAL DINÁMICO (ETAPA ACTIVA) ────────── -->
+      <section class="center-stage-panel" id="centerStagePanel">
+
+        <!-- ETAPA 1: GUION Y TEMA VIRAL (Activa por defecto) -->
+        <div class="stage-content-card active" id="stagePanel1">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">1</span>
+              <div>
+                <h2>Guion y Tema Viral (Meta 2026)</h2>
+                <p>Ganchos Scroll-Stopper (0-3s), alta retención y llamados a la acción.</p>
+              </div>
+            </div>
+            <div class="stage-header-right">
+              <span class="badge badge-categories">26 categorías</span>
+              <button type="button" id="btnGenerateScript" class="btn btn-primary-gradient">
+                ✨ Generar Guion con IA
+              </button>
             </div>
           </div>
-          
-          <div class="form-row">
+
+          <div class="form-row mt-12">
             <div class="form-group col-7">
-              <label for="themeSelect">Selecciona un Tema (26 Categorías)</label>
+              <label for="themeSelect">Selecciona un tema</label>
               <select id="themeSelect" class="form-control">
                 <!-- Inyectado dinámicamente -->
               </select>
             </div>
             <div class="form-group col-5">
-              <label for="scriptDurationMode">Formato & Retención</label>
+              <label for="scriptDurationMode">Formato y retención</label>
               <select id="scriptDurationMode" class="form-control">
                 <option value="deep" selected>🕊️ Oración Profunda (25-32s)</option>
                 <option value="micro">⚡ Micro-Bucle Viral (12-16s)</option>
@@ -163,130 +236,130 @@
           </div>
 
           <div class="form-group">
-            <label for="customTopic">O escribe un Tema o Dolor Específico (Opcional)</label>
-            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Sanidad de un hijo, Superar ataques de pánico, Deudas bancarias...">
+            <label for="customTopic">Tema o dolor específico (opcional)</label>
+            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Sanidad de un hijo, superar ataques de pánico, deudas bancarias...">
           </div>
 
-          <button id="btnGenerateScript" class="btn btn-secondary btn-block">
-            ✨ Generar Guion de Alta Retención (en Inglés)
-          </button>
-
-          <div class="script-editor-boxes">
-            <div class="script-field hook-field">
-              <div class="field-label">
-                <span>🎣 El Gancho / Scroll-Stopper (0s a 3s)</span>
-                <small>4-7 palabras de impacto inmediato para frenar el dedo</small>
+          <!-- Cuadrícula 2x2 de Cajas de Guion -->
+          <div class="script-grid-2x2">
+            <!-- Caja 1: Gancho -->
+            <div class="script-box hook-box">
+              <div class="box-head">
+                <span class="box-title">🎣 Gancho / Scroll-Stopper (0–3s)</span>
+                <span class="char-count" id="hookCharCount">0/500</span>
               </div>
-              <textarea id="scriptHook" rows="2" class="form-control" placeholder="Stop scrolling. Your bills are paid..."></textarea>
+              <small class="box-desc">4–7 palabras de impacto inmediato</small>
+              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Stop scrolling. Your bills are paid..."></textarea>
             </div>
 
-            <div class="script-field body-field">
-              <div class="field-label">
-                <span>❤️ Mensaje al Corazón / Promesa de Jesús</span>
-                <small>Conecta emocional y espiritualmente con autoridad bíblica</small>
+            <!-- Caja 2: Mensaje al Corazón -->
+            <div class="script-box body-box">
+              <div class="box-head">
+                <span class="box-title">❤️ Mensaje al Corazón / Promesa de Jesús</span>
+                <span class="char-count" id="bodyCharCount">0/500</span>
               </div>
-              <textarea id="scriptBody" rows="4" class="form-control" placeholder="Jesus says: I see your silent tears..."></textarea>
+              <small class="box-desc">Conecta emocional y espiritualmente</small>
+              <textarea id="scriptBody" rows="3" class="form-control" placeholder="Jesus says: I see your silent tears..."></textarea>
             </div>
 
-            <div class="script-field cta-field">
-              <div class="field-label">
-                <span>🔗 Llamada a la Acción (Guardar + Nombre en Comentarios + Compartir)</span>
-                <small>Dispara guardados para la noche y pedidos de oración con nombres propios.</small>
+            <!-- Caja 3: Llamada a la Acción -->
+            <div class="script-box cta-box">
+              <div class="box-head">
+                <span class="box-title">💬 Llamada a la Acción</span>
+                <span class="char-count" id="ctaCharCount">0/500</span>
               </div>
-              <textarea id="scriptCta" rows="2" class="form-control" placeholder="Save this prayer for tonight, and drop your first name below so we can pray..."></textarea>
+              <small class="box-desc">Guardar + Nombre en comentarios + Compartir</small>
+              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Save this prayer for tonight, and drop your first name below so we can pray..."></textarea>
             </div>
-          </div>
 
-          <!-- Gancho Visual de Emergencia (Segundos 0 a 3 — Siempre en la Parte Superior) -->
-          <div class="hook-badge-config-box" style="margin-top: 15px; background: var(--bg-card-header); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 14px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 13px; font-weight: 700; color: var(--accent-gold);">⚡ Gancho Visual de Impacto (0.0s a 3.2s — Superior)</span>
-              <button type="button" id="btnRerollHookBadge" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 3px 8px;">
-                🎲 Otra Alerta
-              </button>
-            </div>
-            <input type="text" id="hookBadgeInput" class="form-control" style="font-weight: 800; font-family: 'Montserrat', sans-serif; letter-spacing: 1.2px; text-transform: uppercase; font-size: 13.5px;" placeholder="PRAYER FOR YOUR CHILDREN">
-            
-            <div class="form-row" style="margin-top: 8px;">
-              <div class="form-group col-7" style="margin-bottom: 0;">
-                <label for="hookBadgeStyleSelect" style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 3px; display: block;">🎨 Diseño y Tipografía de la Insignia</label>
-                <select id="hookBadgeStyleSelect" class="form-control" style="font-size: 12px; height: 36px;">
-                  <option value="clean_glass" selected>🪟 Cristal Oscuro Minimalista (Píldora Moderna)</option>
-                  <option value="gold_luxury">🌟 Oro Sagrado Elegante (Píldora Minimalista)</option>
-                  <option value="viral_indigo">⚡ Indigo Moderno (Estilo Estudio Viral)</option>
-                  <option value="editorial_white">📰 Editorial Blanco (Alto Contraste)</option>
+            <!-- Caja 4: Gancho Visual de Impacto (Superior) -->
+            <div class="script-box badge-box">
+              <div class="box-head">
+                <span class="box-title">⚡ Gancho Visual de Impacto</span>
+                <span class="char-count" id="badgeCharCount">0/500</span>
+              </div>
+              <small class="box-desc">0.0s a 3.2s — Píldora superior nítida</small>
+              <input type="text" id="hookBadgeInput" class="form-control" placeholder="PRAYER FOR YOUR CHILDREN">
+              
+              <div class="badge-mini-row mt-6">
+                <select id="hookBadgeStyleSelect" class="form-control form-control-sm" style="flex: 2;">
+                  <option value="clean_glass" selected>🪟 Cristal Oscuro Minimalista</option>
+                  <option value="gold_luxury">🌟 Oro Sagrado Elegante</option>
+                  <option value="viral_indigo">⚡ Indigo Moderno</option>
+                  <option value="editorial_white">📰 Editorial Blanco</option>
                 </select>
-              </div>
-              <div class="form-group col-5" style="margin-bottom: 0; display: flex; align-items: center; padding-top: 16px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <input type="checkbox" id="chkEnableHookBadge" style="width: 17px; height: 17px; cursor: pointer;">
-                  <label for="chkEnableHookBadge" style="margin: 0; font-size: 12px; color: var(--text-main); cursor: pointer; font-weight: 600;">
-                    Mostrar Alerta
-                  </label>
-                </div>
+                <label class="chk-label" style="flex: 1;">
+                  <input type="checkbox" id="chkEnableHookBadge">
+                  <span>Activar</span>
+                </label>
+                <button type="button" id="btnRerollHookBadge" class="btn btn-sm btn-outline" title="Otra frase de gancho">🎲</button>
               </div>
             </div>
-            
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-color);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 4px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <input type="checkbox" id="chkEnableMicroCta" style="width: 17px; height: 17px; cursor: pointer;">
-                  <label for="chkEnableMicroCta" style="margin: 0; font-size: 12.5px; font-weight: 700; color: var(--primary); cursor: pointer;">
-                    💬 Píldora de Invitación a Comentar (Aviso discreto en el segundo 3.4)
-                  </label>
-                </div>
-                <small style="font-size: 11px; color: var(--text-muted);">Fade-in suave sin tapar subtítulos</small>
-              </div>
-              <input type="text" id="microCtaInput" class="form-control" style="font-size: 13px; margin-top: 4px;" placeholder="💬 Leave their first name below">
-              <small class="text-muted block mt-5" style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-                💡 <strong>¿Qué es la Píldora de Invitación?</strong> Es un aviso flotante y discreto arriba que invita a comentar nombres en el segundo 3.4 mientras se escucha la oración. Puedes desmarcar la casilla si prefieres que no aparezca en tu video.
-              </small>
-            </div>
-
-            <small class="text-muted block mt-5" style="font-size: 11.5px; color: var(--text-muted);">
-              📌 <strong>Diseño Seguro Anti-Colisiones:</strong> Ambas insignias se anclan estrictamente en la <strong>parte superior (\an8)</strong> para que <u>nunca</u> se monten sobre tus subtítulos.
-            </small>
           </div>
 
-          <!-- Pinned Comment display box -->
-          <div class="pinned-comment-box mt-15">
-            <div class="pinned-comment-header">
-              <span class="pinned-badge">📌 COMENTARIO FIJADO (ENGAGEMENT VIRAL)</span>
-              <div style="display: flex; gap: 6px;">
-                <button type="button" id="btnRerollMagneticComment" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" title="Generar otra pregunta de alta interacción">
-                  🎲 Otra Pregunta
-                </button>
-                <button type="button" id="btnCopyPinnedComment" class="btn btn-sm btn-gold-outline" style="font-size: 11px; padding: 4px 8px;">
-                  📋 Copiar Comentario
+          <!-- Opciones Avanzadas del Guion (Colapsable / Acordeón) -->
+          <details class="collapsible-box mt-14" open>
+            <summary class="collapsible-summary">
+              <span>⚙️ Opciones Avanzadas del Guion, Comentario Fijado y Sincronización</span>
+            </summary>
+            <div class="collapsible-body">
+              <!-- Píldora Micro-CTA -->
+              <div class="micro-cta-row">
+                <div class="flex-between">
+                  <label class="chk-label">
+                    <input type="checkbox" id="chkEnableMicroCta">
+                    <strong>💬 Píldora de Invitación a Comentar (Segundo 3.4 a 7.8)</strong>
+                  </label>
+                  <small class="text-muted">Aviso flotante arriba para pedir nombres</small>
+                </div>
+                <input type="text" id="microCtaInput" class="form-control mt-4" placeholder="💬 Leave their first name below">
+              </div>
+
+              <!-- Comentario Fijado -->
+              <div class="pinned-comment-wrap mt-10">
+                <div class="flex-between">
+                  <label class="form-label-sm">📌 Comentario Fijado Personalizado</label>
+                  <div class="flex-gap-4">
+                    <button type="button" id="btnRerollMagneticComment" class="btn btn-sm btn-outline">🎲 Otra Pregunta</button>
+                    <button type="button" id="btnCopyPinnedComment" class="btn btn-sm btn-gold-outline">📋 Copiar Comentario</button>
+                  </div>
+                </div>
+                <textarea id="scriptPinnedComment" rows="2" class="form-control mt-4" placeholder="El comentario fijado aparecerá aquí..."></textarea>
+              </div>
+
+              <!-- Botón de Sincronización -->
+              <div class="sync-prompts-bar mt-10">
+                <button type="button" id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block" style="font-weight: 700;">
+                  🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion
                 </button>
               </div>
             </div>
-            <textarea id="scriptPinnedComment" rows="2" class="form-control" placeholder="El comentario fijado personalizado para este video aparecerá aquí..."></textarea>
-            <small class="text-muted block mt-5">💡 <strong>Meta 2026 Tip:</strong> Pega y fija este comentario apenas subas tu Reel a Facebook. Multiplica por 5 los comentarios de oración.</small>
-          </div>
+          </details>
 
-          <!-- Botón de Sincronización Guion -> Imagen -->
-          <div class="script-to-image-sync">
-            <button id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block mt-10" style="font-weight: 700;">
-              🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion
+          <!-- Pie de Acciones de la Etapa 1 -->
+          <div class="stage-footer-actions mt-16">
+            <button type="button" id="btnClearScriptFields" class="btn btn-outline btn-sm">🗑️ Limpiar Campos</button>
+            <button type="button" id="btnNavToStage2" class="btn btn-warning-gradient">
+              ➡️ Siguiente: Voz y Música
             </button>
-            <small class="text-muted block mt-5">Analiza el dolor y las palabras de la oración para generar las 3 escenas exactas (Apertura, Intercesión y Victoria).</small>
           </div>
         </div>
 
-        <!-- Paso 2: Voz y Locución en Inglés -->
-        <div class="card card-step">
-          <div class="card-header">
-            <span class="step-num">2</span>
-            <div>
-              <h2>Voz y Locución en Inglés de EE. UU.</h2>
-              <p>Voces neuronales de calidad cinematográfica (Sin límites ni pagos)</p>
+        <!-- ETAPA 2: VOZ Y MÚSICA DE ADORACIÓN -->
+        <div class="stage-content-card" id="stagePanel2" style="display: none;">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">2</span>
+              <div>
+                <h2>Voz y Música de Adoración</h2>
+                <p>Voces neuronales de calidad cinematográfica (Sin límites ni pagos)</p>
+              </div>
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row mt-14">
             <div class="form-group col-8">
-              <label for="voiceSelect">Voz del Narrador</label>
+              <label for="voiceSelect">Voz del Narrador (Inglés de EE. UU.)</label>
               <select id="voiceSelect" class="form-control">
                 <!-- Inyectado dinámicamente -->
               </select>
@@ -303,306 +376,220 @@
             </div>
           </div>
 
-        <!-- Selector de Música de Fondo y Volumen -->
-          <div class="form-row" style="margin-top: 10px;">
+          <div class="form-row mt-10">
             <div class="form-group col-8">
-              <label for="musicSelect">🎵 Música de Adoración</label>
+              <label for="musicSelect">🎵 Música de Adoración de Fondo</label>
               <select id="musicSelect" class="form-control">
                 <!-- Inyectado dinámicamente -->
               </select>
             </div>
             <div class="form-group col-4">
-              <label for="musicVolume">Volumen</label>
-              <input type="range" id="musicVolume" class="form-control" min="0" max="100" value="20" style="width: 100%; height: 38px;">
+              <label for="musicVolume">Volumen de Música</label>
+              <input type="range" id="musicVolume" class="form-control" min="0" max="100" value="20" style="height: 42px;">
             </div>
           </div>
-          <small class="text-muted block mt-5">Controla la intensidad de la música de fondo. Recomendado: 15-25 para no tapar la voz.</small>
 
-          <button id="btnPreviewAudio" class="btn btn-outline btn-block mt-10">
+          <button id="btnPreviewAudio" class="btn btn-outline btn-block mt-12">
             🔊 Escuchar Previa del Audio
           </button>
           <audio id="audioPreviewPlayer" controls style="display:none; width: 100%; margin-top: 10px;"></audio>
+
+          <!-- Pie de Acciones de la Etapa 2 -->
+          <div class="stage-footer-actions mt-20">
+            <button type="button" id="btnNavBackTo1" class="btn btn-outline btn-sm">⬅️ Anterior: Guion</button>
+            <button type="button" id="btnNavToStage3" class="btn btn-warning-gradient">
+              ➡️ Siguiente: Imágenes y Movimiento
+            </button>
+          </div>
         </div>
 
-        <!-- Paso 3: Motor Visual y Formato -->
-        <div class="card card-step">
-          <div class="card-header">
-            <span class="step-num">3</span>
-            <div>
-              <h2>Formato y Motor Visual Híbrido</h2>
-              <p>Clips B-Roll o Escenas bíblicas con movimiento cinemático respetado para máxima retención en Meta 2026.</p>
+        <!-- ETAPA 3: IMÁGENES Y MOVIMIENTO DE ESCENAS -->
+        <div class="stage-content-card" id="stagePanel3" style="display: none;">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">3</span>
+              <div>
+                <h2>Imágenes y Movimiento de Escenas</h2>
+                <p>Generación de 3 tomas cinematográficas con IA fotorrealista (Z-Image Turbo, FLUX.1, Horde, Puter)</p>
+              </div>
             </div>
           </div>
 
-          <!-- Selector de Modo Visual (B-Roll vs Imágenes) -->
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label for="videoModeSelect" style="font-weight: 700; color: #ffd700;">🎬 Modo de Fondo Visual</label>
-            <select id="videoModeSelect" class="form-control" style="font-size: 13px; font-weight: 600;">
+          <!-- Selector de Motor de IA y Claves -->
+          <div class="form-row mt-12 align-end">
+            <div class="form-group col-8 mb-0">
+              <label for="aiImageProviderSelect">🤖 Motor de Generación IA</label>
+              <select id="aiImageProviderSelect" class="form-control" style="font-weight: 600;">
+                <option value="z_image" selected>🥇 Z-Image Turbo (Recomendado — Fotorrealismo DiT)</option>
+                <option value="flux_schnell">🥈 FLUX.1 Schnell (Black Forest Labs HD)</option>
+                <option value="aihorde">🥉 AI Horde (Comunidad Gratuita)</option>
+                <option value="puter">💻 Puter AI (DALL-E 3 — Conexión Navegador)</option>
+              </select>
+            </div>
+            <div class="form-group col-4 mb-0">
+              <button type="button" id="btnToggleAiSettings" class="btn btn-outline btn-block" style="height: 42px;">
+                ⚙️ Tokens IA / Horde
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuración de Claves API (Desplegable) -->
+          <div id="aiKeysConfigBox" class="subpanel-card mt-10" style="display: none;">
+            <div class="flex-between mb-8">
+              <strong style="color: var(--primary);">🔑 Configuración de Tokens Gratuitos</strong>
+              <button type="button" id="btnCloseAiKeys" class="btn btn-sm btn-outline">✕ Cerrar</button>
+            </div>
+            <div class="form-group mb-8">
+              <label>🤗 Hugging Face Token (FLUX.1 y Z-Image)</label>
+              <input type="password" id="hfTokenInput" class="form-control" placeholder="Token gratuito (hf_...)">
+            </div>
+            <div class="form-group mb-8">
+              <label>🌐 AI Horde API Key</label>
+              <input type="text" id="aiHordeKeyInput" class="form-control" placeholder="0000000000 (Anónimo Gratuito) o tu API Key">
+            </div>
+            <div class="flex-between">
+              <span id="aiKeysStatusText" class="text-success text-sm"></span>
+              <button type="button" id="btnSaveAiKeys" class="btn btn-sm btn-primary">💾 Guardar Claves</button>
+            </div>
+          </div>
+
+          <!-- Estado de Puter AI -->
+          <div id="puterStatusBox" class="puter-status-box mt-10" style="display: none;">
+            <div class="flex-gap-8 align-center">
+              <span id="puterStatusDot" class="status-dot-green"></span>
+              <span id="puterStatusText" class="text-sm">Puter AI: Conectado (DALL-E 3 HD)</span>
+            </div>
+            <div class="flex-gap-4">
+              <button type="button" id="btnPuterConnect" class="btn btn-sm btn-primary" style="display: none;">🔑 Conectar</button>
+              <button type="button" id="btnPuterReset" class="btn btn-sm btn-outline">🔄 Renovar Créditos</button>
+            </div>
+          </div>
+
+          <!-- Botón de Asistente Externo y Variantes -->
+          <div class="flex-between mt-10">
+            <button type="button" id="btnCopyPromptForExternal" class="btn btn-sm btn-outline">
+              📋 Copiar Prompt para Bing / Recraft
+            </button>
+            <button type="button" id="btnRerollPrompt" class="btn btn-sm btn-outline">
+              🎲 Otras 3 Variantes de Escenas
+            </button>
+          </div>
+
+          <!-- Botón Principal: Generar 3 Escenas en 1 Clic -->
+          <button type="button" id="btnGenerate3ScenesAi" class="btn btn-primary-gradient btn-large btn-block mt-12">
+            🚀 GENERAR LAS 3 ESCENAS CON IA EN 1 CLIC (CREAR Y ASIGNAR)
+          </button>
+
+          <!-- Barra de Progreso de Generación -->
+          <div id="batchGenProgressBox" class="progress-box mt-10" style="display: none;">
+            <div class="spinner"></div>
+            <div id="batchGenProgressText" class="progress-title">Generando Escena 1 de 3 (Apertura)...</div>
+            <div id="batchGenProgressSub" class="progress-sub">Creando toma con iluminación dorada e impacto visual...</div>
+          </div>
+
+          <!-- Prompts Editables de las 3 Escenas -->
+          <div class="scene-prompts-stack mt-12">
+            <div class="scene-prompt-box">
+              <div class="flex-between mb-4">
+                <span class="scene-tag tag-blue">🎬 Toma 1: Apertura (0.0s a 3.2s)</span>
+                <button type="button" id="btnGenScene1Only" class="btn btn-xs btn-outline">🎨 Crear solo Toma 1</button>
+              </div>
+              <textarea id="scene1PromptInput" rows="2" class="form-control text-sm" placeholder="Prompt de la toma 1..."></textarea>
+            </div>
+
+            <div class="scene-prompt-box mt-8">
+              <div class="flex-between mb-4">
+                <span class="scene-tag tag-gold">✨ Toma 2: Intercesión (3.2s a 10s)</span>
+                <button type="button" id="btnGenScene2Only" class="btn btn-xs btn-outline">🎨 Crear solo Toma 2</button>
+              </div>
+              <textarea id="scene2PromptInput" rows="2" class="form-control text-sm" placeholder="Prompt de la toma 2..."></textarea>
+            </div>
+
+            <div class="scene-prompt-box mt-8">
+              <div class="flex-between mb-4">
+                <span class="scene-tag tag-green">🕊️ Toma 3: Victoria (10s al final)</span>
+                <button type="button" id="btnGenScene3Only" class="btn btn-xs btn-outline">🎨 Crear solo Toma 3</button>
+              </div>
+              <textarea id="scene3PromptInput" rows="2" class="form-control text-sm" placeholder="Prompt de la toma 3..."></textarea>
+            </div>
+          </div>
+
+          <!-- Input oculto para compatibilidad hacia atrás -->
+          <textarea id="aiImagePrompt" style="display: none;"></textarea>
+
+          <!-- Selector de Modo de Fondo (Imágenes vs B-Roll) -->
+          <div class="form-group mt-14">
+            <label for="videoModeSelect">🎬 Modo de Fondo Visual</label>
+            <select id="videoModeSelect" class="form-control">
               <option value="images" selected>🖼️ Escenas Bíblicas Cinematográficas (Imágenes HD + Movimiento de Cámara)</option>
               <option value="broll">🎬 Clips de Video B-Roll (Pexels / Pixabay / Biblioteca Local)</option>
             </select>
           </div>
 
-          <!-- Panel de Información B-Roll -->
-          <div id="brollInfo" style="display: none; background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 14px; margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 13px; font-weight: 700; color: #93c5fd;">🎬 Motor B-Roll Cinemático Automático</span>
-              <span id="brollApiStatus" class="badge" style="font-size: 11px; padding: 3px 8px; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981;">Verificando...</span>
+          <!-- Panel de B-Roll -->
+          <div id="brollInfo" class="subpanel-card mt-8" style="display: none;">
+            <div class="flex-between mb-4">
+              <strong>Motor B-Roll Automático</strong>
+              <span id="brollApiStatus" class="badge badge-free">Verificando...</span>
             </div>
-            <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 6px 0; line-height: 1.4;">
-              El sistema seleccionará automáticamente 3 clips de video verticales en alta resolución (720p+), aplicando recorte inteligente, transiciones xfade y respaldo automático sobre imágenes cinematográficas.
-            </p>
-            <small style="font-size: 11px; color: #94a3b8;">
-              💡 <em>Opcional:</em> Puedes configurar <code>PEXELS_API_KEY</code> o <code>PIXABAY_API_KEY</code> en tu servidor para buscar clips ilimitados en línea.
-            </small>
+            <p class="text-sm text-muted">El sistema seleccionará automáticamente clips de video verticales en alta resolución (720p+).</p>
           </div>
 
-          <div class="form-row">
-            <div class="form-group col-3">
-              <label for="aspectRatioSelect">Formato de Video</label>
-              <select id="aspectRatioSelect" class="form-control">
-                <option value="9:16" selected>📱 9:16 (Reels/Shorts)</option>
-                <option value="1:1">⬛ 1:1 (Post Cuadrado)</option>
-                <option value="16:9">📺 16:9 (YouTube/TV)</option>
-              </select>
-            </div>
-            <div class="form-group col-3">
-              <label for="cameraMotionSelect">Movimiento Cámara</label>
-              <select id="cameraMotionSelect" class="form-control">
-                <option value="zoom_in" selected>🔍 Acercamiento (Zoom In)</option>
-                <option value="none">🔒 Fija / Estable</option>
-                <option value="zoom_out">🔭 Alejamiento (Zoom Out)</option>
-                <option value="pan_up">⬆️ Inclinación Cielo</option>
-                <option value="pan_down">⬇️ Revelación Divina</option>
-                <option value="pan_right">➡️ Barrido Derecha</option>
-                <option value="pan_left">⬅️ Barrido Izquierda</option>
-                <option value="zoom_in_pan_up">✨ Ascenso + Zoom</option>
-              </select>
-            </div>
-            <div class="form-group col-3">
-              <label for="transitionStyleSelect">Transición entre Escenas</label>
-              <select id="transitionStyleSelect" class="form-control">
-                <option value="fade" selected>🕊️ Disolución Suave (Fade)</option>
-                <option value="fadewhite">☀️ Resplandor Divino (White Flash)</option>
-                <option value="circlecrop">⭕ Foco Sagrado (Circle Crop)</option>
-                <option value="dissolve">✨ Disolución Profunda</option>
-                <option value="smoothup">⬆️ Ascenso de Esperanza (Slide Up)</option>
-                <option value="hblur">🌫️ Desenfoque de Cine (Blur)</option>
-                <option value="wipeleft">➡️ Barrido Cinemático (Wipe)</option>
-                <option value="fadeblack">🌌 Fundido Solemne a Negro</option>
-              </select>
-            </div>
-            <div class="form-group col-3">
-              <label for="effectTypeSelect">Efecto Visual</label>
-              <select id="effectTypeSelect" class="form-control">
-                <option value="cinematic_dust" selected>✨ Polvo de Oro (Partículas)</option>
-                <option value="holy_fire">🔥 Fuego y Unción (Ámbar)</option>
-                <option value="celestial_bloom">🕊️ Resplandor de Gloria</option>
-                <option value="dawn_hope">🌅 Amanecer de Esperanza</option>
-                <option value="divine_light">☀️ Rayos de Luz Divina</option>
-                <option value="dramatic_grain">🎬 Grano de Cine 35mm</option>
-                <option value="celestial_glow">✨ Niebla de Gloria</option>
-                <option value="golden_hour">🌇 Hora Dorada Sagrada</option>
-                <option value="none">🖼️ Limpio (Sin Efectos)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Image Gallery -->
-          <div id="imageGallerySection">
-            <div class="form-group" style="margin-top: 15px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-                <label style="margin: 0;">Galería de Escenas Visuales (3 Tomas Cinematográficas)</label>
-                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                  <button type="button" id="btnTabScene1" class="btn btn-sm btn-primary" style="font-size: 11px; padding: 4px 8px;">
-                    🖼️ 1 (0-3.2s)
-                  </button>
-                  <button type="button" id="btnTabScene2" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" title="Escena 2: Punto de inflexión / Oración (3.2s a 9.5s)">
-                    ✨ 2 (Intercesión)
-                  </button>
-                  <button type="button" id="btnTabScene3" class="btn btn-sm btn-outline" style="font-size: 11px; padding: 4px 8px;" title="Escena 3: Victoria y Paz (9.5s al final)">
-                    🕊️ 3 (Victoria)
-                  </button>
-                </div>
-              </div>
-              <div id="sceneStatusBanner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #93c5fd;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span id="sceneStatusText">🎬 <strong>Escena 1 Activa (Apertura con Flash-Focus):</strong> Selecciona abajo la foto de impacto inicial.</span>
-                  <div style="display: flex; gap: 4px;">
-                    <button type="button" id="btnClearScene2" class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px; display: none;">✕ Quitar 2</button>
-                    <button type="button" id="btnClearScene3" class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 6px; display: none;">✕ Quitar 3</button>
-                  </div>
-                </div>
-              </div>
-              <div class="image-gallery-picker" id="imageGallery">
-                <!-- Inyectado dinámicamente -->
+          <!-- Galería de Escenas Visuales -->
+          <div id="imageGallerySection" class="mt-14">
+            <div class="flex-between mb-8">
+              <label class="mb-0">Galería de Imágenes Disponibles</label>
+              <div class="flex-gap-4">
+                <button type="button" id="btnTabScene1" class="btn btn-xs btn-primary">🖼️ 1 (0-3.2s)</button>
+                <button type="button" id="btnTabScene2" class="btn btn-xs btn-outline">✨ 2 (Intercesión)</button>
+                <button type="button" id="btnTabScene3" class="btn btn-xs btn-outline">🕊️ 3 (Victoria)</button>
               </div>
             </div>
 
-            <!-- Generador Cinemático de 3 Escenas con IA (1 Clic) -->
-            <div class="ai-generator-box" style="background: rgba(15, 23, 42, 0.75); border: 1.5px solid rgba(255, 215, 0, 0.4); border-radius: 12px; padding: 18px; margin-top: 15px;">
-              <div class="ai-box-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
-                <span style="font-size: 14px; font-weight: 800; color: #ffd700;">🎨 Generador Cinemático de 3 Escenas con IA (DALL-E 3 / Flux HD)</span>
-                <button id="btnRerollPrompt" type="button" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 4px 8px;" title="Genera otra terna de escenas que coincidan con la oración">
-                  🎲 Otras 3 Variantes
-                </button>
-              </div>
-
-              <!-- Selector de Proveedor de Imagen IA -->
-              <div class="form-row" style="margin-bottom: 12px; align-items: flex-end;">
-                <div class="form-group col-7" style="margin-bottom: 0;">
-                  <label for="aiImageProviderSelect" style="font-size: 12px; font-weight: 700; color: #ffd700;">🤖 Motor de Generación IA</label>
-                  <select id="aiImageProviderSelect" class="form-control" style="font-size: 12px; height: 36px; font-weight: 600;">
-                    <option value="z_image" selected>🥇 Z-Image Turbo (Recomendado — Fotorrealismo DiT)</option>
-                    <option value="flux_schnell">🥈 FLUX.1 Schnell (Black Forest Labs HD)</option>
-                    <option value="aihorde">🥉 AI Horde (Comunidad Gratuita)</option>
-                    <option value="puter">💻 Puter AI (DALL-E 3 — Conexión Navegador)</option>
-                  </select>
-                </div>
-                <div class="form-group col-5" style="margin-bottom: 0;">
-                  <button type="button" id="btnToggleAiSettings" class="btn btn-outline btn-block" style="font-size: 11px; padding: 7px 10px; height: 36px;">
-                    ⚙️ Tokens IA / Horde
-                  </button>
+            <div id="sceneStatusBanner" class="scene-status-banner mb-8">
+              <div class="flex-between">
+                <span id="sceneStatusText">🎬 <strong>Escena 1 Activa:</strong> Selecciona abajo la imagen de impacto inicial.</span>
+                <div class="flex-gap-4">
+                  <button type="button" id="btnClearScene2" class="btn btn-xs btn-outline" style="display: none;">✕ Quitar 2</button>
+                  <button type="button" id="btnClearScene3" class="btn btn-xs btn-outline" style="display: none;">✕ Quitar 3</button>
                 </div>
               </div>
-
-              <!-- Panel Desplegable de Configuración de Claves API -->
-              <div id="aiKeysConfigBox" style="display: none; background: rgba(30, 41, 59, 0.95); border: 1.5px solid rgba(59, 130, 246, 0.45); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                  <span style="font-size: 13px; font-weight: 800; color: #93c5fd;">🔑 Configuración de Motores de IA Gratuitos</span>
-                  <button type="button" id="btnCloseAiKeys" class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 7px;">✕ Cerrar</button>
-                </div>
-                
-                <!-- Hugging Face Token (Para ZeroGPU & Spaces prioritarios) -->
-                <div style="margin-bottom: 12px;">
-                  <label style="font-size: 11.5px; font-weight: 700; color: #fde047; display: block; margin-bottom: 3px;">
-                    🤗 Hugging Face Token (Otorga cuota prioritaria para FLUX.1 y Z-Image)
-                  </label>
-                  <input type="password" id="hfTokenInput" class="form-control" style="font-size: 11.5px;" placeholder="Token de acceso gratuito (hf_...)">
-                  <small style="font-size: 10px; color: #94a3b8;">
-                    👉 Obtén tu token gratis en <a href="https://huggingface.co/settings/tokens" target="_blank" style="color: #60a5fa; text-decoration: underline;">huggingface.co/settings/tokens</a> (Solo requiere email, sin tarjeta).
-                  </small>
-                </div>
-
-                <!-- AI Horde -->
-                <div style="margin-bottom: 12px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">
-                  <label style="font-size: 11.5px; font-weight: 700; color: #a7f3d0; display: block; margin-bottom: 3px;">
-                    🌐 AI Horde (Red Comunitaria de GPUs — 100% Gratuita)
-                  </label>
-                  <input type="text" id="aiHordeKeyInput" class="form-control" style="font-size: 11.5px;" placeholder="0000000000 (Anónimo Gratuito) o tu API Key">
-                  <small style="font-size: 10px; color: #94a3b8;">
-                    👉 Funciona anónimamente sin clave. Si deseas mayor prioridad, regístrate gratis en <a href="https://aihorde.net/register" target="_blank" style="color: #60a5fa; text-decoration: underline;">aihorde.net/register</a>.
-                  </small>
-                </div>
-
-                <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
-                  <span id="aiKeysStatusText" style="font-size: 11px; color: #a7f3d0;"></span>
-                  <button type="button" id="btnSaveAiKeys" class="btn btn-sm btn-primary" style="font-size: 11.5px; padding: 6px 14px; font-weight: 700;">
-                    💾 Guardar Claves
-                  </button>
-                </div>
-              </div>
-
-              <!-- Barra de Estado y Conexión de Puter (visible solo si se selecciona Puter) -->
-              <div id="puterStatusBox" class="puter-status-box" style="display: none; align-items: center; justify-content: space-between; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span id="puterStatusDot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></span>
-                  <span id="puterStatusText" style="font-size: 13px; font-weight: 600; color: #cbd5e1;">Puter AI: Conectado (DALL-E 3 HD)</span>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                  <button type="button" id="btnPuterConnect" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 5px 12px; cursor: pointer; display: none;">
-                    🔑 Conectar
-                  </button>
-                  <button type="button" id="btnPuterReset" class="btn btn-sm btn-gold-outline" style="font-size: 11px; padding: 4px 10px; cursor: pointer;" title="Cerrar la cuenta actual para conectar otra o usar una cuenta nueva con créditos frescos">
-                    🔄 Cambiar Cuenta / Renovar Créditos
-                  </button>
-                </div>
-              </div>
-
-              <!-- Asistente de Prompt para Bing / Recraft Web -->
-              <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; font-size: 11.5px; color: #cbd5e1;">
-                <span>💡 <strong>¿Generas también en Bing o Recraft?</strong></span>
-                <button type="button" id="btnCopyPromptForExternal" class="btn btn-sm btn-gold-outline" style="font-size: 10.5px; padding: 2px 8px;">
-                  📋 Copiar Prompt para Bing / Recraft
-                </button>
-              </div>
-
-              <!-- Botón Principal 1 Clic para Crear y Asignar las 3 Escenas -->
-              <button type="button" id="btnGenerate3ScenesAi" class="btn btn-primary btn-large btn-block" style="font-weight: 800; font-size: 14.5px; letter-spacing: 0.5px; margin-bottom: 12px; padding: 12px; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35);">
-                🚀 GENERAR LAS 3 ESCENAS CON IA EN 1 CLIC (CREAR Y ASIGNAR)
-              </button>
-
-              <!-- Barra de Progreso de Generación de Lote -->
-              <div id="batchGenProgressBox" style="display: none; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; text-align: center;">
-                <div class="spinner" style="width: 28px; height: 28px; margin: 0 auto 8px auto; border-top-color: #10b981;"></div>
-                <div id="batchGenProgressText" style="font-size: 13px; font-weight: 700; color: #a7f3d0;">Generando Escena 1 de 3 (Apertura)...</div>
-                <div id="batchGenProgressSub" style="font-size: 11.5px; color: #6ee7b7; margin-top: 3px;">Creando toma con iluminación dorada e impacto visual...</div>
-              </div>
-
-              <!-- Prompts de las 3 Escenas -->
-              <div class="scene-prompts-grid" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                <!-- Toma 1 -->
-                <div class="scene-prompt-card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 10px 12px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-size: 12px; font-weight: 700; color: #93c5fd;">🎬 Toma 1: Apertura y Gancho (0.0s a 3.2s)</span>
-                    <button type="button" id="btnGenScene1Only" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;">
-                      🎨 Crear solo Toma 1
-                    </button>
-                  </div>
-                  <textarea id="scene1PromptInput" rows="2" class="form-control" style="font-size: 11.5px; padding: 6px 10px;" placeholder="Prompt de la escena 1..."></textarea>
-                </div>
-
-                <!-- Toma 2 -->
-                <div class="scene-prompt-card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 10px 12px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-size: 12px; font-weight: 700; color: #fde047;">✨ Toma 2: Intercesión y Punto de Dolor (3.2s a 10s)</span>
-                    <button type="button" id="btnGenScene2Only" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;">
-                      🎨 Crear solo Toma 2
-                    </button>
-                  </div>
-                  <textarea id="scene2PromptInput" rows="2" class="form-control" style="font-size: 11.5px; padding: 6px 10px;" placeholder="Prompt de la escena 2..."></textarea>
-                </div>
-
-                <!-- Toma 3 -->
-                <div class="scene-prompt-card" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 10px 12px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-size: 12px; font-weight: 700; color: #86efac;">🕊️ Toma 3: Victoria y Promesa Cumplida (10s al final)</span>
-                    <button type="button" id="btnGenScene3Only" class="btn btn-sm btn-outline" style="font-size: 10.5px; padding: 2px 7px;">
-                      🎨 Crear solo Toma 3
-                    </button>
-                  </div>
-                  <textarea id="scene3PromptInput" rows="2" class="form-control" style="font-size: 11.5px; padding: 6px 10px;" placeholder="Prompt de la escena 3..."></textarea>
-                </div>
-              </div>
-
-              <!-- Input oculto para compatibilidad hacia atrás -->
-              <textarea id="aiImagePrompt" style="display: none;"></textarea>
-
-              <small class="text-muted block mt-10" style="font-size: 11.5px; color: #94a3b8;">
-                💡 <strong>1 Clic Automático:</strong> El generador crea las 3 tomas y las asigna automáticamente a las posiciones [1], [2] y [3] de tu Reel sin que tengas que cambiar de pestaña.
-              </small>
             </div>
 
-            <div class="upload-wrapper mt-15">
+            <div class="image-gallery-picker" id="imageGallery">
+              <!-- Inyectado dinámicamente -->
+            </div>
+
+            <div class="upload-wrapper mt-8">
               <label class="btn-upload" for="imageUpload">
-                📁 O Subir Mi Propia Imagen desde la Computadora / Celular
+                📁 O Subir Mi Propia Imagen desde la Computadora
               </label>
               <input type="file" id="imageUpload" accept="image/*" style="display:none;">
             </div>
           </div>
+
+          <!-- Pie de Acciones de la Etapa 3 -->
+          <div class="stage-footer-actions mt-20">
+            <button type="button" id="btnNavBackTo2" class="btn btn-outline btn-sm">⬅️ Anterior: Voz</button>
+            <button type="button" id="btnNavToStage4" class="btn btn-warning-gradient">
+              ➡️ Siguiente: Subtítulos
+            </button>
+          </div>
         </div>
 
-        <!-- Paso 4: Estilos de Subtítulos -->
-        <div class="card card-step">
-          <div class="card-header">
-            <span class="step-num">4</span>
-            <div>
-              <h2>Estilos y Ubicación de Subtítulos</h2>
-              <p>Personaliza color, tamaño, posición exacta y animación en vivo</p>
+        <!-- ETAPA 4: SUBTÍTULOS Y TIPOGRAFÍA -->
+        <div class="stage-content-card" id="stagePanel4" style="display: none;">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">4</span>
+              <div>
+                <h2>Subtítulos y Tipografía</h2>
+                <p>Personaliza color, tamaño, posición exacta y animación en vivo</p>
+              </div>
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row mt-14">
             <div class="form-group col-7">
               <label for="subtitleStyleSelect">Diseño y Tipografía de Subtítulo</label>
               <select id="subtitleStyleSelect" class="form-control">
@@ -621,12 +608,12 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-row mt-10">
             <div class="form-group col-7">
               <label for="subtitleAnimationSelect">Animación de Palabras</label>
               <select id="subtitleAnimationSelect" class="form-control">
-                <option value="pop" selected>💥 Rebote Dinámico (Pop Alex Hormozi)</option>
+                <option value="pop" selected>💥 Resalte Pop Dinámico (CapCut / Estable)</option>
                 <option value="glow">✨ Resplandor Divino (Glow / Destello)</option>
                 <option value="fade">🌫️ Aparición Suave (Fade in)</option>
                 <option value="scale_slow">🔍 Escala Lenta (Cinematográfico)</option>
@@ -635,83 +622,122 @@
             </div>
             <div class="form-group col-5">
               <label for="subtitleSizeSelect">Tamaño & Formato</label>
-              <div style="display: flex; gap: 8px; align-items: center;">
+              <div class="flex-gap-8 align-center">
                 <select id="subtitleSizeSelect" class="form-control" style="flex: 1;">
                   <option value="normal" selected>Normal</option>
                   <option value="large">Grande</option>
                 </select>
-                <label style="margin: 0; display: flex; align-items: center; gap: 4px; font-size: 11px; color: #cbd5e1; cursor: pointer; white-space: nowrap;">
-                  <input type="checkbox" id="chkSubtitlesAllCaps" style="width: 15px; height: 15px; cursor: pointer;">
-                  MAYÚS
+                <label class="chk-label nowrap">
+                  <input type="checkbox" id="chkSubtitlesAllCaps">
+                  <span>MAYÚS</span>
                 </label>
               </div>
             </div>
           </div>
+
+          <!-- Pie de Acciones de la Etapa 4 -->
+          <div class="stage-footer-actions mt-20">
+            <button type="button" id="btnNavBackTo3" class="btn btn-outline btn-sm">⬅️ Anterior: Imágenes</button>
+            <button type="button" id="btnNavToStage5" class="btn btn-warning-gradient">
+              ➡️ Siguiente: Configuración Avanzada
+            </button>
+          </div>
         </div>
 
-        <!-- Botón de Render Final -->
-        <button id="btnRenderVideo" class="btn btn-primary btn-large btn-block">
-          🎬 GENERAR REEL VIRAL (MP4)
-        </button>
-
-      </section>
-
-      <!-- Columna Derecha: Vista Previa en Móvil y Descarga -->
-      <section class="preview-panel" id="previewSection">
-        <div class="preview-sticky-wrap">
-          <div class="preview-header-mobile">
-            <h3>📱 Vista Previa en Tiempo Real</h3>
-          </div>
-
-          <!-- Selector de Modo de Vista Previa -->
-          <div class="preview-mode-bar">
-            <button type="button" id="btnViewStage" class="preview-tab active">
-              👁️ Previa Diseño
-            </button>
-            <button type="button" id="btnViewVideo" class="preview-tab" disabled>
-              🎬 Video Renderizado
-            </button>
-          </div>
-
-          <div class="phone-mockup">
-            <div class="phone-screen">
-              <!-- Escenario Idle -->
-              <div class="stage-placeholder" id="stagePlaceholder">
-                <div class="stage-blur-bg" id="stageBlurBg"></div>
-                <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
-                <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
-
-                <!-- Recuadro de Alerta Superior (Hook Badge) — Siempre Arriba -->
-                <div id="stageHookBadge" class="stage-hook-badge hook-style-gold" style="display: block;">
-                  PRAYER FOR YOUR CHILDREN
-                </div>
-
-                <!-- Píldora de Micro-CTA Superior — Vista Previa en Vivo -->
-                <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: block;">
-                  💬 Leave their first name below
-                </div>
-
-                <div class="stage-overlay" id="stageOverlay">
-                  <div class="live-subtitle-preview pos-bottom" id="liveSubPreview">
-                    <span class="sub-word">GOD IS</span> <span class="sub-word highlight">WITH YOU</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Reproductor de Video Final -->
-              <video id="finalVideoPlayer" controls playsinline loop style="display: none;"></video>
-
-              <!-- Pantalla de Carga Durante Render -->
-              <div class="render-overlay" id="renderOverlay" style="display: none;">
-                <div class="spinner"></div>
-                <h3 id="renderStatusText">Creando tu Reel Viral...</h3>
-                <p id="renderStatusSub">Sintetizando voz y animando cámara...</p>
+        <!-- ETAPA 5: CONFIGURACIÓN AVANZADA (Formato, Cámara, Transiciones, Efectos) -->
+        <div class="stage-content-card" id="stagePanel5" style="display: none;">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">⚙️</span>
+              <div>
+                <h2>Configuración Avanzada y Efectos</h2>
+                <p>Relación de aspecto, movimientos de cámara cinemáticos y transiciones entre tomas</p>
               </div>
             </div>
           </div>
 
-          <!-- Acciones de Video Generado -->
-          <div class="video-actions" id="videoActions" style="display: none;">
+          <div class="form-row mt-14">
+            <div class="form-group col-6">
+              <label for="aspectRatioSelect">Formato de Video</label>
+              <select id="aspectRatioSelect" class="form-control">
+                <option value="9:16" selected>📱 9:16 (Reels/Shorts)</option>
+                <option value="1:1">⬛ 1:1 (Post Cuadrado)</option>
+                <option value="16:9">📺 16:9 (YouTube/TV)</option>
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label for="cameraMotionSelect">Movimiento Cámara</label>
+              <select id="cameraMotionSelect" class="form-control">
+                <option value="zoom_in" selected>🔍 Acercamiento (Zoom In)</option>
+                <option value="none">🔒 Fija / Estable</option>
+                <option value="zoom_out">🔭 Alejamiento (Zoom Out)</option>
+                <option value="pan_up">⬆️ Inclinación Cielo</option>
+                <option value="pan_down">⬇️ Revelación Divina</option>
+                <option value="pan_right">➡️ Barrido Derecha</option>
+                <option value="pan_left">⬅️ Barrido Izquierda</option>
+                <option value="zoom_in_pan_up">✨ Ascenso + Zoom</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row mt-10">
+            <div class="form-group col-6">
+              <label for="transitionStyleSelect">Transición entre Escenas</label>
+              <select id="transitionStyleSelect" class="form-control">
+                <option value="fade" selected>🕊️ Disolución Suave (Fade)</option>
+                <option value="fadewhite">☀️ Resplandor Divino (White Flash)</option>
+                <option value="circlecrop">⭕ Foco Sagrado (Circle Crop)</option>
+                <option value="dissolve">✨ Disolución Profunda</option>
+                <option value="smoothup">⬆️ Ascenso de Esperanza (Slide Up)</option>
+                <option value="hblur">🌫️ Desenfoque de Cine (Blur)</option>
+                <option value="wipeleft">➡️ Barrido Cinemático (Wipe)</option>
+                <option value="fadeblack">🌌 Fundido Solemne a Negro</option>
+              </select>
+            </div>
+            <div class="form-group col-6">
+              <label for="effectTypeSelect">Efecto Visual Cinemático</label>
+              <select id="effectTypeSelect" class="form-control">
+                <option value="cinematic_dust" selected>✨ Polvo de Oro (Partículas)</option>
+                <option value="holy_fire">🔥 Fuego y Unción (Ámbar)</option>
+                <option value="celestial_bloom">🕊️ Resplandor de Gloria</option>
+                <option value="dawn_hope">🌅 Amanecer de Esperanza</option>
+                <option value="divine_light">☀️ Rayos de Luz Divina</option>
+                <option value="dramatic_grain">🎬 Grano de Cine 35mm</option>
+                <option value="celestial_glow">✨ Niebla de Gloria</option>
+                <option value="golden_hour">🌇 Hora Dorada Sagrada</option>
+                <option value="none">🖼️ Limpio (Sin Efectos)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Pie de Acciones de la Etapa 5 -->
+          <div class="stage-footer-actions mt-20">
+            <button type="button" id="btnNavBackTo4" class="btn btn-outline btn-sm">⬅️ Anterior: Subtítulos</button>
+            <button type="button" id="btnNavToStage6" class="btn btn-warning-gradient">
+              ➡️ Siguiente: Exportar Video
+            </button>
+          </div>
+        </div>
+
+        <!-- ETAPA 6: EXPORTAR Y DESCARGAR -->
+        <div class="stage-content-card" id="stagePanel6" style="display: none;">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">📥</span>
+              <div>
+                <h2>Exportar Video y Publicación en Facebook</h2>
+                <p>Renderizado con FFmpeg en 1080x1920 MP4 y recursos virales listos para copiar</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de Render Principal -->
+          <button id="btnRenderVideo" class="btn btn-primary-gradient btn-large btn-block mt-16" style="padding: 16px; font-size: 16px;">
+            🎬 GENERAR REEL VIRAL (MP4)
+          </button>
+
+          <!-- Acciones de Video Generado (Descargar, Copiar SEO, Copiar Comentario) -->
+          <div class="video-actions mt-16" id="videoActions" style="display: none;">
             <a id="btnDownloadVideo" href="#" download="jesus_reel.mp4" class="btn btn-success btn-large btn-block">
               ⬇️ Descargar Video MP4 (1080x1920)
             </a>
@@ -727,93 +753,188 @@
           </div>
 
           <!-- Biblioteca de Videos Recientes -->
-          <div class="card recent-reels-card">
-            <h3>Biblioteca de Videos Recientes</h3>
-            <div class="recent-list" id="recentList">
+          <div class="subpanel-card mt-20">
+            <h3>🎬 Biblioteca de Videos Recientes</h3>
+            <div class="recent-list mt-8" id="recentList">
               <p class="text-muted">Aún no hay videos generados. ¡Crea el primero!</p>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
 
-    <!-- Área de Trabajo 2: Creador Dedicado de Tarjetas de Oración (Feed 4:5) -->
-    <main class="workspace" id="workspaceCards" style="display: none;">
-      <!-- Columna Izquierda: Configuración de la Tarjeta -->
-      <section class="controls-panel">
-        <div class="card card-step">
-          <div class="card-header">
-            <span class="step-num">🖼️</span>
-            <div>
-              <h2>Estudio de Tarjetas de Oración para Feed (4:5 HD)</h2>
-              <p>Formato vertical 1080x1350 optimizado para el Feed de Facebook. Diseñado para retener la lectura, despertar fe y disparar comentarios de "AMEN".</p>
+          <!-- Pie de Acciones de la Etapa 6 -->
+          <div class="stage-footer-actions mt-20">
+            <button type="button" id="btnNavBackTo5" class="btn btn-outline btn-sm">⬅️ Anterior: Configuración</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ─── COLUMNA 3: PANEL DERECHO PERSISTENTE (VISTA PREVIA EN VIVO) ── -->
+      <section class="preview-panel" id="previewSection">
+        <div class="preview-sticky-wrap">
+          
+          <!-- Encabezado de Vista Previa -->
+          <div class="preview-top-bar">
+            <div class="flex-gap-8 align-center">
+              <span class="preview-title">📱 Vista Previa</span>
+              <span class="badge-ratio">9:16</span>
+            </div>
+            <div class="preview-mode-bar">
+              <button type="button" id="btnViewStage" class="preview-tab active">👁️ Diseño</button>
+              <button type="button" id="btnViewVideo" class="preview-tab" disabled>🎬 Video Final</button>
             </div>
           </div>
 
-          <div class="form-row">
+          <!-- Mockup del Teléfono Móvil -->
+          <div class="phone-mockup">
+            <div class="phone-screen">
+              
+              <!-- Escenario de Previsualización en Vivo -->
+              <div class="stage-placeholder" id="stagePlaceholder">
+                <div class="stage-blur-bg" id="stageBlurBg"></div>
+                <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
+                <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
+
+                <!-- Recuadro de Alerta Superior (Hook Badge) — Siempre Arriba -->
+                <div id="stageHookBadge" class="stage-hook-badge hook-style-clean_glass" style="display: block;">
+                  PRAYER FOR YOUR CHILDREN
+                </div>
+
+                <!-- Píldora de Micro-CTA Superior — Vista Previa en Vivo -->
+                <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: block;">
+                  💬 Leave their first name below
+                </div>
+
+                <!-- Capa de Subtítulos en Vivo -->
+                <div class="stage-overlay" id="stageOverlay">
+                  <div class="live-subtitle-preview pos-bottom" id="liveSubPreview">
+                    <span class="sub-word">GOD IS</span> <span class="sub-word highlight">WITH YOU</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reproductor de Video Final Renderizado -->
+              <video id="finalVideoPlayer" controls playsinline loop style="display: none;"></video>
+
+              <!-- Pantalla de Carga Durante Renderizado -->
+              <div class="render-overlay" id="renderOverlay" style="display: none;">
+                <div class="spinner"></div>
+                <h3 id="renderStatusText">Creando tu Reel Viral...</h3>
+                <p id="renderStatusSub">Sintetizando voz y animando cámara...</p>
+              </div>
+
+              <!-- Barra Inferior de Control de Reproducción Simulado -->
+              <div class="phone-player-controls-bar">
+                <span class="ctrl-play" id="btnLivePlayPause" style="cursor: pointer;" title="Reproducir / Pausar">▶</span>
+                <span class="ctrl-time" id="liveCtrlTime">00:00 / 00:28</span>
+                <div class="ctrl-icons">
+                  <span id="btnLiveMute" style="cursor: pointer;" title="Silenciar / Activar Sonido">🔊</span>
+                  <span id="btnLiveFullscreen" style="cursor: pointer;" title="Pantalla Completa">⛶</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Escenas del Reel (3 Tomas en Miniatura — Como en la Referencia) -->
+          <div class="reel-scenes-shelf mt-10">
+            <div class="shelf-label">Escenas del Reel (3)</div>
+            <div class="shelf-thumbnails-grid">
+              <div class="scene-thumb-card active" id="previewThumbScene1">
+                <img src="/assets/images/jesus_healing_miracle.jpg" alt="Escena 1" id="shelfImgScene1">
+                <span class="shelf-badge">1</span>
+                <span class="shelf-name">1. Apertura (0.0–3.2s)</span>
+              </div>
+              <div class="scene-thumb-card" id="previewThumbScene2">
+                <img src="/assets/images/jesus_reaching_hand.jpg" alt="Escena 2" id="shelfImgScene2">
+                <span class="shelf-badge">2</span>
+                <span class="shelf-name">2. Intercesión (3.2–10s)</span>
+              </div>
+              <div class="scene-thumb-card" id="previewThumbScene3">
+                <img src="/assets/images/jesus_walking_storm.jpg" alt="Escena 3" id="shelfImgScene3">
+                <span class="shelf-badge">3</span>
+                <span class="shelf-name">3. Victoria (10s–Final)</span>
+              </div>
+              <label class="scene-thumb-add" for="imageUpload" title="Subir o agregar escena">
+                <span>+</span>
+                <small>Agregar</small>
+              </label>
+            </div>
+          </div>
+
+          <!-- Botón de Render Rápido en Panel Derecho -->
+          <button type="button" id="btnRightRender" class="btn btn-warning-gradient btn-block btn-large mt-10">
+            🎬 RENDERIZAR REEL VIRAL (MP4)
+          </button>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- 3. ESPACIO DE TRABAJO 2: TARJETAS DE ORACIÓN (FEED 4:5)             -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <main class="workspace-studio" id="workspaceCards" style="display: none;">
+      <section class="controls-panel" style="max-width: 720px; margin: 0 auto; width: 100%;">
+        <div class="stage-content-card active">
+          <div class="stage-header-row">
+            <div class="stage-header-left">
+              <span class="stage-badge-big">🖼️</span>
+              <div>
+                <h2>Estudio de Tarjetas de Oración para Feed (4:5 HD)</h2>
+                <p>Formato vertical 1080x1350 optimizado para el Feed de Facebook.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row mt-14">
             <div class="form-group col-8">
               <label for="cardThemeSelect">Tema Bíblico o Dolor Específico (26 Categorías)</label>
               <select id="cardThemeSelect" class="form-control">
                 <!-- Inyectado dinámicamente -->
               </select>
             </div>
-            <div class="form-group col-4" style="display: flex; align-items: flex-end;">
+            <div class="form-group col-4 flex align-end">
               <button type="button" id="btnSyncCardTheme" class="btn btn-gold-outline btn-block" style="height: 42px; font-weight: 700;">
                 🪄 Sincronizar
               </button>
             </div>
           </div>
 
-          <!-- Título en Inglés de la Tarjeta -->
           <div class="form-group">
-            <label for="cardTitleInput">Título en Pantalla de la Tarjeta (En Inglés - Cinzel Dorado)</label>
-            <input type="text" id="cardTitleInput" class="form-control" style="font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 1px; color: #ffd700;" placeholder="DIVINE HEALING & PEACE OVER YOUR HOME">
-            <small class="text-muted block mt-5">Aparece centrado arriba con marco dorado. Atrae la mirada de tu audiencia en EE. UU.</small>
+            <label for="cardTitleInput">Título en Pantalla de la Tarjeta (En Inglés - Dorado)</label>
+            <input type="text" id="cardTitleInput" class="form-control" placeholder="DIVINE HEALING & PEACE OVER YOUR HOME">
           </div>
 
-          <!-- Oración Devocional en Inglés -->
           <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <label for="cardPrayerInput" style="margin: 0;">Oración Devocional (En Inglés - Texto Central de Alto Impacto)</label>
-              <button type="button" id="btnRerollCardPrayer" class="btn btn-outline btn-sm" style="font-size: 11px; padding: 2px 8px;">
-                🎲 Otra Oración
-              </button>
+            <div class="flex-between mb-4">
+              <label for="cardPrayerInput" class="mb-0">Oración Devocional (En Inglés - Texto Central de Alto Impacto)</label>
+              <button type="button" id="btnRerollCardPrayer" class="btn btn-outline btn-sm">🎲 Otra Oración</button>
             </div>
-            <textarea id="cardPrayerInput" rows="5" class="form-control" style="font-family: 'Cinzel', Georgia, serif; font-size: 14.5px; line-height: 1.6;" placeholder="Infuse divine strength into every cell, reverse medical reports, and breathe supernatural life from head to toe. What doctors call impossible, You redeem."></textarea>
-            <small class="text-muted block mt-5">Redactada con autoridad bíblica y unción para que las personas la lean completa y la compartan con sus familiares.</small>
+            <textarea id="cardPrayerInput" rows="5" class="form-control" placeholder="Infuse divine strength into every cell..."></textarea>
           </div>
 
-          <!-- Versículo Bíblico al Pie -->
           <div class="form-group">
             <label for="cardVerseInput">Versículo Bíblico al Pie de la Imagen</label>
-            <input type="text" id="cardVerseInput" class="form-control" style="font-size: 13.5px;" placeholder="Isaiah 53:5 — By his wounds we are healed.">
-            <small class="text-muted block mt-5">Sello de autoridad bíblica posicionado con margen seguro dentro del marco.</small>
+            <input type="text" id="cardVerseInput" class="form-control" placeholder="Isaiah 53:5 — By his wounds we are healed.">
           </div>
 
-          <!-- Configuración de Marca de Agua Sutil de la Página de Facebook -->
-          <div class="card-watermark-box" style="background: rgba(30, 41, 59, 0.6); border: 1.5px solid rgba(255, 215, 0, 0.4); border-radius: 10px; padding: 14px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="chkCardWatermark" checked style="width: 17px; height: 17px; cursor: pointer;">
-                <label for="chkCardWatermark" style="margin: 0; font-size: 13px; font-weight: 700; color: #ffd700; cursor: pointer;">
-                  🔒 Marca de Agua Sutil de tu Página de Facebook
-                </label>
-              </div>
-              <small style="font-size: 11px; color: #94a3b8;">Protección de autoría</small>
+          <div class="card-watermark-box subpanel-card mt-12">
+            <div class="flex-between mb-4">
+              <label class="chk-label">
+                <input type="checkbox" id="chkCardWatermark" checked>
+                <strong>🔒 Marca de Agua Sutil de tu Página de Facebook</strong>
+              </label>
+              <small class="text-muted">Protección de autoría</small>
             </div>
-            <input type="text" id="cardWatermarkInput" class="form-control" style="font-size: 13px;" placeholder="@JesusDailyFaith">
-            <small class="text-muted block mt-5" style="color: #94a3b8; font-size: 11px;">
-              💡 <strong>Diseño Elegante y Discreto:</strong> Se imprime al pie en un tono dorado suave semi-transparente. Nadie podrá robar tus imágenes en grupos de Facebook sin que se vea el nombre de tu página.
-            </small>
+            <input type="text" id="cardWatermarkInput" class="form-control" placeholder="@JesusDailyFaith">
           </div>
 
-          <!-- Selector de Fondo de la Tarjeta -->
-          <div class="form-group" style="margin-top: 18px;">
+          <div class="form-group mt-14">
             <label>Selecciona la Imagen de Fondo Sagrada</label>
             <div class="image-gallery-picker" id="cardGalleryPicker">
               <!-- Inyectado dinámicamente -->
             </div>
-            <div class="upload-wrapper mt-10">
+            <div class="upload-wrapper mt-8">
               <label class="btn-upload" for="cardImageUpload">
                 📁 O Subir Fondo Propio desde tu Dispositivo
               </label>
@@ -821,73 +942,69 @@
             </div>
           </div>
 
-          <!-- Botón de Renderizado de Tarjeta -->
-          <button type="button" id="btnRenderCard" class="btn btn-primary btn-large btn-block mt-15" style="font-weight: 800; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35);">
+          <button type="button" id="btnRenderCard" class="btn btn-primary-gradient btn-large btn-block mt-16">
             ✨ RENDERIZAR TARJETA DE ORACIÓN 4:5 (FEED HD)
           </button>
         </div>
       </section>
 
-      <!-- Columna Derecha: Vista Previa de la Tarjeta y Descarga -->
+      <!-- Previsualización de la Tarjeta 4:5 -->
       <section class="preview-panel" id="cardPreviewSection">
         <div class="preview-sticky-wrap">
-          <div class="preview-header-mobile">
-            <h3>🖼️ Vista Previa Tarjeta 4:5</h3>
+          <div class="preview-top-bar">
+            <span class="preview-title">🖼️ Vista Previa Tarjeta 4:5</span>
           </div>
 
-          <!-- Mockup Tarjeta 4:5 -->
-          <div class="feed-card-mockup" style="width: 100%; max-width: 360px; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 0 2px #2a3346; position: relative; background: #000; margin: 0 auto;">
+          <div class="feed-card-mockup" style="width: 100%; max-width: 360px; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; position: relative; background: #000; margin: 0 auto; box-shadow: var(--shadow-card);">
             <img id="cardResultImg" src="/assets/images/jesus_healing_miracle.jpg" alt="Tarjeta de Oración 4:5" style="width: 100%; height: 100%; object-fit: cover; display: block;">
             
             <div id="cardRenderOverlay" style="display: none; position: absolute; inset: 0; background: rgba(11, 14, 20, 0.94); flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; backdrop-filter: blur(4px); z-index: 20;">
               <div class="spinner"></div>
-              <h3 style="font-size: 15px; margin-bottom: 6px; color: #ffd700;">Componiendo Tarjeta 4:5...</h3>
-              <p style="font-size: 12px; color: #94a3b8;">Aplicando marco dorado, tipografía noble y marca de agua...</p>
+              <h3 style="font-size: 15px; margin-bottom: 6px; color: var(--gold);">Componiendo Tarjeta 4:5...</h3>
+              <p style="font-size: 12px; color: var(--text-muted);">Aplicando marco dorado, tipografía noble y marca de agua...</p>
             </div>
           </div>
 
-          <!-- Acciones de la Tarjeta Generada -->
-          <div class="card-actions-box" id="cardActionsBox" style="width: 100%; max-width: 360px; margin-top: 14px;">
-            <a id="btnDownloadCard" href="#" download="prayer_card_4_5.jpg" class="btn btn-success btn-large btn-block" style="font-weight: 800;">
+          <div class="card-actions-box mt-14" id="cardActionsBox" style="width: 100%; max-width: 360px;">
+            <a id="btnDownloadCard" href="#" download="prayer_card_4_5.jpg" class="btn btn-success btn-large btn-block">
               ⬇️ Descargar Tarjeta JPG (1080x1350)
             </a>
-            <button type="button" id="btnCopyCardFeedPost" class="btn btn-primary btn-block mt-10" style="font-weight: 700;">
-              📋 Copiar Publicación Completa para Facebook (Copy + Hashtags)
+            <button type="button" id="btnCopyCardFeedPost" class="btn btn-primary btn-block mt-10">
+              📋 Copiar Publicación Completa para Facebook
             </button>
-            <button type="button" id="btnCopyCardPinnedComment" class="btn btn-gold-outline btn-block mt-10" style="font-weight: 700;">
+            <button type="button" id="btnCopyCardPinnedComment" class="btn btn-gold-outline btn-block mt-10">
               📌 Copiar Comentario Fijado de la Tarjeta
             </button>
-
-            <!-- Cuadro con el texto de la publicación copiada -->
-            <div style="margin-top: 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px;">
-              <div style="font-size: 11px; font-weight: 700; color: #ffd700; margin-bottom: 4px;">📝 Copy de Publicación para el Feed:</div>
-              <textarea id="cardFeedCopyText" rows="4" class="form-control" style="font-size: 12px; line-height: 1.4;" placeholder="El copy viral para pegar en Facebook aparecerá aquí..."></textarea>
+            <div class="subpanel-card mt-10">
+              <div class="text-xs font-bold text-gold mb-4">📝 Copy de Publicación para el Feed:</div>
+              <textarea id="cardFeedCopyText" rows="4" class="form-control text-xs" placeholder="El copy viral para pegar en Facebook aparecerá aquí..."></textarea>
             </div>
           </div>
         </div>
       </section>
     </main>
+
   </div>
 
-  <!-- Modal Planificador de Lote Diario (3 Videos del Día) -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- 4. MODAL PLANIFICADOR DE LOTE DIARIO (3 VIDEOS DEL DÍA)             -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
   <div id="dailyBatchModal" class="modal-backdrop" style="display: none;">
-    <div class="modal-card" style="background: #1e293b; border: 1.5px solid rgba(255, 215, 0, 0.45); border-radius: 14px; max-width: 820px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 10px 45px rgba(0,0,0,0.85);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+    <div class="modal-card">
+      <div class="modal-header">
         <div>
-          <h2 style="margin: 0; font-size: 19px; color: #ffd700; display: flex; align-items: center; gap: 8px;">
-            <span>📅 Planificador de Lote Diario (3 Videos del Día)</span>
-          </h2>
-          <p style="margin: 4px 0 0 0; font-size: 12.5px; color: #94a3b8;">Estrategia comprobada Meta 2026: 3 publicaciones diarias con horarios, dolores y llamados de fe coordinados.</p>
+          <h2 class="modal-title">📅 Planificador de Lote Diario (3 Videos del Día)</h2>
+          <p class="modal-desc">Estrategia comprobada Meta 2026: 3 publicaciones diarias con horarios, dolores y llamados de fe coordinados.</p>
         </div>
-        <button type="button" id="btnCloseDailyBatch" class="btn btn-sm btn-outline" style="font-size: 16px; padding: 2px 10px; cursor: pointer;">✕</button>
+        <button type="button" id="btnCloseDailyBatch" class="btn-close-modal">✕</button>
       </div>
 
-      <div id="dailyBatchContent" style="display: flex; flex-direction: column; gap: 16px;">
-        <p style="color: #cbd5e1; text-align: center; padding: 20px;">Cargando lote diario programado...</p>
+      <div id="dailyBatchContent" class="modal-body-stack">
+        <p class="text-center text-muted p-20">Cargando lote diario programado...</p>
       </div>
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=5.2"></script>
 </body>
 </html>

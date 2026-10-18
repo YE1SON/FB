@@ -423,17 +423,15 @@
                 <div class="form-group col-7" style="margin-bottom: 0;">
                   <label for="aiImageProviderSelect" style="font-size: 12px; font-weight: 700; color: #ffd700;">🤖 Motor de Generación IA</label>
                   <select id="aiImageProviderSelect" class="form-control" style="font-size: 12px; height: 36px; font-weight: 600;">
-                    <option value="cloudflare" selected>🌟 Cloudflare: Leonardo Phoenix 1.0 (Recomendado)</option>
-                    <option value="cloudflare_lucid">🎨 Cloudflare: Leonardo Lucid Origin (Ultra HD)</option>
-                    <option value="cloudflare_flux">⚡ Cloudflare: FLUX.1 Schnell (Borrador Rápido)</option>
-                    <option value="aihorde">🌐 AI Horde (Comunidad Gratuita — Sin Registro Obligatorio)</option>
+                    <option value="z_image" selected>🥇 Z-Image Turbo (Recomendado — Fotorrealismo DiT)</option>
+                    <option value="flux_schnell">🥈 FLUX.1 Schnell (Black Forest Labs HD)</option>
+                    <option value="aihorde">🥉 AI Horde (Comunidad Gratuita)</option>
                     <option value="puter">💻 Puter AI (DALL-E 3 — Conexión Navegador)</option>
-                    <option value="huggingface">🤗 Hugging Face (Status 410)</option>
                   </select>
                 </div>
                 <div class="form-group col-5" style="margin-bottom: 0;">
                   <button type="button" id="btnToggleAiSettings" class="btn btn-outline btn-block" style="font-size: 11px; padding: 7px 10px; height: 36px;">
-                    ⚙️ Claves Cloudflare / Horde
+                    ⚙️ Tokens IA / Horde
                   </button>
                 </div>
               </div>
@@ -445,54 +443,25 @@
                   <button type="button" id="btnCloseAiKeys" class="btn btn-sm btn-outline" style="font-size: 10px; padding: 2px 7px;">✕ Cerrar</button>
                 </div>
                 
-                <!-- Cloudflare Workers AI -->
+                <!-- Hugging Face Token (Para ZeroGPU & Spaces prioritarios) -->
                 <div style="margin-bottom: 12px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-                    <label style="font-size: 11.5px; font-weight: 700; color: #fde047; margin: 0;">
-                      ⚡ Cloudflare Workers AI (10,000 Neuronas gratis/día sin tarjeta ni teléfono)
-                    </label>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group col-6" style="margin-bottom: 4px;">
-                      <input type="text" id="cfAccountIdInput" class="form-control" style="font-size: 11.5px;" placeholder="Account ID (dash.cloudflare.com)">
-                    </div>
-                    <div class="form-group col-6" style="margin-bottom: 4px;">
-                      <input type="password" id="cfApiTokenInput" class="form-control" style="font-size: 11.5px;" placeholder="API Token (Workers AI)">
-                    </div>
-                  </div>
-                  <div class="form-group" style="margin-bottom: 4px;">
-                    <label style="font-size: 10.5px; color: #93c5fd; font-weight: 600; display: block; margin-bottom: 2px;">Modelo Predeterminado de Cloudflare:</label>
-                    <select id="cfModelSelect" class="form-control" style="font-size: 11.5px; height: 32px;">
-                      <option value="@cf/leonardo/phoenix-1.0" selected>🌟 Leonardo Phoenix 1.0 (Máximo realismo en rostros bíblicos)</option>
-                      <option value="@cf/leonardo/lucid-origin">🎨 Leonardo Lucid Origin (Ultra definición y texturas)</option>
-                      <option value="@cf/black-forest-labs/flux-1-schnell">⚡ FLUX.1 Schnell (4 pasos rápido)</option>
-                      <option value="@cf/bytedance/stable-diffusion-xl-lightning">⚡ SDXL Lightning (Rápido)</option>
-                    </select>
-                  </div>
+                  <label style="font-size: 11.5px; font-weight: 700; color: #fde047; display: block; margin-bottom: 3px;">
+                    🤗 Hugging Face Token (Otorga cuota prioritaria para FLUX.1 y Z-Image)
+                  </label>
+                  <input type="password" id="hfTokenInput" class="form-control" style="font-size: 11.5px;" placeholder="Token de acceso gratuito (hf_...)">
                   <small style="font-size: 10px; color: #94a3b8;">
-                    👉 Obtén tu ID y Token en <a href="https://dash.cloudflare.com" target="_blank" style="color: #60a5fa; text-decoration: underline;">dash.cloudflare.com</a> (Solo requiere email).
+                    👉 Obtén tu token gratis en <a href="https://huggingface.co/settings/tokens" target="_blank" style="color: #60a5fa; text-decoration: underline;">huggingface.co/settings/tokens</a> (Solo requiere email, sin tarjeta).
                   </small>
                 </div>
 
                 <!-- AI Horde -->
                 <div style="margin-bottom: 12px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">
                   <label style="font-size: 11.5px; font-weight: 700; color: #a7f3d0; display: block; margin-bottom: 3px;">
-                    🌐 AI Horde (Red Comunitaria Distribuida — 100% Gratuita)
+                    🌐 AI Horde (Red Comunitaria de GPUs — 100% Gratuita)
                   </label>
-                  <input type="text" id="aiHordeKeyInput" class="form-control" style="font-size: 11.5px;" placeholder="0000000000 (Anónimo Gratuito) o tu API Key de aihorde.net">
+                  <input type="text" id="aiHordeKeyInput" class="form-control" style="font-size: 11.5px;" placeholder="0000000000 (Anónimo Gratuito) o tu API Key">
                   <small style="font-size: 10px; color: #94a3b8;">
-                    👉 Funciona anónimamente sin clave. Si deseas mayor prioridad, regístrate gratis en <a href="https://aihorde.net/register" target="_blank" style="color: #60a5fa; text-decoration: underline;">aihorde.net/register</a> (No pide teléfono ni tarjeta).
-                  </small>
-                </div>
-
-                <!-- Hugging Face -->
-                <div style="margin-bottom: 12px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">
-                  <label style="font-size: 11.5px; font-weight: 700; color: #f87171; display: block; margin-bottom: 3px;">
-                    🤗 Hugging Face User Token (Status 410 Deprecated)
-                  </label>
-                  <input type="password" id="hfTokenInput" class="form-control" style="font-size: 11.5px;" placeholder="Token de acceso (hf_...)">
-                  <small style="font-size: 10px; color: #fca5a5;">
-                    ⚠️ HF ha descontinuado la inferencia gratuita serverless de imágenes (Error 410). Recomendamos usar <b>Leonardo Phoenix en Cloudflare</b> o <b>AI Horde</b>.
+                    👉 Funciona anónimamente sin clave. Si deseas mayor prioridad, regístrate gratis en <a href="https://aihorde.net/register" target="_blank" style="color: #60a5fa; text-decoration: underline;">aihorde.net/register</a>.
                   </small>
                 </div>
 

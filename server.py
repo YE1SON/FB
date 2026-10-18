@@ -75,31 +75,22 @@ class ImagePromptRequest(BaseModel):
     custom_topic: Optional[str] = None
 
 class SaveKeysRequest(BaseModel):
-    cf_account_id: Optional[str] = None
-    cf_api_token: Optional[str] = None
-    cf_model: Optional[str] = None
-    aihorde_api_key: Optional[str] = None
     hf_token: Optional[str] = None
+    aihorde_api_key: Optional[str] = None
 
 class GenerateAiImageRequest(BaseModel):
     prompt: str
     aspect_ratio: str = "9:16"
     provider: str = "auto"
-    cf_model: Optional[str] = None
-    cf_account_id: Optional[str] = None
-    cf_api_token: Optional[str] = None
-    aihorde_api_key: Optional[str] = None
     hf_token: Optional[str] = None
+    aihorde_api_key: Optional[str] = None
 
 class BatchGenerateAiImageRequest(BaseModel):
     prompts: List[str]
     aspect_ratio: str = "9:16"
     provider: str = "auto"
-    cf_model: Optional[str] = None
-    cf_account_id: Optional[str] = None
-    cf_api_token: Optional[str] = None
-    aihorde_api_key: Optional[str] = None
     hf_token: Optional[str] = None
+    aihorde_api_key: Optional[str] = None
 
 class AudioPreviewRequest(BaseModel):
     text: str
@@ -278,7 +269,7 @@ async def upload_image(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida", "deletable": True}
 
-# ─── Image Generation Engine (Cloudflare Workers AI & Hugging Face FLUX.1) ──
+# ─── Image Generation Engine (Z-Image Turbo, FLUX.1 Schnell, AI Horde) ───────
 
 @app.get("/api/image-providers")
 @app.get("/studio/api/image-providers")
@@ -289,11 +280,8 @@ def api_image_providers():
 @app.post("/studio/api/save-image-keys")
 def api_save_image_keys(req: SaveKeysRequest):
     save_keys(
-        cf_account_id=req.cf_account_id,
-        cf_api_token=req.cf_api_token,
-        cf_model=req.cf_model,
-        aihorde_api_key=req.aihorde_api_key,
-        hf_token=req.hf_token
+        hf_token=req.hf_token,
+        aihorde_api_key=req.aihorde_api_key
     )
     return {"status": "success", "providers": get_providers_status()}
 
@@ -306,11 +294,8 @@ def api_generate_ai_image(req: GenerateAiImageRequest):
             aspect_ratio=req.aspect_ratio,
             label="IA Cinemática HD",
             provider=req.provider,
-            cf_model=req.cf_model,
-            cf_account_id=req.cf_account_id,
-            cf_api_token=req.cf_api_token,
-            aihorde_api_key=req.aihorde_api_key,
-            hf_token=req.hf_token
+            hf_token=req.hf_token,
+            aihorde_api_key=req.aihorde_api_key
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con IA: {str(e)}")
@@ -333,11 +318,8 @@ def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
             aspect_ratio=req.aspect_ratio,
             label=lbl,
             provider=req.provider,
-            cf_model=req.cf_model,
-            cf_account_id=req.cf_account_id,
-            cf_api_token=req.cf_api_token,
-            aihorde_api_key=req.aihorde_api_key,
-            hf_token=req.hf_token
+            hf_token=req.hf_token,
+            aihorde_api_key=req.aihorde_api_key
         )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(prompts), 3)) as executor:

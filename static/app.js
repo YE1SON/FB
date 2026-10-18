@@ -795,9 +795,6 @@ function bootstrapJesusStudio() {
   const btnToggleAiSettings = document.getElementById("btnToggleAiSettings");
   const btnCloseAiKeys = document.getElementById("btnCloseAiKeys");
   const aiKeysConfigBox = document.getElementById("aiKeysConfigBox");
-  const cfAccountIdInput = document.getElementById("cfAccountIdInput");
-  const cfApiTokenInput = document.getElementById("cfApiTokenInput");
-  const cfModelSelect = document.getElementById("cfModelSelect");
   const aiHordeKeyInput = document.getElementById("aiHordeKeyInput");
   const hfTokenInput = document.getElementById("hfTokenInput");
   const btnSaveAiKeys = document.getElementById("btnSaveAiKeys");
@@ -833,16 +830,10 @@ function bootstrapJesusStudio() {
     btnSaveAiKeys.addEventListener("click", async () => {
       btnSaveAiKeys.disabled = true;
       btnSaveAiKeys.textContent = "⏳ Guardando...";
-      const cfAcc = cfAccountIdInput ? cfAccountIdInput.value.trim() : "";
-      const cfTok = cfApiTokenInput ? cfApiTokenInput.value.trim() : "";
-      const cfMod = cfModelSelect ? cfModelSelect.value : "@cf/leonardo/phoenix-1.0";
       const hordeKey = aiHordeKeyInput ? aiHordeKeyInput.value.trim() : "0000000000";
       const hfTok = hfTokenInput ? hfTokenInput.value.trim() : "";
 
       try {
-        localStorage.setItem("cf_account_id", cfAcc);
-        localStorage.setItem("cf_api_token", cfTok);
-        localStorage.setItem("cf_model", cfMod);
         localStorage.setItem("aihorde_api_key", hordeKey);
         localStorage.setItem("hf_token", hfTok);
 
@@ -850,9 +841,6 @@ function bootstrapJesusStudio() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            cf_account_id: cfAcc,
-            cf_api_token: cfTok,
-            cf_model: cfMod,
             aihorde_api_key: hordeKey,
             hf_token: hfTok
           })
@@ -862,7 +850,7 @@ function bootstrapJesusStudio() {
           aiKeysStatusText.textContent = "✅ ¡Configuración guardada y activada con éxito!";
           setTimeout(() => { if (aiKeysStatusText) aiKeysStatusText.textContent = ""; }, 4000);
         }
-        alert("¡Configuración de IA guardada con éxito! Ya puedes generar imágenes fotorrealistas con Leonardo en Cloudflare y AI Horde.");
+        alert("¡Configuración guardada! Z-Image Turbo y FLUX.1 Schnell están listos para generar en alta definición.");
       } catch (err) {
         alert("Aviso al guardar claves: " + err.message);
       } finally {
@@ -893,18 +881,8 @@ function bootstrapJesusStudio() {
     }
 
     const providerSelect = document.getElementById("aiImageProviderSelect");
-    const activeProvider = providerSelect ? providerSelect.value : "cloudflare";
+    const activeProvider = providerSelect ? providerSelect.value : "z_image";
 
-    const cfAcc = (cfAccountIdInput ? cfAccountIdInput.value.trim() : "") || localStorage.getItem("cf_account_id") || "";
-    const cfTok = (cfApiTokenInput ? cfApiTokenInput.value.trim() : "") || localStorage.getItem("cf_api_token") || "";
-    let cfMod = (cfModelSelect ? cfModelSelect.value : "") || localStorage.getItem("cf_model") || "@cf/leonardo/phoenix-1.0";
-    if (activeProvider === "cloudflare_lucid") {
-      cfMod = "@cf/leonardo/lucid-origin";
-    } else if (activeProvider === "cloudflare_flux") {
-      cfMod = "@cf/black-forest-labs/flux-1-schnell";
-    } else if (activeProvider === "cloudflare") {
-      cfMod = "@cf/leonardo/phoenix-1.0";
-    }
     const hordeKey = (aiHordeKeyInput ? aiHordeKeyInput.value.trim() : "") || localStorage.getItem("aihorde_api_key") || "0000000000";
     const hfTok = (hfTokenInput ? hfTokenInput.value.trim() : "") || localStorage.getItem("hf_token") || "";
 
@@ -941,11 +919,11 @@ function bootstrapJesusStudio() {
           }
         }
       } catch (puterErr) {
-        console.warn("Fallo en Puter, recurriendo a motor Cloudflare / AI Horde del servidor:", puterErr);
+        console.warn("Fallo en Puter, recurriendo a Z-Image Turbo / FLUX del servidor:", puterErr);
       }
     }
 
-    // Intento 2: Cloudflare Workers AI (Leonardo Phoenix / Lucid) o AI Horde (del servidor)
+    // Intento 2: Z-Image Turbo, FLUX.1 Schnell o AI Horde (del servidor)
     if (!savedFilename) {
       const res = await fetch("/api/generate-ai-image", {
         method: "POST",
@@ -954,11 +932,8 @@ function bootstrapJesusStudio() {
           prompt: cleanPrompt,
           aspect_ratio: "9:16",
           provider: activeProvider,
-          cf_model: cfMod,
-          cf_account_id: cfAcc,
-          cf_api_token: cfTok,
-          aihorde_api_key: hordeKey,
-          hf_token: hfTok
+          hf_token: hfTok,
+          aihorde_api_key: hordeKey
         })
       });
       if (!res.ok) {
@@ -1997,16 +1972,6 @@ function bootstrapJesusStudio() {
 
   async function loadAiProviderKeys() {
     try {
-      if (cfAccountIdInput && !cfAccountIdInput.value) {
-        cfAccountIdInput.value = localStorage.getItem("cf_account_id") || "";
-      }
-      if (cfApiTokenInput && !cfApiTokenInput.value) {
-        cfApiTokenInput.value = localStorage.getItem("cf_api_token") || "";
-      }
-      if (cfModelSelect) {
-        const savedModel = localStorage.getItem("cf_model");
-        if (savedModel) cfModelSelect.value = savedModel;
-      }
       if (aiHordeKeyInput && !aiHordeKeyInput.value) {
         aiHordeKeyInput.value = localStorage.getItem("aihorde_api_key") || "";
       }
@@ -2017,14 +1982,8 @@ function bootstrapJesusStudio() {
       const res = await fetch("/api/image-providers");
       if (res.ok) {
         const data = await res.json();
-        if (data.cloudflare && data.cloudflare.configured && cfAccountIdInput && !cfAccountIdInput.value) {
-          cfAccountIdInput.placeholder = `Configurado en servidor (${data.cloudflare.account_id_masked})`;
-        }
-        if (data.cloudflare && data.cloudflare.model && cfModelSelect && !localStorage.getItem("cf_model")) {
-          cfModelSelect.value = data.cloudflare.model;
-        }
-        if (data.huggingface && data.huggingface.configured && hfTokenInput && !hfTokenInput.value) {
-          hfTokenInput.placeholder = `Configurado en servidor (${data.huggingface.token_masked})`;
+        if (data.flux_schnell && data.flux_schnell.configured && hfTokenInput && !hfTokenInput.value) {
+          hfTokenInput.placeholder = `Configurado en servidor (${data.flux_schnell.token_masked})`;
         }
       }
     } catch (_) {}

@@ -332,7 +332,7 @@ def render_reel(
             cmd.extend(["-i", sfx_files["chime"]]) # index 6
             sfx_input_indices.append(audio_idx + 3)
 
-    music_idx = len(cmd) // 2  # siguiente índice libre
+    music_idx = cmd.count("-i")  # índice exacto de entrada para el stream de música
     if music_file:
         cmd.extend(["-i", music_file])
 

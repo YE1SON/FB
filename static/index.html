@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=5.7">
+  <link rel="stylesheet" href="/static/style.css?v=5.8">
   <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
   <script>
     (function() {
@@ -260,6 +260,19 @@
             </div>
           </div>
 
+          <!-- Plugin: Bucle Infinito Perfecto (Seamless Loop Engine) -->
+          <div class="seamless-loop-card mb-12" style="background: rgba(var(--primary-rgb), 0.08); border: 1px solid rgba(var(--primary-rgb), 0.25); border-radius: 8px; padding: 10px 14px;">
+            <label class="chk-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;">
+              <input type="checkbox" id="chkSeamlessLoop" style="margin-top: 3px;">
+              <div>
+                <strong style="color: var(--primary); font-size: 13px;">🔄 Bucle Infinito Perfecto (Seamless Loop Engine - Meta >100% Completion)</strong>
+                <div class="text-muted text-xs" style="line-height: 1.35; margin-top: 2px;">
+                  Conecta el remate de la llamada a la acción directamente con el gancho inicial para que el Reel se repita de forma natural sin que el espectador note el corte.
+                </div>
+              </div>
+            </label>
+          </div>
+
           <div class="form-group">
             <label for="customTopic">Tema o dolor específico (opcional)</label>
             <input type="text" id="customTopic" class="form-control" placeholder="Ej: Sanidad de un hijo, superar ataques de pánico, deudas bancarias...">
@@ -448,6 +461,36 @@
             🔊 Escuchar Previa del Audio
           </button>
           <audio id="audioPreviewPlayer" controls style="display:none; width: 100%; margin-top: 10px;"></audio>
+
+          <!-- Suite de Plugins de Audio Meta 2026 -->
+          <div class="subpanel-card mt-14" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px;">
+            <div style="font-weight: 700; font-size: 13px; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <span>⚡ Suite de Producción de Audio & Mastering Meta</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="chkEnableSfx" checked style="margin-top: 3px;">
+                <div>
+                  <strong style="font-size: 13px;">✨ Micro-Efectos de Sonido Emocionales (Audio Punctuation SFX)</strong>
+                  <div class="text-muted text-xs" style="line-height: 1.3;">Whoosh sub-grave a los 0.0s (Scroll-Stopper), Swell armónico en transición de escena y Campanilla sagrada en la revelación bíblica.</div>
+                </div>
+              </label>
+              <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="chkMasterLufs" checked style="margin-top: 3px;">
+                <div>
+                  <strong style="font-size: 13px;">🔊 Masterización Broadcast EBU R128 (-14 LUFS & EQ Presencia Vocal)</strong>
+                  <div class="text-muted text-xs" style="line-height: 1.3;">Calibra el volumen estándar estricto de Meta (-14 LUFS) y aplica ecualización de calidez (120 Hz) y claridad (3.3 kHz) para altavoces de celular.</div>
+                </div>
+              </label>
+              <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="chkGenerateTrendingAudio" checked style="margin-top: 3px;">
+                <div>
+                  <strong style="font-size: 13px;">🎵 Dual Export: "Trending Audio Ready" (Voz + SFX Limpios)</strong>
+                  <div class="text-muted text-xs" style="line-height: 1.3;">Genera una versión adicional sin música de fondo para que puedas adjuntar canciones de adoración en tendencia directamente desde la app de Facebook.</div>
+                </div>
+              </label>
+            </div>
+          </div>
 
           <!-- Pie de Acciones de la Etapa 2 -->
           <div class="stage-footer-actions mt-20">
@@ -754,7 +797,11 @@
             <div class="form-group col-6">
               <label for="effectTypeSelect">Efecto Visual Cinemático</label>
               <select id="effectTypeSelect" class="form-control">
-                <option value="cinematic_dust" selected>✨ Polvo de Oro (Partículas)</option>
+                <option value="living_gold" selected>✨ Atmósfera Dorada Viva (Anti-Slideshow Temporal)</option>
+                <option value="divine_rays">☀️ Rayos Celestiales Vivos (Pulsación de Luz)</option>
+                <option value="sacred_candle">🕯️ Vela Sagrada en Penumbra (Calidez Fluctuante)</option>
+                <option value="angelic_shimmer">🕊️ Destello Angélico Resplandeciente</option>
+                <option value="cinematic_dust">✨ Polvo de Oro (Partículas Clásicas)</option>
                 <option value="holy_fire">🔥 Fuego y Unción (Ámbar)</option>
                 <option value="celestial_bloom">🕊️ Resplandor de Gloria</option>
                 <option value="dawn_hope">🌅 Amanecer de Esperanza</option>
@@ -796,8 +843,14 @@
           <!-- Acciones de Video Generado (Descargar, Copiar SEO, Copiar Comentario) -->
           <div class="video-actions mt-16" id="videoActions" style="display: none;">
             <a id="btnDownloadVideo" href="#" download="jesus_reel.mp4" class="btn btn-success btn-large btn-block">
-              ⬇️ Descargar Video MP4 (1080x1920)
+              ⬇️ Descargar Master Reel Completo (Con Música)
             </a>
+            <a id="btnDownloadTrendingAudioVideo" href="#" download="jesus_reel_trending.mp4" class="btn btn-primary-gradient btn-large btn-block mt-8" style="display: none;">
+              🎵 Descargar Versión "Trending Audio Ready" (Voz + SFX)
+            </a>
+            <div class="trending-tip-box mt-10" style="background: rgba(var(--primary-rgb), 0.08); border: 1px solid rgba(var(--primary-rgb), 0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.45;">
+              💡 <strong>Estrategia de Alcance Orgánico Meta 2026:</strong> Descarga la versión <em>"Trending Audio Ready"</em>, abre la app de Facebook en tu celular, crea un Reel y toca <strong>"Audio" ➔ "Añadir música"</strong> para seleccionar una canción de adoración en tendencia. Los algoritmos de Meta detectan el audio de su biblioteca y disparan la distribución del Reel sin opacar la voz.
+            </div>
             <button type="button" id="btnGenerateCardFromReel" class="btn btn-gold-outline btn-block mt-10" style="font-weight: 700;">
               🖼️ Generar Tarjeta de Oración 4:5 para Feed (1080x1350)
             </button>
@@ -1125,6 +1178,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=5.7"></script>
+  <script src="/static/app.js?v=5.8"></script>
 </body>
 </html>

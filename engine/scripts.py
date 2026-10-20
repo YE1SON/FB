@@ -1425,7 +1425,8 @@ def generate_script(
     theme_key: Optional[str] = None,
     custom_topic: Optional[str] = None,
     mode: str = "deep",
-    tone: Optional[str] = None
+    tone: Optional[str] = None,
+    seamless_loop: bool = False
 ) -> Dict[str, str]:
     """
     Genera un guion estructurado con variaciones reales según tema, modo y tema personalizado.
@@ -1498,6 +1499,18 @@ def generate_script(
         "Whisper Amen if you receive this peace today.",
         "Rest in His promise tonight; tomorrow brings fresh mercy."
     ]))
+    if seamless_loop:
+        loop_bridges = [
+            "And the reason God placed this message in your path tonight is because...",
+            "Hold onto this promise tonight, and always remember that...",
+            "Type Amen if you receive this, because as scripture declares...",
+            "Share this with someone you love, and never forget that...",
+            "Before you close your eyes in sleep tonight, remember that..."
+        ]
+        chosen_bridge = random.choice(loop_bridges)
+        cta_base = cta.rstrip(".! ")
+        cta = f"{cta_base} — {chosen_bridge}"
+
 
     # Ensamblar texto completo según el modo
     if mode == "micro":
@@ -1531,6 +1544,7 @@ def generate_script(
         "word_count": word_count,
         "estimated_duration_sec": estimated_duration_sec,
         "mode": mode,
+        "seamless_loop": seamless_loop,
         "tone": chosen_tone,
         "hook_badge_text": hook_badge,
         "micro_cta_text": cta,

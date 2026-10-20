@@ -1,6 +1,7 @@
 import os
 import subprocess
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple
+from engine.audio import get_sfx_files
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIO_DIR = os.path.join(BASE_DIR, "assets", "audio")
@@ -13,6 +14,10 @@ WORSHIP_TRACKS: Dict[str, str] = {
 }
 
 EFFECTS: Dict[str, str] = {
+    "living_gold": "✨ Atmósfera Viva (Partículas y Luz Respirante)",
+    "divine_rays": "☀️ Rayos Celestiales Dinámicos (Resplandor en Movimiento)",
+    "sacred_candle": "🕯️ Parpadeo Cálido Íntimo (Vela Sagrada)",
+    "angelic_shimmer": "🕊️ Destellos Angelicales (Brillo Continuo)",
     "cinematic_dust": "✨ Polvo de Oro Divino (Partículas doradas)",
     "divine_light": "☀️ Rayos de Luz Celestial (Aura dorada y resplandor visible)",
     "dramatic_grain": "🎬 Grano de Cine Épico (Textura 35mm y alto contraste)",
@@ -93,13 +98,15 @@ def build_3scene_video_filter(
     camera_motion: str = "zoom_in",
     fps: int = 30,
     transition_style: str = "fade"
-) -> str:
+) -> Tuple[str, float, float]:
     """
     Construye el filter_complex de FFmpeg con soporte unificado para:
     - Videos B-Roll o Imágenes estáticas con movimiento de cámara real.
+    - Atmósfera Viva (Anti-Slideshow) con fluctuación de luz temporal y ruido orgánico.
     - Transiciones cinemáticas encadenadas (xfade).
     - Etalonaje de color profesional.
     - Burn-in de subtítulos ASS sincronizados.
+    Retorna (filter_string, offset1, offset2)
     """
     filters = []
 
@@ -120,7 +127,6 @@ def build_3scene_video_filter(
     # Función auxiliar para encuadre inteligente sin recortes en 1:1
     def _get_scene_base_filter(idx: int, motion_expr: str) -> str:
         if w == h:
-            # Encuadre inteligente 1:1 (Square Feed): Fondo con resplandor difuminado + primer plano completo sin cortes
             return (
                 f"[{idx}:v]split=2[bg_raw_{idx}][fg_raw_{idx}];"
                 f"[bg_raw_{idx}]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},gblur=sigma=22,eq=brightness=-0.12[bg_{idx}];"
@@ -161,7 +167,6 @@ def build_3scene_video_filter(
             f"trim=0:{dur2:.2f},setpts=PTS-STARTPTS[v2]"
         )
     else:
-        # Alternar movimiento cinemático para escena 2
         alt_motion = "pan_up" if camera_motion == "zoom_in" else "zoom_in"
         motion_expr_2 = _get_zoompan_expr(alt_motion, tf2, w, h, fps)
         s2 = f"{_get_scene_base_filter(1, motion_expr_2)}[v2]"
@@ -192,9 +197,30 @@ def build_3scene_video_filter(
     )
     filters.append(blend_filter)
 
-    # Visual Grading Effects
+    # Visual Grading Effects & Atmósfera Viva (Anti-Slideshow Plugin)
     fx_parts = []
-    if effect_type == "cinematic_dust":
+    if effect_type == "living_gold":
+        # Fluctuación orgánica de luz cálida + grano vivo temporal (meta-motion detector)
+        fx_parts.append("eq=brightness='0.025*sin(2*PI*t/3.2)':contrast='1.18+0.04*cos(2*PI*t/4.1)':saturation=1.25")
+        fx_parts.append("noise=alls=12:allf=t")
+        fx_parts.append("colorchannelmixer=rr=1.06:gg=1.03:bb=0.94")
+        fx_parts.append("vignette=PI/3.6")
+    elif effect_type == "divine_rays":
+        # Rayos celestiales con pulsación mística suave
+        fx_parts.append("eq=brightness='0.03*sin(2*PI*t/2.8)':contrast='1.24+0.05*sin(2*PI*t/3.8)':saturation=1.28")
+        fx_parts.append("colorbalance=rs=0.18:gs=0.09:bs=-0.12:rm=0.12:gm=0.06:bm=-0.08")
+        fx_parts.append("vignette=PI/4.0")
+    elif effect_type == "sacred_candle":
+        # Parpadeo cálido de vela de oración
+        fx_parts.append("eq=brightness='0.02*sin(2*PI*t/1.8)+0.01*sin(2*PI*t/0.9)':contrast=1.16:saturation=1.20")
+        fx_parts.append("colorbalance=rs=0.16:gs=0.06:bs=-0.15")
+        fx_parts.append("vignette=PI/3.5")
+    elif effect_type == "angelic_shimmer":
+        # Brillo angelical continuo
+        fx_parts.append("eq=brightness='0.03*cos(2*PI*t/3.0)':contrast='1.20+0.03*sin(2*PI*t/2.5)':saturation=1.18")
+        fx_parts.append("colorbalance=rs=0.08:gs=0.10:bs=0.06")
+        fx_parts.append("vignette=PI/4.0")
+    elif effect_type == "cinematic_dust":
         fx_parts.append("colorchannelmixer=rr=1.05:gg=1.02:bb=0.96")
         fx_parts.append("vignette=PI/3.6")
     elif effect_type == "divine_light":
@@ -224,7 +250,7 @@ def build_3scene_video_filter(
     fx_str = f"[motion]{','.join(fx_parts)}[v]"
     filters.append(fx_str)
 
-    return ";".join(filters)
+    return ";".join(filters), offset1, offset2
 
 
 def render_reel(
@@ -233,22 +259,32 @@ def render_reel(
     ass_path: str,
     output_mp4_path: str,
     aspect_ratio: str = "9:16",
-    effect_type: str = "cinematic_dust",
+    effect_type: str = "living_gold",
     camera_motion: str = "zoom_in",
     music_track: str = "worship_piano_peace",
     music_volume: float = 0.20,
     fps: int = 30,
     image_path_2: Optional[str] = None,
     image_path_3: Optional[str] = None,
-    transition_style: str = "fade"
-) -> str:
+    transition_style: str = "fade",
+    enable_sfx: bool = True,
+    generate_trending_audio_version: bool = True,
+    seamless_loop: bool = False,
+    master_lufs: bool = True
+) -> Dict[str, str]:
     """
-    Renderiza el Reel vertical 1080x1920 con el pipeline de 3 escenas,
-    movimiento de cámara respetado, música balanceada y subtítulos ASS dinámicos.
+    Renderiza el Reel con la suite completa de 6 Plugins Algorítmicos:
+    1. Anti-C2PA Sanitizer: Elimina metadatos de IA, inyecta perfiles de cámara móvil limpia.
+    2. Living Atmosphere: Partículas vivas con variación temporal de luz contra el castigo de slideshow.
+    3. Dual Export (Trending Audio Ready): Genera versión master + versión con voz limpia para audio viral de FB.
+    4. Audio Punctuation (SFX): Sub-bass whoosh inicial (0s), swell sagrado y campanilla celestial.
+    5. Seamless Loop: Cierre suave en el loop boundary sin cortes abruptos.
+    6. Masterización Broadcast EBU R128 (-14 LUFS Meta Standard) para volumen perfecto en móviles.
     """
     duration = get_audio_duration(audio_path)
     norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
     music_file = _resolve_music_file(music_track)
+    sfx_files = get_sfx_files()
 
     if aspect_ratio == "1:1":
         w, h = 1080, 1080
@@ -257,7 +293,7 @@ def render_reel(
     else:  # default 9:16 vertical
         w, h = 1080, 1920
 
-    # Resolver las 3 fuentes
+    # Resolver las 3 fuentes visuales
     inp1 = image_path if (image_path and os.path.exists(image_path)) else None
     inp2 = image_path_2 if (image_path_2 and os.path.exists(image_path_2)) else inp1
     inp3 = image_path_3 if (image_path_3 and os.path.exists(image_path_3)) else inp1
@@ -267,7 +303,7 @@ def render_reel(
 
     inputs = [inp1, inp2, inp3]
 
-    video_filter = build_3scene_video_filter(
+    video_filter, offset1, offset2 = build_3scene_video_filter(
         inputs=inputs,
         w=w, h=h,
         effect_type=effect_type,
@@ -283,31 +319,158 @@ def render_reel(
     cmd.extend(["-i", audio_path])
     audio_idx = 3
 
+    # Configurar SFX si están activos y existen los archivos
+    has_sfx = enable_sfx and os.path.exists(sfx_files.get("whoosh", ""))
+    sfx_input_indices = []
+    if has_sfx:
+        cmd.extend(["-i", sfx_files["whoosh"]]) # index 4
+        sfx_input_indices.append(audio_idx + 1)
+        if os.path.exists(sfx_files.get("swell", "")):
+            cmd.extend(["-i", sfx_files["swell"]]) # index 5
+            sfx_input_indices.append(audio_idx + 2)
+        if os.path.exists(sfx_files.get("chime", "")):
+            cmd.extend(["-i", sfx_files["chime"]]) # index 6
+            sfx_input_indices.append(audio_idx + 3)
+
+    music_idx = len(cmd) // 2  # siguiente índice libre
     if music_file:
         cmd.extend(["-i", music_file])
-        music_idx = audio_idx + 1
-        fade_out_start = max(0.0, duration - 2.0)
-        audio_filter = (
-            f"[{audio_idx}:a]volume=1.0[maina];"
-            f"[{music_idx}:a]volume={music_volume:.2f},afade=t=in:st=0:d=1.5,afade=t=out:st={fade_out_start:.2f}:d=2.0[musica];"
-            f"[maina][musica]amix=inputs=2:duration=first:dropout_transition=2[a]"
-        )
-        filter_complex = f"{video_filter};{audio_filter}"
-        cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", "[a]"])
-    else:
-        filter_complex = video_filter
-        cmd.extend(["-filter_complex", filter_complex, "-map", "[v]", "-map", f"{audio_idx}:a"])
 
+    # Construir cadena de audio avanzada con Masterización LUFS y SFX
+    audio_filters = []
+    
+    # 1. Ecualización de calidez vocal humana
+    audio_filters.append(
+        f"[{audio_idx}:a]equalizer=f=120:width_type=h:width=60:g=1.8,"
+        f"equalizer=f=3300:width_type=h:width=1200:g=2.2,volume=1.0[voice_eq]"
+    )
+
+    # 2. Mezclar SFX si aplican
+    if has_sfx and len(sfx_input_indices) >= 3:
+        w_idx, s_idx, c_idx = sfx_input_indices[0], sfx_input_indices[1], sfx_input_indices[2]
+        delay_swell_ms = int(max(offset1 * 1000 - 300, 1000))
+        delay_chime_ms = int(max(offset2 * 1000 - 200, 3000))
+        
+        audio_filters.append(f"[{w_idx}:a]volume=0.55[sfx_w]")
+        audio_filters.append(f"[{s_idx}:a]adelay={delay_swell_ms}|{delay_swell_ms},volume=0.38[sfx_s]")
+        audio_filters.append(f"[{c_idx}:a]adelay={delay_chime_ms}|{delay_chime_ms},volume=0.32[sfx_c]")
+        audio_filters.append(
+            f"[voice_eq][sfx_w][sfx_s][sfx_c]amix=inputs=4:duration=first:dropout_transition=2[voice_and_sfx]"
+        )
+        pure_voice_label = "[voice_and_sfx]"
+    else:
+        pure_voice_label = "[voice_eq]"
+
+    # 3. Mezclar Música o Salida Pura
+    if music_file:
+        # Fadeout según Bucle Infinito o estándar
+        fade_dur = 1.0 if seamless_loop else 2.0
+        fade_out_start = max(0.0, duration - fade_dur)
+        audio_filters.append(
+            f"[{music_idx}:a]volume={music_volume:.2f},"
+            f"afade=t=in:st=0:d=1.2,afade=t=out:st={fade_out_start:.2f}:d={fade_dur:.2f}[musica]"
+        )
+        audio_filters.append(
+            f"{pure_voice_label}[musica]amix=inputs=2:duration=first:dropout_transition=2[a_mixed]"
+        )
+        final_a_label = "[a_mixed]"
+    else:
+        final_a_label = pure_voice_label
+
+    # 4. Masterización Broadcast Meta -14 LUFS
+    if master_lufs:
+        audio_filters.append(f"{final_a_label}loudnorm=I=-14:TP=-1.0:LRA=7[a_final]")
+        a_out_target = "[a_final]"
+    else:
+        a_out_target = final_a_label
+
+    full_filter_complex = f"{video_filter};{';'.join(audio_filters)}"
+    cmd.extend(["-filter_complex", full_filter_complex, "-map", "[v]", "-map", a_out_target])
+
+    # Sanitización de metadatos C2PA y perfil móvil limpio
     cmd.extend([
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k",
         "-t", f"{duration:.2f}",
+        "-map_metadata", "-1",
+        "-fflags", "+bitexact",
+        "-flags:v", "+bitexact",
+        "-flags:a", "+bitexact",
+        "-metadata:g", "encoder=Apple QuickTime",
+        "-metadata:g", "comment=",
+        "-metadata:g", "artist=",
+        "-metadata:g", "title=",
+        "-movflags", "+faststart",
         output_mp4_path
     ])
 
-    print(f"[Render Reel] Ratio: {w}x{h}, Motion: {camera_motion}, FX: {effect_type}, Dur: {duration:.2f}s")
+    print(f"[Render Reel] Ratio: {w}x{h}, Motion: {camera_motion}, FX: {effect_type}, Dur: {duration:.2f}s, SFX={has_sfx}, LUFS={master_lufs}")
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"FFmpeg rendering falló: {result.stderr[-600:]}")
 
-    return output_mp4_path
+    trending_mp4_path = output_mp4_path.replace(".mp4", "_trending_audio.mp4")
+
+    # Plugin 3: Generación de la Versión "Trending Audio Ready" (Voz + SFX sin música)
+    if generate_trending_audio_version and music_file:
+        try:
+            # Extraer audio limpio con SFX y masterizado en un archivo temporal
+            temp_clean_audio = output_mp4_path.replace(".mp4", "_temp_clean_audio.wav")
+            af_clean = [
+                f"[{audio_idx}:a]equalizer=f=120:width_type=h:width=60:g=1.8,equalizer=f=3300:width_type=h:width=1200:g=2.2,volume=1.0[v_clean]"
+            ]
+            if has_sfx and len(sfx_input_indices) >= 3:
+                af_clean.append(f"[{w_idx}:a]volume=0.55[sfx_w2]")
+                af_clean.append(f"[{s_idx}:a]adelay={delay_swell_ms}|{delay_swell_ms},volume=0.38[sfx_s2]")
+                af_clean.append(f"[{c_idx}:a]adelay={delay_chime_ms}|{delay_chime_ms},volume=0.32[sfx_c2]")
+                af_clean.append("[v_clean][sfx_w2][sfx_s2][sfx_c2]amix=inputs=4:duration=first:dropout_transition=2[v_sfx2]")
+                af_clean.append("[v_sfx2]loudnorm=I=-14:TP=-1.0:LRA=7[clean_final]")
+            else:
+                af_clean.append("[v_clean]loudnorm=I=-14:TP=-1.0:LRA=7[clean_final]")
+
+            cmd_clean_a = ["ffmpeg", "-y"]
+            cmd_clean_a.extend(["-i", audio_path])
+            if has_sfx:
+                cmd_clean_a.extend(["-i", sfx_files["whoosh"], "-i", sfx_files["swell"], "-i", sfx_files["chime"]])
+            
+            # Recalcular índices para el subcomando de audio
+            if has_sfx:
+                sub_filter = (
+                    "[0:a]equalizer=f=120:width_type=h:width=60:g=1.8,equalizer=f=3300:width_type=h:width=1200:g=2.2[v0];"
+                    f"[1:a]volume=0.55[w0];[2:a]adelay={delay_swell_ms}|{delay_swell_ms},volume=0.38[s0];[3:a]adelay={delay_chime_ms}|{delay_chime_ms},volume=0.32[c0];"
+                    "[v0][w0][s0][c0]amix=inputs=4:duration=first:dropout_transition=2,loudnorm=I=-14:TP=-1.0:LRA=7[a_clean_out]"
+                )
+            else:
+                sub_filter = "[0:a]equalizer=f=120:width_type=h:width=60:g=1.8,equalizer=f=3300:width_type=h:width=1200:g=2.2,loudnorm=I=-14:TP=-1.0:LRA=7[a_clean_out]"
+
+            cmd_clean_a.extend(["-filter_complex", sub_filter, "-map", "[a_clean_out]", "-t", f"{duration:.2f}", temp_clean_audio])
+            subprocess.run(cmd_clean_a, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+            # Ensamblar con el video maestro en 0.5s usando -c:v copy
+            cmd_mux = [
+                "ffmpeg", "-y",
+                "-i", output_mp4_path,
+                "-i", temp_clean_audio,
+                "-c:v", "copy",
+                "-c:a", "aac", "-b:a", "192k",
+                "-map", "0:v:0",
+                "-map", "1:a:0",
+                "-map_metadata", "-1",
+                "-movflags", "+faststart",
+                trending_mp4_path
+            ]
+            subprocess.run(cmd_mux, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            if os.path.exists(temp_clean_audio):
+                os.remove(temp_clean_audio)
+            print(f"[Trending Audio Ready] Exportado exitosamente: {trending_mp4_path}")
+        except Exception as err:
+            print(f"[Trending Audio Warning]: {err}. Duplicando video maestro.")
+            trending_mp4_path = output_mp4_path
+    else:
+        # Si no había música, el propio output_mp4_path ya es "trending audio ready"
+        trending_mp4_path = output_mp4_path
+
+    return {
+        "master_video": output_mp4_path,
+        "trending_audio_video": trending_mp4_path
+    }

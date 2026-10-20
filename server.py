@@ -68,6 +68,7 @@ class ScriptRequest(BaseModel):
     theme_key: Optional[str] = None
     custom_topic: Optional[str] = None
     mode: str = "deep"
+    seamless_loop: Optional[bool] = False
 
 class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
@@ -128,6 +129,10 @@ class RenderRequest(BaseModel):
     hook_badge_font: Optional[str] = "Montserrat"
     hook_badge_size: Optional[str] = "normal"
     micro_cta_text: Optional[str] = ""
+    enable_sfx: Optional[bool] = True
+    seamless_loop: Optional[bool] = False
+    master_lufs: Optional[bool] = True
+    generate_trending_audio: Optional[bool] = True
 
 class ImageCardRequest(BaseModel):
     background_image_path: str
@@ -174,7 +179,7 @@ def list_themes():
 @app.post("/api/generate-script")
 @app.post("/studio/api/generate-script")
 def api_generate_script(req: ScriptRequest):
-    return generate_script(req.theme_key, req.custom_topic, mode=req.mode)
+    return generate_script(req.theme_key, req.custom_topic, mode=req.mode, seamless_loop=bool(req.seamless_loop))
 
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")
@@ -439,7 +444,7 @@ async def api_render_video(req: RenderRequest):
                 if os.path.exists(cand3):
                     image_file_3 = cand3
 
-        render_reel(
+        render_result = render_reel(
             image_file, audio_file, ass_file, output_video,
             aspect_ratio=req.aspect_ratio,
             effect_type=req.effect_type,
@@ -448,7 +453,11 @@ async def api_render_video(req: RenderRequest):
             music_volume=req.music_volume,
             image_path_2=image_file_2,
             image_path_3=image_file_3,
-            transition_style=req.transition_style or "fade"
+            transition_style=req.transition_style or "fade",
+            enable_sfx=bool(req.enable_sfx) if req.enable_sfx is not None else True,
+            seamless_loop=bool(req.seamless_loop) if req.seamless_loop is not None else False,
+            master_lufs=bool(req.master_lufs) if req.master_lufs is not None else True,
+            generate_trending_audio_version=bool(req.generate_trending_audio) if req.generate_trending_audio is not None else True
         )
 
     except HTTPException:
@@ -459,10 +468,15 @@ async def api_render_video(req: RenderRequest):
         print(f"[RENDER ERROR] session={session_id}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Fallo al renderizar: {error_detail}")
 
+    trending_filename = os.path.basename(render_result.get("trending_audio_video", output_video))
+    trending_url = f"/outputs/{trending_filename}"
+
     return {
         "status": "success",
         "video_url": f"/outputs/reel_{session_id}.mp4",
-        "filename": f"reel_{session_id}.mp4"
+        "filename": f"reel_{session_id}.mp4",
+        "trending_audio_video_url": trending_url,
+        "trending_filename": trending_filename
     }
 
 

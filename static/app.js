@@ -81,6 +81,11 @@ function bootstrapJesusStudio() {
   const aspectRatioSelect = document.getElementById("aspectRatioSelect");
   const btnRerollMagneticComment = document.getElementById("btnRerollMagneticComment");
   const transitionStyleSelect = document.getElementById("transitionStyleSelect");
+  const chkSeamlessLoop = document.getElementById("chkSeamlessLoop");
+  const chkEnableSfx = document.getElementById("chkEnableSfx");
+  const chkMasterLufs = document.getElementById("chkMasterLufs");
+  const chkGenerateTrendingAudio = document.getElementById("chkGenerateTrendingAudio");
+  const btnDownloadTrendingAudioVideo = document.getElementById("btnDownloadTrendingAudioVideo");
 
   const btnTabScene1 = document.getElementById("btnTabScene1");
   const btnTabScene2 = document.getElementById("btnTabScene2");
@@ -648,7 +653,8 @@ function bootstrapJesusStudio() {
         body: JSON.stringify({
           theme_key: themeSelect.value,
           custom_topic: customTopic.value,
-          mode: durationMode
+          mode: durationMode,
+          seamless_loop: !!(chkSeamlessLoop && chkSeamlessLoop.checked)
         })
       });
       const data = await res.json();
@@ -1325,7 +1331,97 @@ function bootstrapJesusStudio() {
 
     fxCtx.clearRect(0, 0, w, h);
 
-    if (effect === "cinematic_dust") {
+    if (effect === "living_gold") {
+      // Atmósfera Dorada Viva (Pulsación de luz cálida temporal + Motes dorados ascendentes)
+      const time = Date.now() * 0.0016;
+      const pulse = 0.16 + 0.08 * Math.sin(time * 1.5);
+      const gradient = fxCtx.createRadialGradient(w / 2, h * 0.45, 20, w / 2, h * 0.45, w * 0.85);
+      gradient.addColorStop(0, `rgba(255, 220, 100, ${pulse * 1.3})`);
+      gradient.addColorStop(0.5, `rgba(255, 180, 50, ${pulse * 0.6})`);
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.y -= p.speedY * 1.1;
+        p.x += p.speedX * 0.9;
+        p.pulseVal += p.pulseSpeed * 1.2;
+        const currentAlpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulseVal));
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 225, 110, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ffd700";
+        fxCtx.shadowBlur = 12;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "divine_rays") {
+      // Rayos Celestiales Vivos (Pulsación de Luz Divina Cenital)
+      const time = Date.now() * 0.0018;
+      const intensity = 0.28 + 0.12 * Math.sin(time);
+      const gradient = fxCtx.createRadialGradient(w / 2, 0, 20, w / 2, 0, h * 0.9);
+      gradient.addColorStop(0, `rgba(255, 245, 200, ${intensity})`);
+      gradient.addColorStop(0.4, `rgba(255, 215, 120, ${intensity * 0.6})`);
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.y -= p.speedY * 0.7;
+        p.pulseVal += p.pulseSpeed;
+        const currentAlpha = p.alpha * 0.7;
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius * 0.9, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 250, 220, ${currentAlpha})`;
+        fxCtx.shadowColor = "#fff8db";
+        fxCtx.shadowBlur = 10;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "sacred_candle") {
+      // Vela Sagrada en Penumbra (Calidez Fluctuante Ámbar y Fuego Santo)
+      const time = Date.now() * 0.003;
+      const flicker = 0.15 + 0.06 * Math.sin(time) + 0.03 * Math.sin(time * 2.7);
+      const gradient = fxCtx.createRadialGradient(w / 2, h * 0.7, 10, w / 2, h * 0.7, w * 0.75);
+      gradient.addColorStop(0, `rgba(255, 170, 40, ${flicker * 1.4})`);
+      gradient.addColorStop(0.6, `rgba(200, 90, 10, ${flicker * 0.5})`);
+      gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+      fxCtx.fillStyle = gradient;
+      fxCtx.fillRect(0, 0, w, h);
+
+      particles.forEach(p => {
+        p.y -= p.speedY * 1.3;
+        p.x += (Math.random() - 0.5) * 0.8;
+        p.pulseVal += p.pulseSpeed * 1.5;
+        const currentAlpha = p.alpha * (0.5 + 0.5 * Math.sin(p.pulseVal));
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius * 0.85, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 160, 30, ${currentAlpha})`;
+        fxCtx.shadowColor = "#ff8c00";
+        fxCtx.shadowBlur = 8;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "angelic_shimmer") {
+      // Destello Angélico Resplandeciente (Cristales Eclécticos Puros)
+      particles.forEach(p => {
+        p.y -= p.speedY * 0.7;
+        p.x += p.speedX * 0.6;
+        p.pulseVal += p.pulseSpeed * 1.4;
+        const currentAlpha = p.alpha * (0.6 + 0.4 * Math.cos(p.pulseVal));
+        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.radius * 1.15, 0, Math.PI * 2);
+        fxCtx.fillStyle = `rgba(255, 255, 255, ${currentAlpha * 0.95})`;
+        fxCtx.shadowColor = "#e6f2ff";
+        fxCtx.shadowBlur = 14;
+        fxCtx.fill();
+      });
+      fxCtx.shadowBlur = 0;
+    } else if (effect === "cinematic_dust") {
       // Golden Dust Motes floating up with sparkling glow
       particles.forEach(p => {
         p.y -= p.speedY;
@@ -1696,7 +1792,11 @@ function bootstrapJesusStudio() {
           hook_badge_font: hookBadgeFontSelect ? hookBadgeFontSelect.value : "Montserrat",
           hook_badge_size: hookBadgeSizeSelect ? hookBadgeSizeSelect.value : "normal",
           enable_micro_cta: !!(chkEnableMicroCta && chkEnableMicroCta.checked),
-          micro_cta_text: (chkEnableMicroCta && chkEnableMicroCta.checked && microCtaInput) ? microCtaInput.value.trim() : ""
+          micro_cta_text: (chkEnableMicroCta && chkEnableMicroCta.checked && microCtaInput) ? microCtaInput.value.trim() : "",
+          enable_sfx: chkEnableSfx ? chkEnableSfx.checked : true,
+          seamless_loop: !!(chkSeamlessLoop && chkSeamlessLoop.checked),
+          master_lufs: chkMasterLufs ? chkMasterLufs.checked : true,
+          generate_trending_audio: chkGenerateTrendingAudio ? chkGenerateTrendingAudio.checked : true
         })
       });
 
@@ -1728,6 +1828,16 @@ function bootstrapJesusStudio() {
       finalVideoPlayer.src = data.video_url;
       btnDownloadVideo.href = data.video_url;
       btnDownloadVideo.download = data.filename;
+
+      if (btnDownloadTrendingAudioVideo) {
+        if (data.trending_audio_video_url && data.trending_audio_video_url !== data.video_url) {
+          btnDownloadTrendingAudioVideo.href = data.trending_audio_video_url;
+          btnDownloadTrendingAudioVideo.download = data.trending_filename || "jesus_reel_trending.mp4";
+          btnDownloadTrendingAudioVideo.style.display = "block";
+        } else {
+          btnDownloadTrendingAudioVideo.style.display = "none";
+        }
+      }
       videoActions.style.display = "block";
       showVideoView();
 

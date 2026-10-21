@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>JesusReels Studio - Creador Profesional de Reels Cristianos</title>
+  <title>JesusReels Studio — Estudio de Producción de Reels Cristianos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&family=Cinzel:wght@700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=5.8">
+  <link rel="stylesheet" href="/static/style.css?v=6.0">
   <!-- Polyfill de crypto.randomUUID para compatibilidad universal (HTTP y HTTPS) -->
   <script>
     (function() {
@@ -72,7 +72,7 @@
         <button type="button" class="btn-top-add" id="btnTopNewProject" title="Crear Nuevo Proyecto">+</button>
         <div class="brand">
           <div class="brand-title">JesusReels <span class="brand-accent">Studio</span></div>
-          <div class="brand-sub">Creador de Reels y Videos Cristianos de Alta Retención</div>
+          <div class="brand-sub">Estudio de producción · Guion, voz, escenas y subtítulos</div>
         </div>
       </div>
 
@@ -207,14 +207,14 @@
             <div class="stage-header-left">
               <span class="stage-badge-big">1</span>
               <div>
-                <h2>Guion y Tema Viral (Meta 2026)</h2>
-                <p>Ganchos Scroll-Stopper (0-3s), alta retención y llamados a la acción.</p>
+                <h2>Guion y tema</h2>
+                <p>Construye un mensaje claro, con una necesidad concreta, una reflexión bíblica y un cierre natural.</p>
               </div>
             </div>
             <div class="stage-header-right">
-              <span class="badge badge-categories">26 categorías</span>
+              <span class="badge badge-categories">26 temas · 5 pilares</span>
               <button type="button" id="btnGenerateScript" class="btn btn-primary-gradient">
-                ✨ Generar Guion con IA
+                ✨ Generar guion
               </button>
             </div>
           </div>
@@ -254,20 +254,24 @@
             <div class="form-group col-5">
               <label for="scriptDurationMode">Formato y retención</label>
               <select id="scriptDurationMode" class="form-control">
-                <option value="deep" selected>🕊️ Oración Profunda (25-32s)</option>
-                <option value="micro">⚡ Micro-Bucle Viral (12-16s)</option>
+                <option value="deep" selected>🕊️ Oración profunda · objetivo 25–32 s</option>
+                <option value="micro">⚡ Micro-oración · objetivo 12–16 s</option>
               </select>
             </div>
           </div>
 
-          <!-- Plugin: Bucle Infinito Perfecto (Seamless Loop Engine) -->
+          <div class="quality-note" id="scriptDurationEstimate" role="status" aria-live="polite">
+            Estimación de locución: escribe o genera un guion para calcular una duración aproximada. La duración del MP4 puede variar.
+          </div>
+
+          <!-- Opción de cierre en bucle (Seamless Loop) -->
           <div class="seamless-loop-card mb-12" style="background: rgba(var(--primary-rgb), 0.08); border: 1px solid rgba(var(--primary-rgb), 0.25); border-radius: 8px; padding: 10px 14px;">
             <label class="chk-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;">
               <input type="checkbox" id="chkSeamlessLoop" style="margin-top: 3px;">
               <div>
-                <strong style="color: var(--primary); font-size: 13px;">🔄 Bucle Infinito Perfecto (Seamless Loop Engine - Meta >100% Completion)</strong>
+                <strong style="color: var(--primary); font-size: 13px;">🔄 Intentar un cierre en bucle</strong>
                 <div class="text-muted text-xs" style="line-height: 1.35; margin-top: 2px;">
-                  Conecta el remate de la llamada a la acción directamente con el gancho inicial para que el Reel se repita de forma natural sin que el espectador note el corte.
+                  Busca un cierre que pueda enlazar con el inicio. El resultado depende de la redacción y debe comprobarse en el MP4 final.
                 </div>
               </div>
             </label>
@@ -286,8 +290,8 @@
                 <span class="box-title">🎣 Gancho / Scroll-Stopper (0–3s)</span>
                 <span class="char-count" id="hookCharCount">0/500</span>
               </div>
-              <small class="box-desc">4–7 palabras de impacto inmediato</small>
-              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Stop scrolling. Your bills are paid..."></textarea>
+              <small class="box-desc">Una frase inicial breve, concreta y fácil de entender</small>
+              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Bring your worries to God tonight..."></textarea>
             </div>
 
             <!-- Caja 2: Mensaje al Corazón -->
@@ -306,7 +310,7 @@
                 <span class="box-title">💬 Llamada a la Acción</span>
                 <span class="char-count" id="ctaCharCount">0/500</span>
               </div>
-              <small class="box-desc">Guardar + Nombre en comentarios + Compartir</small>
+              <small class="box-desc">Invita a guardar o compartir solo cuando sea útil para la persona</small>
               <textarea id="scriptCta" rows="3" class="form-control" placeholder="Save this prayer for tonight, and drop your first name below so we can pray..."></textarea>
             </div>
 
@@ -420,7 +424,7 @@
               <span class="stage-badge-big">2</span>
               <div>
                 <h2>Voz y Música de Adoración</h2>
-                <p>Voces neuronales de calidad cinematográfica (Sin límites ni pagos)</p>
+                <p>Compara narradores con la misma frase y elige por naturalidad, claridad y emoción.</p>
               </div>
             </div>
           </div>
@@ -444,6 +448,10 @@
             </div>
           </div>
 
+          <div class="quality-note" role="note">
+            <span aria-hidden="true">🎙️</span><span><strong>Prueba recomendada:</strong> empieza con Guy y compara la misma oración con Brian y Christopher. Se conservan todas las voces y velocidades; la opción seleccionada no garantiza que sea la mejor para cada guion.</span>
+          </div>
+
           <div class="form-row mt-10">
             <div class="form-group col-8">
               <label for="musicSelect">🎵 Música de Adoración de Fondo</label>
@@ -465,28 +473,28 @@
           <!-- Suite de Plugins de Audio Meta 2026 -->
           <div class="subpanel-card mt-14" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px;">
             <div style="font-weight: 700; font-size: 13px; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-              <span>⚡ Suite de Producción de Audio & Mastering Meta</span>
+              <span>⚙️ Opciones de mezcla de audio</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
               <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
                 <input type="checkbox" id="chkEnableSfx" style="margin-top: 3px;">
                 <div>
-                  <strong style="font-size: 13px;">✨ Micro-Efectos de Sonido Emocionales (Audio Punctuation SFX)</strong>
-                  <div class="text-muted text-xs" style="line-height: 1.3;">Whoosh sub-grave a los 0.0s (Scroll-Stopper), Swell armónico en transición de escena y Campanilla sagrada en la revelación bíblica.</div>
+                  <strong style="font-size: 13px;">✨ Efectos de sonido opcionales</strong>
+                  <div class="text-muted text-xs" style="line-height: 1.3;">Añade detalles sonoros si están disponibles. Escucha el resultado con auriculares y desactívalos si distraen de la oración.</div>
                 </div>
               </label>
               <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
                 <input type="checkbox" id="chkMasterLufs" checked style="margin-top: 3px;">
                 <div>
-                  <strong style="font-size: 13px;">🔊 Masterización Broadcast EBU R128 (-14 LUFS & EQ Presencia Vocal)</strong>
-                  <div class="text-muted text-xs" style="line-height: 1.3;">Calibra el volumen estándar estricto de Meta (-14 LUFS) y aplica ecualización de calidez (120 Hz) y claridad (3.3 kHz) para altavoces de celular.</div>
+                  <strong style="font-size: 13px;">🔊 Procesamiento de volumen y claridad</strong>
+                  <div class="text-muted text-xs" style="line-height: 1.3;">Busca una voz clara y una música de fondo que no compita con las palabras. Verifica el nivel escuchando el archivo exportado.</div>
                 </div>
               </label>
               <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
                 <input type="checkbox" id="chkGenerateTrendingAudio" checked style="margin-top: 3px;">
                 <div>
-                  <strong style="font-size: 13px;">🎵 Dual Export: "Trending Audio Ready" (Voz + SFX Limpios)</strong>
-                  <div class="text-muted text-xs" style="line-height: 1.3;">Genera una versión adicional sin música de fondo para que puedas adjuntar canciones de adoración en tendencia directamente desde la app de Facebook.</div>
+                  <strong style="font-size: 13px;">🎵 Versión sin música de fondo</strong>
+                  <div class="text-muted text-xs" style="line-height: 1.3;">Permite añadir música desde la biblioteca de Facebook después de subir el video. Revisa que la voz conserve suficiente volumen.</div>
                 </div>
               </label>
             </div>
@@ -684,7 +692,7 @@
               <span class="stage-badge-big">4</span>
               <div>
                 <h2>Subtítulos y Tipografía</h2>
-                <p>Personaliza color, tamaño, posición exacta y animación en vivo</p>
+                <p>Elige un estilo legible y comprueba la vista previa lateral antes de exportar.</p>
               </div>
             </div>
           </div>
@@ -733,6 +741,10 @@
                 </label>
               </div>
             </div>
+          </div>
+
+          <div class="quality-note" role="note">
+            <span aria-hidden="true">🔎</span><span><strong>Cómo probarlo:</strong> cambia estilo, posición, animación y tamaño; la vista previa del teléfono debe actualizarse. Es una maqueta, no una garantía de sincronización: revisa los subtítulos en el MP4 exportado antes de publicar.</span>
           </div>
 
           <!-- Pie de Acciones de la Etapa 4 -->
@@ -837,7 +849,7 @@
 
           <!-- Botón de Render Principal -->
           <button id="btnRenderVideo" class="btn btn-primary-gradient btn-large btn-block mt-16" style="padding: 16px; font-size: 16px;">
-            🎬 GENERAR REEL VIRAL (MP4)
+            🎬 GENERAR VIDEO MP4
           </button>
 
           <!-- Acciones de Video Generado (Descargar, Copiar SEO, Copiar Comentario) -->
@@ -944,7 +956,7 @@
               <!-- Pantalla de Carga Durante Renderizado -->
               <div class="render-overlay" id="renderOverlay" style="display: none;">
                 <div class="spinner"></div>
-                <h3 id="renderStatusText">Creando tu Reel Viral...</h3>
+                <h3 id="renderStatusText">Preparando el video...</h3>
                 <p id="renderStatusSub">Sintetizando voz y animando cámara...</p>
               </div>
 
@@ -1184,6 +1196,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=5.8"></script>
+  <script src="/static/app.js?v=6.0"></script>
 </body>
 </html>

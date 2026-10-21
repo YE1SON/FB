@@ -8,6 +8,7 @@ function bootstrapJesusStudio() {
   // Elementos de la interfaz
   const customTopic = document.getElementById("customTopic");
   const scriptDurationMode = document.getElementById("scriptDurationMode");
+  const scriptDurationEstimate = document.getElementById("scriptDurationEstimate");
   const btnGenerateScript = document.getElementById("btnGenerateScript");
   const scriptHook = document.getElementById("scriptHook");
   const scriptBody = document.getElementById("scriptBody");
@@ -451,21 +452,82 @@ function bootstrapJesusStudio() {
     }
   }
 
-  // 1. Cargar Temas Virales
+  // Cinco pilares visibles; los 26 temas originales se conservan.
+  const THEME_PILLAR_LABELS = {
+    family_relationships: "1 · Familia y relaciones",
+    peace_rest_daily: "2 · Paz, descanso y oración cotidiana",
+    grief_solitude_comfort: "3 · Duelo, soledad y acompañamiento",
+    faith_hope_trials: "4 · Fe y esperanza en las dificultades",
+    gratitude_wisdom_growth: "5 · Gratitud y crecimiento espiritual"
+  };
+
+  function escapeThemeOption(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[ch]));
+  }
+
+  function buildGroupedThemeOptions(themes) {
+    const groups = new Map();
+    themes.forEach(theme => {
+      const pillar = Object.prototype.hasOwnProperty.call(THEME_PILLAR_LABELS, theme.pillar)
+        ? theme.pillar
+        : "other";
+      if (!groups.has(pillar)) groups.set(pillar, []);
+      groups.get(pillar).push(theme);
+    });
+
+    const order = [...Object.keys(THEME_PILLAR_LABELS), "other"];
+    return order
+      .filter(pillar => groups.has(pillar) && groups.get(pillar).length)
+      .map(pillar => {
+        const label = THEME_PILLAR_LABELS[pillar] || "Otros temas";
+        const options = groups.get(pillar).map(theme =>
+          `<option value="${escapeThemeOption(theme.key)}">${escapeThemeOption(theme.title)}</option>`
+        ).join("");
+        return `<optgroup label="${escapeThemeOption(label)}">${options}</optgroup>`;
+      }).join("");
+  }
+
+  // 1. Cargar los 26 temas agrupados visualmente en sus cinco pilares.
   async function loadThemes() {
     try {
       const res = await fetch("/api/themes");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const themes = await res.json();
-      const optionsHtml = themes
-        .map(t => `<option value="${t.key}">${t.title}</option>`)
-        .join("");
+      const optionsHtml = buildGroupedThemeOptions(themes);
       if (themeSelect) themeSelect.innerHTML = optionsHtml;
       if (cardThemeSelect) cardThemeSelect.innerHTML = optionsHtml;
       updateProjectTitle();
+      updateScriptDurationEstimate();
     } catch (e) {
       console.error("Error al cargar temas:", e);
+      if (themeSelect) themeSelect.innerHTML = '<option value="">No se pudieron cargar los temas</option>';
     }
   }
+
+  function updateScriptDurationEstimate() {
+    if (!scriptDurationEstimate) return;
+    const joined = [scriptHook?.value, scriptBody?.value, scriptCta?.value]
+      .filter(Boolean).join(" ").trim();
+    const words = joined ? joined.split(/\s+/).filter(Boolean).length : 0;
+    const seconds = words ? Math.round(words * 60 / 125) : 0;
+    const duration = words
+      ? (seconds >= 60
+          ? `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, "0")} s`
+          : `~${seconds} s`)
+      : "sin estimación todavía";
+    const target = scriptDurationMode?.value === "micro"
+      ? "objetivo del modo: 12–16 s"
+      : "objetivo del modo: 25–32 s";
+    scriptDurationEstimate.textContent =
+      `Estimación orientativa de locución: ${words} palabras · ${duration}. ${target}. Cálculo aproximado a 125 palabras/min; el narrador, las pausas y el render pueden cambiar la duración real.`;
+  }
+
+  [scriptHook, scriptBody, scriptCta].forEach(field => {
+    if (field) field.addEventListener("input", updateScriptDurationEstimate);
+  });
+  if (scriptDurationMode) scriptDurationMode.addEventListener("change", updateScriptDurationEstimate);
 
   // 2. Cargar Voces en Inglés (Guy como voz predeterminada conversacional)
   async function loadVoices() {
@@ -662,6 +724,7 @@ function bootstrapJesusStudio() {
       scriptHook.value = data.hook;
       scriptBody.value = data.body;
       scriptCta.value = data.cta;
+      updateScriptDurationEstimate();
 
       const badge = data.hook_badge_text || data.hook_text;
       if (badge) {
@@ -1301,6 +1364,9 @@ function bootstrapJesusStudio() {
   if (subtitleSizeSelect) subtitleSizeSelect.addEventListener("change", updateSubtitlePreview);
   const chkSubtitlesAllCaps = document.getElementById("chkSubtitlesAllCaps");
   if (chkSubtitlesAllCaps) chkSubtitlesAllCaps.addEventListener("change", updateSubtitlePreview);
+  updateSubtitlePreview();
+  updateSubtitlePosition();
+  updateSubtitleAnimation();
 
   // ─── Canvas Particle & Visual Effects Engine ────────────────────────────────
   const fxCanvas = document.getElementById("fxCanvas");

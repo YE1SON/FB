@@ -28,20 +28,17 @@ Acceso web directo: `http://<IP_PUBLICA>`
 
 ---
 
-## 🎯 La Fórmula de Retención Viral para Facebook (Público de EE. UU.)
+## 🧭 Guía práctica de calidad para publicar
 
-Para que los vídeos no se pierdan en el scroll de Facebook en los primeros 2 segundos, el generador de guiones implementa una estructura psicológica probada:
+La aplicación ayuda a preparar guiones, audio, escenas y subtítulos; no puede garantizar alcance, retención ni viralidad. Antes de publicar cada Reel:
 
-1. **El Gancho Disruptivo (0s a 3s - The Hook):**
-   * Frases directas al subconsciente del creyente:  
-     * *"Do not scroll past this video. Jesus saw you crying last night in secret..."*  
-     * *"Stop scrolling for 20 seconds. God has an urgent message for the battle you are fighting alone."*
-2. **El Mensaje / Oración (4s a 35s - The Heart Message):**
-   * Enfocado en **dolores y necesidades reales**: batallas silenciosas, ansiedad, crisis económica, sanidad familiar y oración nocturna de paz.
-3. **El Llamado a la Acción (36s a 45s - The Viral CTA):**
-   * En Facebook, **los shares privados y comentarios de oración disparan la distribución viral**.
-4. **Comentario Fijado Estratégico (Meta 2026 Boost):**
-   * Cada video incluye una oración o pregunta estratégica lista para fijar en el primer comentario, multiplicando el engagement orgánico.
+1. **Gancho claro:** empieza con una necesidad humana concreta, sin prometer milagros inmediatos ni afirmar que el video contiene un mensaje personal de Dios para cada espectador.
+2. **Mensaje centrado:** desarrolla una idea principal y una oración natural; evita repetir la misma petición o llamada a la acción.
+3. **Referencia bíblica:** revisa la cita y la traducción que quieres usar antes de publicar. La referencia automatizada debe tratarse como un punto de partida, no como una verificación editorial.
+4. **Llamada a la acción natural:** invita a guardar o compartir cuando tenga sentido para la persona. No hay una frase que garantice distribución en Facebook.
+5. **Control de calidad:** escucha la voz con la música, comprueba que el texto se lea en pantalla y revisa la duración y sincronización del MP4 exportado.
+
+Los 26 temas están organizados en cinco pilares para facilitar la selección y reducir la sensación de repetición. La calidad final depende de revisar cada guion y cada video antes de publicarlo.
 
 ---
 

@@ -1122,16 +1122,32 @@ def generate_seo_caption(
     cta: str,
     hashtags: List[str]
 ) -> str:
-    """Genera un copy limpio, honesto y editable para Facebook Reels sin sensacionalismo."""
+    """Crea un copy breve: un solo extracto, referencia bíblica y CTA sin duplicar la locución."""
     clean_title = re.sub(r'^[^\w]+', '', theme_title).strip()
-    tags_str = " ".join(hashtags[:5])
-    cta_clean = f"\n\n🕊️ {cta}" if cta else ""
-    return (
-        f"✝️ {clean_title} ✝️\n\n"
-        f"\"{prayer_text}\"\n\n"
-        f"📖 {scripture}{cta_clean}\n\n"
-        f"{tags_str}"
-    )
+    clean_cta = re.sub(r"\s+", " ", cta or "").strip()
+
+    # El llamador proporciona la locución completa. Retira el CTA final antes de
+    # elegir el extracto, porque el CTA se añade una sola vez como bloque propio.
+    narration = re.sub(r"\s+", " ", prayer_text or "").strip().strip('"“”')
+    if clean_cta and narration.casefold().endswith(clean_cta.casefold()):
+        narration = narration[:-len(clean_cta)].rstrip(" —–-,:;")
+
+    # No copiar todo el audio a la descripción: deja solo la primera oración.
+    excerpt = re.split(r"(?<=[.!?])\s+", narration, maxsplit=1)[0].strip() if narration else ""
+    if len(excerpt) > 220:
+        excerpt = excerpt[:217].rstrip() + "..."
+
+    tags_str = " ".join((hashtags or [])[:5])
+    parts = [f"✝️ {clean_title} ✝️"]
+    if excerpt:
+        parts.extend(["", f"“{excerpt}”"])
+    if scripture:
+        parts.extend(["", f"📖 {scripture}"])
+    if clean_cta:
+        parts.extend(["", f"🕊️ {clean_cta}"])
+    if tags_str:
+        parts.extend(["", tags_str])
+    return "\n".join(parts)
 
 
 # ─── Generador Interno por Plantillas con Control de Repeticiones ───────────

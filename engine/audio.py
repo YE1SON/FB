@@ -15,9 +15,13 @@ def get_sfx_files() -> Dict[str, str]:
 
 def sanitize_and_trim_audio(input_audio_path: str, output_audio_path: str, master_lufs: bool = True) -> str:
     """
-    Elimina silencios al inicio (>20ms bajo -45dB), aplica compresión vocal,
-    ecualización de presencia/calidez humana y masterización broadcast -14 LUFS (Estándar Meta).
-    Garantiza que la locución empiece a modular antes de los 50ms en Facebook Reels.
+    Cadena de postprocesamiento acústico estándar para narración hablada:
+    1. silenceremove: Recorta silencios de entrada (>20ms bajo -45dB) para un arranque inmediato y limpio.
+    2. acompressor: Control dinámico suave (ratio 2.5:1, attack 10ms, release 80ms) para equilibrar el nivel vocal.
+    3. equalizer (120 Hz, +1.8 dB): Aporta cuerpo y calidez fundamental a la voz sin generar retumbos.
+    4. equalizer (3300 Hz, +2.2 dB): Aumenta la inteligibilidad y presencia de consonantes en altavoces de dispositivos móviles.
+    5. loudnorm (EBU R128): Normalización de sonoridad integrada a -14 LUFS (True Peak -1.0 dBTP),
+       adecuada para reproducción en plataformas móviles y redes sociales.
     """
     os.makedirs(os.path.dirname(os.path.abspath(output_audio_path)), exist_ok=True)
     

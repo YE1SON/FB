@@ -166,22 +166,32 @@ def format_ass_time(seconds: float) -> str:
     return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
 
 
-def _chunk_cues(cues: List[CueItem], max_words: int = 3, max_chars: int = 24) -> List[List[CueItem]]:
+def _chunk_cues(cues: List[CueItem], max_words: int = 4, max_chars: int = 28) -> List[List[CueItem]]:
     """
-    Agrupa los cues de palabras en frases cortas de 2 a 4 palabras,
-    respetando signos de puntuación terminales para no cortar pensamientos naturales.
+    Agrupa los cues de palabras en frases legibles de 2 a 4 palabras,
+    respetando pausas naturales y signos de puntuación (. ! ? , ; : —).
+    Si un CueItem ya contiene varias palabras (por ejemplo de segment cues),
+    se conserva íntegro sin fragmentación arbitraria.
     """
     chunks: List[List[CueItem]] = []
     current_chunk: List[CueItem] = []
     current_chars = 0
 
     for cue in cues:
-        word = cue.text.strip()
-        if not word:
+        raw_text = cue.text.strip()
+        if not raw_text:
             continue
 
-        w_len = len(word)
-        # Si agregar la palabra excede el límite de palabras o caracteres, cerrar chunk
+        # Si el cue ya es una frase o cláusula completa procedente del estimador
+        if " " in raw_text and len(raw_text.split()) > 2:
+            if current_chunk:
+                chunks.append(current_chunk)
+                current_chunk = []
+                current_chars = 0
+            chunks.append([cue])
+            continue
+
+        w_len = len(raw_text)
         if current_chunk and (len(current_chunk) >= max_words or (current_chars + w_len + 1) > max_chars):
             chunks.append(current_chunk)
             current_chunk = []
@@ -190,8 +200,7 @@ def _chunk_cues(cues: List[CueItem], max_words: int = 3, max_chars: int = 24) ->
         current_chunk.append(cue)
         current_chars += w_len + 1
 
-        # Si la palabra termina en puntuación mayor (. ! ? : ;), cortar el chunk de inmediato
-        if word.endswith((".", "!", "?", ":", ";")):
+        if raw_text.endswith((".", "!", "?", ":", ";", "—")):
             chunks.append(current_chunk)
             current_chunk = []
             current_chars = 0
@@ -205,7 +214,7 @@ def _chunk_cues(cues: List[CueItem], max_words: int = 3, max_chars: int = 24) ->
 def generate_viral_ass(
     cues: List[CueItem],
     output_path: str,
-    style_key: str = "karaoke",
+    style_key: str = "clean",
     margin_v: int = 440,
     hook_text: str = "",
     micro_cta_text: str = "",
@@ -222,18 +231,15 @@ def generate_viral_ass(
     all_caps: Optional[bool] = None
 ) -> str:
     """
-    Genera un archivo .ass optimizado para Facebook Reels:
-    - 4 estilos animados reales: KARAOKE, POP, CINEMATIC, CLEAN.
-    - Zonas seguras respetadas (MarginV por defecto 440 en 1080x1920).
-    - Insignias superiores con temporalidad separada:
-      * Gancho Visual: 0.0s a 3.5s (Apertura)
-      * Píldora de Comentario: 4.5s a 9.5s (Segundo tercio)
-    - Subtítulos siempre sincronizados palabra por palabra.
+    Genera un archivo .ass optimizado para Facebook Reels y videos verticales:
+    - 4 estilos tipográficos: CLEAN (predeterminado), CINEMATIC, KARAOKE, POP.
+    - Zonas seguras verticales respetadas (MarginV por defecto 440 en 1080x1920).
+    - Agrupación semántica que garantiza un tiempo mínimo de lectura confortable (>=0.75s).
     """
     if not cues:
         cues = [CueItem(start_sec=0.0, end_sec=5.0, text="May the peace of Christ guard your home.")]
 
-    style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["karaoke"])
+    style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["clean"])
     font = style_cfg["font"]
     primary = style_cfg["primary"]
     highlight = style_cfg["highlight"]
@@ -340,7 +346,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             continue
 
         chunk_start = chunk[0].start_sec
-        chunk_end = max(chunk[-1].end_sec, chunk_start + 0.40)
+        chunk_end = max(chunk[-1].end_sec, chunk_start + 0.75)
 
         # ─── MODO 1: KARAOKE (Palabra por palabra activa sincrónica) ───────────
         if style_key == "karaoke":

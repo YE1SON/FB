@@ -23,6 +23,48 @@ class CueItem:
 # ─── Voice Registry ───────────────────────────────────────────────────────────
 
 VOICES: Dict[str, Dict] = {
+    # ─── Edge-TTS Online Neural Voices (Voces recomendadas para inglés de EE. UU.) ─
+    "guy": {
+        "id": "guy",
+        "engine": "edge",
+        "voice_name": "en-US-GuyNeural",
+        "name": "Guy (Conversacional y Empático — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 0.94,
+    },
+    "brian": {
+        "id": "brian",
+        "engine": "edge",
+        "voice_name": "en-US-BrianNeural",
+        "name": "Brian (Tranquilo e Inspirador — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 0.94,
+    },
+    "christopher": {
+        "id": "christopher",
+        "engine": "edge",
+        "voice_name": "en-US-ChristopherNeural",
+        "name": "Christopher (Firme, Confiado y Cálido — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 0.94,
+    },
+    "andrew": {
+        "id": "andrew",
+        "engine": "edge",
+        "voice_name": "en-US-AndrewMultilingualNeural",
+        "name": "Andrew (Dinámico y Conmovedor — Edge HD)",
+        "gender": "Hombre",
+        "base_speed": 0.94,
+    },
+    "jenny": {
+        "id": "jenny",
+        "engine": "edge",
+        "voice_name": "en-US-JennyNeural",
+        "name": "Jenny (Clara, Luminosa y Pacífica — Edge HD)",
+        "gender": "Mujer",
+        "base_speed": 0.94,
+    },
+
     # ─── Kokoro-82M Neural Voices (Ultra-Natural Local 24kHz) ─────────────────
     "adam": {
         "id": "adam",
@@ -63,48 +105,6 @@ VOICES: Dict[str, Dict] = {
         "name": "Bella (Tierna y Compasiva — Kokoro Neural)",
         "gender": "Mujer",
         "base_speed": 0.90,
-    },
-
-    # ─── Edge-TTS Online Neural Voices (Alta Fidelidad sin Costo) ──────────────
-    "christopher": {
-        "id": "christopher",
-        "engine": "edge",
-        "voice_name": "en-US-ChristopherNeural",
-        "name": "Christopher (Firme, Confiado y Cálido — Edge HD)",
-        "gender": "Hombre",
-        "base_speed": 1.0,
-    },
-    "brian": {
-        "id": "brian",
-        "engine": "edge",
-        "voice_name": "en-US-BrianNeural",
-        "name": "Brian (Tranquilo e Inspirador — Edge HD)",
-        "gender": "Hombre",
-        "base_speed": 1.0,
-    },
-    "guy": {
-        "id": "guy",
-        "engine": "edge",
-        "voice_name": "en-US-GuyNeural",
-        "name": "Guy (Conversacional y Empático — Edge HD)",
-        "gender": "Hombre",
-        "base_speed": 1.0,
-    },
-    "andrew": {
-        "id": "andrew",
-        "engine": "edge",
-        "voice_name": "en-US-AndrewMultilingualNeural",
-        "name": "Andrew (Dinámico y Conmovedor — Edge HD)",
-        "gender": "Hombre",
-        "base_speed": 1.0,
-    },
-    "jenny": {
-        "id": "jenny",
-        "engine": "edge",
-        "voice_name": "en-US-JennyNeural",
-        "name": "Jenny (Clara, Luminosa y Pacífica — Edge HD)",
-        "gender": "Mujer",
-        "base_speed": 1.0,
     },
 
     # ─── Piper Local TTS (Offline Fallback) ───────────────────────────────────
@@ -234,12 +234,18 @@ def _parse_rate(rate_str: str) -> float:
 
 
 def _extract_whisper_word_cues(audio_path: str) -> Optional[List[CueItem]]:
-    """Extrae marcas de tiempo de cada palabra con precisión de milisegundos usando faster-whisper."""
+    """Extrae marcas de tiempo de cada palabra con precisión de milisegundos usando faster-whisper con filtro VAD."""
     model = _get_whisper()
     if model is None:
         return None
     try:
-        segments, _ = model.transcribe(audio_path, word_timestamps=True, language="en")
+        segments, _ = model.transcribe(
+            audio_path,
+            word_timestamps=True,
+            language="en",
+            vad_filter=True,
+            vad_parameters=dict(min_silence_duration_ms=250)
+        )
         cues = []
         for segment in segments:
             if not segment.words:
@@ -260,31 +266,57 @@ def _extract_whisper_word_cues(audio_path: str) -> Optional[List[CueItem]]:
         return None
 
 
-def _estimate_cues(text: str, total_duration: float) -> List[CueItem]:
-    """Alineación rítmica de respaldo basada en silabeo y longitud si Whisper no está disponible."""
-    words = [w for w in text.split() if w.strip()]
-    if not words:
-        return [CueItem(start_sec=0.0, end_sec=total_duration, text=text)]
+def _estimate_segment_cues(text: str, total_duration: float) -> List[CueItem]:
+    """
+    Alineación estructurada por oraciones y cláusulas cuando Faster-Whisper no está disponible.
+    Respeta la puntuación natural para mantener subtítulos legibles y estables
+    en lugar de proyectar marcas artificiales palabra por palabra.
+    """
+    raw_clauses = re.split(r'([.?!,;:\n—]+)', text)
+    clauses = []
+    temp = ""
+    for part in raw_clauses:
+        if not part:
+            continue
+        if re.match(r'^[.?!,;:\n—]+$', part):
+            temp += part
+            if temp.strip():
+                clauses.append(temp.strip())
+            temp = ""
+        else:
+            if temp.strip():
+                clauses.append(temp.strip())
+            temp = part
+    if temp.strip():
+        clauses.append(temp.strip())
 
-    lengths = [max(len(w), 1) for w in words]
-    total_chars = sum(lengths)
+    if not clauses:
+        clauses = [w for w in text.split() if w.strip()]
+        if not clauses:
+            return [CueItem(start_sec=0.0, end_sec=total_duration, text=text)]
 
+    char_counts = [max(len(c), 1) for c in clauses]
+    total_chars = sum(char_counts)
     cues = []
     t = 0.0
-    for word, length in zip(words, lengths):
-        w_dur = total_duration * (length / total_chars)
+    for clause, count in zip(clauses, char_counts):
+        dur = total_duration * (count / total_chars)
         cues.append(
             CueItem(
                 start_sec=round(t, 2),
-                end_sec=round(min(t + w_dur, total_duration), 2),
-                text=word
+                end_sec=round(min(t + dur, total_duration), 2),
+                text=clause
             )
         )
-        t += w_dur
+        t += dur
 
     if cues:
         cues[-1].end_sec = round(total_duration, 2)
     return cues
+
+
+# Alias para compatibilidad hacia atrás
+_estimate_cues = _estimate_segment_cues
 
 
 async def synthesize_speech(
@@ -295,10 +327,10 @@ async def synthesize_speech(
 ) -> List[CueItem]:
     """
     Sintetiza la voz utilizando la mejor opción disponible en la jerarquía:
-    1. Kokoro-82M (Local Neural 24kHz)
-    2. Edge-TTS (Online Neural HD)
+    1. Edge-TTS (Online Neural HD en inglés estadounidense natural)
+    2. Kokoro-82M (Local Neural 24kHz)
     3. Piper TTS (Local Offline Fallback)
-    Aplica normalización y compresión acústica inmediata con FFmpeg,
+    Aplica compresión suave y ecualización con FFmpeg,
     y alinea cada palabra al milisegundo exacto con faster-whisper.
     """
     clean_text = text.strip()
@@ -308,9 +340,9 @@ async def synthesize_speech(
     voice_key = LEGACY_VOICE_MAP.get(voice_id, voice_id)
     voice_cfg = VOICES.get(voice_key)
 
-    # Si la voz no existe, asignar la primera voz válida
+    # Si la voz no existe, asignar la primera voz válida recomendada
     if not voice_cfg:
-        voice_cfg = VOICES["adam"]
+        voice_cfg = VOICES.get("guy", list(VOICES.values())[0])
 
     engine_pref = voice_cfg.get("engine", "kokoro")
     user_rate = _parse_rate(rate)

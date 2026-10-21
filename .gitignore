@@ -8,6 +8,8 @@ outputs/*.mp3
 outputs/*.ass
 outputs/*.jpg
 outputs/cards/*
+outputs/test_run/*
+outputs/script_history.json
 !outputs/.gitkeep
 !outputs/cards/.gitkeep
 

@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, generate_3scene_prompts_for_script, get_card_template_for_theme, VIRAL_THEMES
+from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, generate_3scene_prompts_for_script, get_card_template_for_theme, get_daily_batch_schedule, VIRAL_THEMES
 from engine.tts import synthesize_speech, get_available_voices, VOICES, LEGACY_VOICE_MAP, check_engine_availability
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, WORSHIP_TRACKS
@@ -105,13 +105,13 @@ class RenderRequest(BaseModel):
     body: str
     cta: str
     theme_key: Optional[str] = "morning_favor"
-    voice_key: str = "adam"
-    rate: str = "+0%"
+    voice_key: str = "guy"
+    rate: str = "-6%"
     video_mode: str = "images"  # "images" or "broll"
     image_name: str = "jesus_healing_miracle.jpg"
     image_name_2: Optional[str] = None
     image_name_3: Optional[str] = None
-    subtitle_style: str = "karaoke"
+    subtitle_style: str = "clean"
     subtitle_size: str = "normal"
     subtitle_animation: str = "pop"
     subtitle_position: str = "bottom"
@@ -121,7 +121,7 @@ class RenderRequest(BaseModel):
     music_track: str = "worship_piano_peace"
     music_volume: float = 0.20
     aspect_ratio: str = "9:16"
-    effect_type: str = "cinematic_dust"
+    effect_type: str = "none"
     camera_motion: str = "zoom_in"
     transition_style: Optional[str] = "fade"
     hook_text: str = ""
@@ -129,10 +129,10 @@ class RenderRequest(BaseModel):
     hook_badge_font: Optional[str] = "Montserrat"
     hook_badge_size: Optional[str] = "normal"
     micro_cta_text: Optional[str] = ""
-    enable_sfx: Optional[bool] = True
+    enable_sfx: Optional[bool] = False
     seamless_loop: Optional[bool] = False
     master_lufs: Optional[bool] = True
-    generate_trending_audio: Optional[bool] = True
+    generate_trending_audio: Optional[bool] = False
 
 class ImageCardRequest(BaseModel):
     background_image_path: str
@@ -476,18 +476,23 @@ async def api_render_video(req: RenderRequest):
         "video_url": f"/outputs/reel_{session_id}.mp4",
         "filename": f"reel_{session_id}.mp4",
         "trending_audio_video_url": trending_url,
-        "trending_filename": trending_filename
+        "trending_filename": trending_filename,
+        "actual_duration_sec": render_result.get("actual_duration_sec"),
+        "target_duration_sec": render_result.get("target_duration_sec"),
+        "duration_diff_sec": render_result.get("duration_diff_sec")
     }
 
 
 def _resolve_image(image_name: str) -> str:
-    image_file = os.path.join(ASSETS_DIR, image_name)
-    if not os.path.exists(image_file):
-        avail = [f for f in os.listdir(ASSETS_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    # Protección estricta contra path traversal
+    safe_name = os.path.basename(image_name.strip()) if image_name else ""
+    image_file = os.path.join(ASSETS_DIR, safe_name)
+    if not safe_name or not os.path.exists(image_file):
+        avail = [f for f in os.listdir(ASSETS_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
         if avail:
             image_file = os.path.join(ASSETS_DIR, avail[0])
         else:
-            raise HTTPException(status_code=400, detail="No hay imágenes disponibles.")
+            raise HTTPException(status_code=400, detail="No hay imágenes disponibles en el repositorio.")
     return image_file
 
 
@@ -504,15 +509,14 @@ def list_outputs():
     return [{"filename": f, "url": f"/outputs/{f}"} for f in files]
 
 
-# ─── Daily Batch Schedule & Magnetic Engagement ─────────────────────────────
-
+# ─── Daily Batch Schedule & Respectful Community Reflections ────────────────
 MAGNETIC_COMMENTS = [
-    "👇 God sees your exact situation today. Drop your first name below so our community can agree in prayer over your home tonight! Say 'I receive it' 🙏",
-    "👇 A praying family breaks every chain. Type the first name or initial of your child/loved one and claim: 'They are protected in Jesus' name!' ❤️",
-    "👇 Sickness does not have the final say. Drop your name below and declare: 'By His stripes I am healed!' 🕊️",
-    "👇 If you woke up carrying fear or anxiety, breathe. Leave a '🙏' below and let us carry this burden in prayer with you right now.",
-    "👇 Drop your first name below to stand in agreement for a financial miracle before this week ends. Type AMEN! 💸",
-    "👇 Comment 'THANK YOU JESUS' and leave one thing you are grateful for today so we can rejoice together! 🙌"
+    "May the peace of God, which surpasses all understanding, guard your heart and mind today. We're keeping you in prayer. 🙏",
+    "If someone you love is carrying a heavy burden this week, feel free to share their first name so we can join in prayer for them.",
+    "Remember that you do not have to carry tomorrow's worries today. Rest in His grace tonight.",
+    "Which scripture has brought you comfort during difficult seasons? Feel free to share it below to encourage someone today.",
+    "May the Lord give strength to your home and peace to your family tonight.",
+    "Take a quiet moment today to reflect on God's faithfulness through every season of your life."
 ]
 
 @app.get("/api/magnetic-comments")
@@ -556,38 +560,7 @@ async def api_render_image_card(req: ImageCardRequest):
 @app.get("/api/daily-batch")
 @app.get("/studio/api/daily-batch")
 def api_daily_batch():
-    return [
-        {
-            "slot": "morning",
-            "time_label": "🌅 Mañana (7:00 AM - 8:30 AM EST)",
-            "purpose": "Apertura de Bendición, Favor y Sabiduría",
-            "script": generate_script("morning_favor", mode="deep"),
-            "recommended_image": "jesus_holy_bible.jpg",
-            "recommended_image_2": "jesus_praying_gethsemane.jpg",
-            "recommended_image_3": "jesus_reaching_hand.jpg",
-            "recommended_music": "celestial_strings_hope"
-        },
-        {
-            "slot": "midday",
-            "time_label": "☀️ Mediodía (12:30 PM - 2:00 PM EST)",
-            "purpose": "Sanidad en el Cuerpo y Paz en el Hogar",
-            "script": generate_script("medical_fear", mode="deep"),
-            "recommended_image": "jesus_healing_miracle.jpg",
-            "recommended_image_2": "jesus_comforting_embrace.jpg",
-            "recommended_image_3": "jesus_praying_gethsemane.jpg",
-            "recommended_music": "worship_piano_peace"
-        },
-        {
-            "slot": "night",
-            "time_label": "🌙 Noche (8:30 PM - 10:00 PM EST)",
-            "purpose": "Protección para los Hijos y Familia",
-            "script": generate_script("lost_child", mode="deep"),
-            "recommended_image": "holy_cross_calvary.jpg",
-            "recommended_image_2": "jesus_comforting_embrace.jpg",
-            "recommended_image_3": "jesus_healing_miracle.jpg",
-            "recommended_music": "midnight_prayer_acoustic"
-        }
-    ]
+    return get_daily_batch_schedule()
 
 
 if __name__ == "__main__":

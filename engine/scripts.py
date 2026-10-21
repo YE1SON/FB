@@ -1,1345 +1,1071 @@
+"""
+JESUSREELS STUDIO v4.5 - NARRATIVE ENGINE & THEMATIC PILLARS
+Generador de guiones con variedad narrativa real, situaciones humanas específicas,
+catálogo bíblico verificado y soporte de 5 pilares temáticos para evitar repeticiones.
+Diseñado para audiencia adulta estadounidense en inglés natural contemporáneo.
+"""
+
 import random
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
+from engine.history import get_history_manager
 
-# =============================================================================
-# JESUS REELS STUDIO v4.0 - ADVANCED NARRATIVE SCRIPT GENERATOR
-# =============================================================================
-# 26 Temas Espirituales y Emocionales con Variaciones Narrativas Reales:
-# - Estructura Narrativa de 4 Partes: Gancho -> Reflexión/Oración -> Cierre -> CTA
-# - 4 Tonos Emocionales: Intimate, Hopeful, Reflective, Narrative
-# - 3 Modos de Duración: Micro (15-20s), Deep (25-35s), Story (40-50s)
-# - Soporte Activo de Tema Personalizado (Español e Inglés)
-# - Libre de promesas médicas falsas o cebo de comentarios forzado.
-# =============================================================================
+# ─── 5 Pilares Temáticos Organizados ─────────────────────────────────────────
 
-CUSTOM_TOPIC_TRANSLATIONS = {
-    "hijo": "a child wandering far from peace",
-    "hijos": "our children and the next generation",
-    "hija": "a beloved daughter needing guidance",
-    "nieto": "a precious grandchild",
-    "nietos": "our grandchildren's future and protection",
-    "familia": "restoring peace and unity within a family",
-    "deuda": "the heavy pressure of unpaid bills and financial strain",
-    "deudas": "financial struggle and breaking through debt",
-    "dinero": "financial provision and stability for the home",
-    "trabajo": "finding an honest job and an open door",
-    "empleo": "career direction and breakthrough in employment",
-    "negocio": "blessing and integrity in a small business",
-    "salud": "physical weariness, illness, and body healing",
-    "enfermedad": "facing illness and finding strength in God",
-    "cancer": "walking through a frightening medical trial with faith",
-    "dolor": "chronic pain and finding daily endurance",
-    "ansiedad": "overwhelming anxiety, racing thoughts, and panic",
-    "panico": "calming panic attacks in the quiet of the night",
-    "insomnio": "sleepless nights and restoring sweet peace to the mind",
-    "soledad": "deep loneliness and knowing God has not abandoned you",
-    "depresion": "silent emotional heaviness and finding light in darkness",
-    "matrimonio": "healing a strained marriage and rebuilding trust",
-    "pareja": "reconciliation, patience, and love between partners",
-    "divorcio": "healing a broken heart after painful separation",
-    "duelo": "grieving the loss of someone dearly missed",
-    "luto": "comforting a soul walking through bereavement",
-    "perdon": "letting go of resentment and forgiving past wounds",
-    "adiccion": "breaking chains of habit, dependency, and addiction",
-    "juicio": "fairness, truth, and peace in legal battles",
-    "abuela": "comfort and strength for an aging grandmother",
-    "abuelo": "health and honoring an aging grandfather",
-    "padres": "peace, health, and blessing over aging parents",
-    "madre soltera": "sustaining grace and provision for a single mother",
-    "padre soltero": "daily strength and wisdom for a single father",
-    "fuerza": "renewed strength when completely exhausted",
-    "fe": "strengthening faint faith in a quiet season",
-    "paz": "the peace of God that surpasses all human understanding"
+THEMATIC_PILLARS = {
+    "family_relationships": {
+        "name": "Familia y Relaciones",
+        "description": "Oraciones por hijos, matrimonio, padres ancianos y reconciliación en el hogar.",
+        "themes": ["lost_child", "family_protection", "marriage_healing", "single_parent", "elderly_parents", "sick_grandchild"]
+    },
+    "peace_rest_daily": {
+        "name": "Paz, Descanso y Oración Cotidiana",
+        "description": "Serenidad mental, entrega de la ansiedad nocturna, devoción matutina y descanso reparador.",
+        "themes": ["morning_favor", "night_anxiety", "restless_sleep", "unspoken_prayer", "peace_in_storm"]
+    },
+    "grief_solitude_comfort": {
+        "name": "Duelo, Soledad y Acompañamiento Emocional",
+        "description": "Consuelo en el luto, soledad, desgaste emocional y vulnerabilidad física.",
+        "themes": ["lonely_widow", "grief_loss", "healing_depression", "medical_fear"]
+    },
+    "faith_hope_trials": {
+        "name": "Fe y Esperanza durante las Dificultades",
+        "description": "Confianza en momentos de estrechez económica, desempleo, batallas legales y pruebas.",
+        "themes": ["zero_balance", "job_breakthrough", "addiction_chains", "court_legal", "spiritual_warfare", "strength_weary", "guidance_direction"]
+    },
+    "gratitude_wisdom_growth": {
+        "name": "Gratitud, Sabiduría y Crecimiento Espiritual",
+        "description": "Agradecimiento, perdón de heridas pasadas, bendición en el trabajo y gracia divina.",
+        "themes": ["gratitude_harvest", "forgiving_past", "business_blessing", "divine_grace"]
+    }
 }
 
-VIRAL_THEMES: Dict[str, Dict] = {
+# ─── Catálogo Bíblico Verificado (Textos Exactos en Inglés ESV/NIV) ─────────
+
+BIBLICAL_CATALOGUE = {
+    "lost_child": "Luke 15:20 — While he was still a long way off, his father saw him and was filled with compassion for him.",
+    "family_protection": "Psalm 91:11 — For he will command his angels concerning you to guard you in all your ways.",
+    "medical_fear": "2 Corinthians 12:9 — My grace is sufficient for you, for my power is made perfect in weakness.",
+    "zero_balance": "Philippians 4:19 — And my God will meet all your needs according to the riches of his glory in Christ Jesus.",
+    "night_anxiety": "Philippians 4:6-7 — Do not be anxious about anything, but in every situation present your requests to God.",
+    "morning_favor": "Lamentations 3:22-23 — The steadfast love of the Lord never ceases; his mercies are new every morning.",
+    "marriage_healing": "Colossians 3:13 — Bear with each other and forgive one another if any of you has a grievance against someone.",
+    "healing_depression": "Psalm 34:18 — The Lord is close to the brokenhearted and saves those who are crushed in spirit.",
+    "job_breakthrough": "Proverbs 3:5-6 — Trust in the Lord with all your heart and lean not on your own understanding.",
+    "lonely_widow": "Psalm 68:5 — A father to the fatherless, a defender of widows, is God in his holy dwelling.",
+    "addiction_chains": "John 8:36 — So if the Son sets you free, you will be free indeed.",
+    "elderly_parents": "Isaiah 46:4 — Even to your old age and gray hairs I am he, I am he who will sustain you.",
+    "single_parent": "Isaiah 40:29 — He gives strength to the weary and increases the power of the weak.",
+    "sick_grandchild": "Matthew 19:14 — Jesus said, 'Let the little children come to me, and do not hinder them.'",
+    "court_legal": "Psalm 37:5-6 — Commit your way to the Lord; trust in him and he will act.",
+    "restless_sleep": "Psalm 4:8 — In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.",
+    "gratitude_harvest": "1 Thessalonians 5:18 — Give thanks in all circumstances; for this is God's will for you in Christ Jesus.",
+    "unspoken_prayer": "Romans 8:26 — The Spirit helps us in our weakness, interceding with groans that words cannot express.",
+    "spiritual_warfare": "2 Thessalonians 3:3 — The Lord is faithful, and he will strengthen you and protect you from the evil one.",
+    "business_blessing": "Proverbs 16:3 — Commit to the Lord whatever you do, and he will establish your plans.",
+    "forgiving_past": "Ephesians 4:32 — Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.",
+    "grief_loss": "Matthew 5:4 — Blessed are those who mourn, for they will be comforted.",
+    "guidance_direction": "Psalm 32:8 — I will instruct you and teach you in the way you should go; I will counsel you with my loving eye upon you.",
+    "strength_weary": "Isaiah 40:31 — Those who hope in the Lord will renew their strength. They will soar on wings like eagles.",
+    "peace_in_storm": "Mark 4:39 — He got up, rebuked the wind and said to the waves, 'Quiet! Be still!' Then the wind died down.",
+    "divine_grace": "Hebrews 4:16 — Let us approach God's throne of grace with confidence, so that we may receive mercy in time of need."
+}
+
+# ─── Mapeo de Traducciones para Temas Libres ────────────────────────────────
+
+CUSTOM_TOPIC_TRANSLATIONS = {
+    "hijo": "a son who feels distant from faith",
+    "hijos": "our children and their future steps",
+    "hija": "a daughter walking through deep trials",
+    "nieto": "a grandchild needing care and protection",
+    "nietos": "the younger generation of our family",
+    "familia": "restoring quiet understanding at home",
+    "deuda": "the stress of unpaid bills and financial strain",
+    "deudas": "financial pressure weighing on the mind",
+    "dinero": "honest provision for daily necessities",
+    "trabajo": "finding purposeful work and direction",
+    "empleo": "an open door for employment",
+    "negocio": "guidance and wisdom in daily business",
+    "salud": "physical fatigue and managing illness",
+    "enfermedad": "facing a difficult health diagnosis",
+    "cancer": "walking through a frightening medical season",
+    "dolor": "living with chronic physical pain",
+    "ansiedad": "restless thoughts when trying to sleep",
+    "panico": "finding calm during overwhelming panic",
+    "insomnio": "restoring quiet sleep after long nights",
+    "soledad": "loneliness and the desire for genuine companionship",
+    "depresion": "emotional weariness and finding quiet hope",
+    "matrimonio": "rebuilding patience and warmth between spouses",
+    "pareja": "mutual respect and kindness in a relationship",
+    "divorcio": "healing after a painful separation",
+    "duelo": "grieving the empty chair of someone loved",
+    "luto": "bereavement and holding onto eternal hope",
+    "perdon": "letting go of bitter memories and choosing peace",
+    "adiccion": "breaking free from dependencies step by step",
+    "juicio": "fairness and resolution in legal disputes",
+    "abuela": "comfort and strength for an aging grandmother",
+    "abuelo": "health and peace for an aging grandfather",
+    "padres": "wisdom in caring for aging parents",
+    "madre soltera": "daily endurance and grace for a single mother",
+    "padre soltero": "patience and provision for a single father",
+    "fuerza": "renewed strength when energy is depleted",
+    "fe": "holding steady when faith feels quiet or small",
+    "paz": "the peace of God that calms an uneasy heart"
+}
+
+def _translate_topic(topic: Optional[str]) -> str:
+    if not topic or not topic.strip():
+        return ""
+    clean = topic.strip().lower()
+    for es, en in CUSTOM_TOPIC_TRANSLATIONS.items():
+        if es in clean:
+            return en
+    return topic.strip()
+
+
+# ─── 26 Temas con Situación Humana, Idea Central y Perspectivas Múltiples ───
+
+VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
     "lost_child": {
-        "title": "🚶‍♂️ Por el hijo/hija que se alejó de Dios",
-        "description": "Oración intercesora por un hijo, hija o ser querido que atraviesa rebeldía o dolor.",
-        "target_time_slot": "night",
-        "hook_badge_text": "PRAYER FOR YOUR CHILDREN",
+        "title": "🚶‍♂️ Por el hijo o hija que se alejó",
+        "pillar": "family_relationships",
+        "description": "Oración y esperanza para padres con hijos distanciados o atravesando momentos difíciles.",
+        "human_situation": "A parent lying awake with quiet heartache for an adult son or daughter who has drifted from home or faith.",
+        "central_idea": "Love does not stop at the doorway; God's unseen care is larger than the distance between human words.",
+        "hook_badge_text": "WHEN A CHILD FEELS DISTANT",
         "recommended_image": "jesus_reaching_hand.jpg",
-        "scripture": "Luke 15:20 — While he was still a long way off, his father saw him and was filled with compassion.",
-        "hashtags": ["#PrayingParents", "#FaithInGod", "#ChristianFamily", "#ProdigalChild", "#DailyPrayer"],
+        "scripture": BIBLICAL_CATALOGUE["lost_child"],
+        "hashtags": ["#PrayingParents", "#FaithfulGod", "#FamilyGrace", "#ProdigalLove"],
         "hooks": [
-            "If your heart aches tonight for a child who feels distant or lost...",
-            "Before you close your eyes carrying that quiet worry for your son or daughter...",
-            "To every parent who has whispered prayers through tears for their family...",
-            "When words don't seem to reach them, remember that God's presence can."
+            "If your heart aches tonight over a child who feels far away...",
+            "To every parent whispering silent prayers before switching off the light...",
+            "When your advice cannot reach them, remember that God's patience does.",
+            "Before worry steals your rest regarding your son or daughter tonight..."
         ],
-        "reflections": {
-            "intimate": "Lord, You know where my words cannot reach. Wrap Your unseen arms around my child tonight. Quiet their silent struggles, protect their path from unseen harm, and remind them that they are forever loved.",
-            "hopeful": "Father, no distance is too far for Your grace. Lead their wandering steps toward safety, surround them with wise voices, and let them feel the warmth of Your steady mercy guiding them back home.",
-            "reflective": "We often carry the weight of those we love in silence. But what we cannot control, God can gently restore. Trust that every heartfelt prayer planted in faith continues to watch over their steps.",
-            "narrative": "A father once stood at the edge of the road, looking out every evening, waiting for his child. God looks upon your family with that same unwavering love, keeping watch even in the dark."
+        "perspectives": {
+            "prayer": "Lord, You know every step my child takes. Where my voice cannot go, let Your quiet mercy meet them. Protect their life, guard their conscience, and remind them that they remain deeply loved.",
+            "scripture_reflection": "In Scripture, the father watched the horizon daily, not with anger, but with open arms. When you cannot fix their choices, place their tomorrow into the hands of the One who never leaves.",
+            "heart_comfort": "Parenting often means learning to release what we cherish into God's keeping. Your tears are not forgotten, and no prayer prayed in faith is ever lost.",
+            "story_lesson": "A wanderer once said that in his darkest hour, what kept him safe was remembering his mother's steady faith. Keep loving; your quiet prayers are still bearing fruit."
         },
         "closings": [
-            "May God's peace guard their mind and yours tonight.",
-            "Rest in the assurance that God watches over those you love.",
-            "Tomorrow carries fresh mercy; trust their tomorrow into His hands.",
-            "His love is pursuing them even when you cannot see it."
+            "May God's peace guard both their heart and yours tonight.",
+            "Rest in the knowledge that those you love are held in faithful hands.",
+            "Tomorrow carries fresh grace; leave their steps with the Lord."
         ],
         "ctas": [
-            "If this spoke to your heart, take a quiet breath and rest in Him tonight.",
-            "Keep their name lifted in faith; love never gives up.",
-            "Share this quiet prayer with a parent who might need hope today.",
-            "Whisper Amen if you trust God with your family's future."
-        ],
-        "pinned_comments": [
-            "What is the first name of the child or loved one you are lifting in prayer tonight? We stand with you in faith. 🙏",
-            "No prayer for our children is ever wasted. Drop a heart ❤️ if you are trusting God for your family today.",
-            "I am joining my faith with every mother and father here tonight. You are not praying alone."
+            "Take a quiet breath and rest in God's faithfulness tonight.",
+            "Hold steady in hope; love never gives up.",
+            "Save this prayer if your heart needed this quiet reminder today."
         ]
     },
 
     "family_protection": {
-        "title": "🛡️ Protección y Paz sobre tu Hogar y Familia",
-        "description": "Cobertura de paz y resguardo sobre tu casa, tus seres queridos y tu descanso.",
-        "target_time_slot": "night",
-        "hook_badge_text": "PROTECTION OVER YOUR HOME",
+        "title": "🛡️ Protección y Paz sobre el Hogar",
+        "pillar": "family_relationships",
+        "description": "Serenidad y cobertura sobre la casa, los seres queridos y el descanso nocturno.",
+        "human_situation": "Families facing stressful schedules, emotional friction, and the need for a quiet sanctuary.",
+        "central_idea": "A home centered on grace is a shelter from the noise and pressure of the outside world.",
+        "hook_badge_text": "PEACE OVER THIS HOUSE",
         "recommended_image": "holy_cross_calvary.jpg",
-        "scripture": "Psalm 91:11 — He will command his angels concerning you to guard you in all your ways.",
-        "hashtags": ["#FamilyPrayer", "#Psalm91", "#PeaceInTheHome", "#ChristianLiving", "#NightPrayer"],
+        "scripture": BIBLICAL_CATALOGUE["family_protection"],
+        "hashtags": ["#FamilyPrayer", "#PeaceInTheHome", "#ChristianLiving", "#NightDevotion"],
         "hooks": [
-            "Tonight, let peace settle inside the walls of your home.",
-            "If the world felt heavy today, step into the safety of God's presence.",
-            "Before you turn off the lights, invite the peace of Christ into every room.",
-            "Your home is meant to be a sanctuary of rest and comfort tonight."
+            "Tonight, let quiet peace settle inside the walls of your home.",
+            "Before turning off the lights, bring the day's stress to a calm halt.",
+            "If the world outside felt noisy today, let your home be a quiet refuge.",
+            "Step into the stillness of God's presence as this evening winds down."
         ],
-        "reflections": {
-            "intimate": "Father, place a gentle shield of peace over this household. Guard our door from discord, silence every anxious thought upon our pillows, and fill our rooms with Your calming presence.",
-            "hopeful": "Lord, we dedicate our home to You. May Your angels stand watch over every window, bless our going out and our coming in, and keep our loved ones safe beneath Your wings.",
-            "reflective": "Safety is not the absence of storms outside, but the presence of Christ inside. When you place your family in God's hands, fear loses its grip on your home.",
-            "narrative": "In ancient times, homes covered in faith were safe through the darkest nights. That same covenant of grace surrounds your loved ones today."
+        "perspectives": {
+            "prayer": "Father, place a gentle hedge of peace around this home tonight. Silence anxious thoughts upon our pillows, mend tired tempers with kindness, and let Your quiet rest cover every room.",
+            "scripture_reflection": "Psalm 91 reminds us that true safety is found in dwelling near the Almighty. When Christ is welcomed inside, fear loses its authority over the household.",
+            "heart_comfort": "Peace is not the total absence of life's demands; it is the steady assurance that God dwells with you right in the middle of them.",
+            "story_lesson": "Homes built on patience endure the hardest seasons. May grace be the foundation under your roof tonight."
         },
         "closings": [
             "May your sleep be deep and your household sheltered in grace.",
-            "Rest easy knowing God neither slumbers nor sleeps.",
-            "His presence is the strongest wall around your family.",
-            "Peace be upon this house, and upon all who dwell within."
+            "Rest easy knowing God watches over all who dwell here.",
+            "Peace be upon this house, and quiet strength for the morning."
         ],
         "ctas": [
-            "Whisper Amen and claim this shelter of peace over your home.",
-            "Share this blessing with someone whose family is on your heart.",
-            "Take a deep breath and let go of today's burdens.",
-            "May your heart find rest tonight under His protection."
-        ],
-        "pinned_comments": [
-            "Drop your family's initial below so we can speak a prayer of protection over your household tonight! 🕊️",
-            "May God's peace fill every corner of your home tonight. Type 'AMEN' in faith.",
-            "Who in your family needs extra comfort and peace tonight? We are lifting them up with you."
+            "Breathe out the tensions of today and rest in His peace.",
+            "Share this gentle prayer with someone whose home needs quiet rest.",
+            "May your heart find quiet refuge tonight."
         ]
     },
 
     "medical_fear": {
-        "title": "🩺 Fortaleza en Momentos de Enfermedad o Dolor",
-        "description": "Consuelo, serenidad y fortaleza divina para quienes enfrentan diagnósticos o debilidad física.",
-        "target_time_slot": "midday",
+        "title": "🩺 Fortaleza ante la Enfermedad y el Dolor",
+        "pillar": "grief_solitude_comfort",
+        "description": "Consuelo, serenidad y paciencia para quienes enfrentan diagnósticos o debilidad física.",
+        "human_situation": "Individuals or caregivers navigating medical appointments, test results, or daily physical limitation.",
+        "central_idea": "Physical frailty does not diminish our spiritual worth; God meets us with gentle endurance in weakness.",
         "hook_badge_text": "STRENGTH IN WEAKNESS",
         "recommended_image": "jesus_healing_miracle.jpg",
-        "scripture": "2 Corinthians 12:9 — My grace is sufficient for you, for my power is made perfect in weakness.",
-        "hashtags": ["#HealingGrace", "#FaithOverFear", "#ComfortInChrist", "#JesusHeals", "#DailyStrength"],
+        "scripture": BIBLICAL_CATALOGUE["medical_fear"],
+        "hashtags": ["#StrengthInChrist", "#ComfortAndFaith", "#DailyEndurance", "#PeaceInTrials"],
         "hooks": [
-            "If your body feels weary and medical worries are clouding your mind...",
-            "When health challenges make tomorrow feel uncertain and heavy...",
-            "To anyone sitting in a quiet room waiting on news or managing pain...",
-            "Take heart today: your strength is sustained by a compassionate God."
+            "If your body feels weary and medical worries cloud your thoughts today...",
+            "When waiting for health answers makes tomorrow feel fragile...",
+            "To anyone managing quiet pain or sitting in hospital waiting rooms...",
+            "Take courage today: your worth is sustained by a compassionate God."
         ],
-        "reflections": {
-            "intimate": "Jesus, You walked among the hurting with gentle hands. Touch the places in this body that feel weak and exhausted. Grant wisdom to the doctors, peace to this heart, and renewed endurance for each new morning.",
-            "hopeful": "Father, breathe new life into every tired breath. When medicine feels limited, Your comfort has no boundaries. Strengthen this spirit, calm every fear, and let healing peace flow from head to toe.",
-            "reflective": "Facing physical weakness teaches us that we do not walk alone. Even in moments of pain, Christ draws near, offering grace that carries us through one hour at a time.",
-            "narrative": "A woman once reached through a pressing crowd just to touch the hem of His garment, and found immediate peace. Reach out in quiet faith today; He is listening."
+        "perspectives": {
+            "prayer": "Lord Jesus, You know what it is to walk through human pain. Touch the places that feel exhausted. Grant wisdom to physicians, quiet patience to the heart, and gentle relief for the hours ahead.",
+            "scripture_reflection": "The Apostle Paul learned that when human strength feels smallest, God's grace stands closest. You do not have to carry tomorrow's burdens with today's tired hands.",
+            "heart_comfort": "Healing begins in the soul when we stop fighting our limitations and allow God's love to cradle our vulnerability.",
+            "story_lesson": "Countless faithful souls before us found that the quietest hospital rooms can become sacred spaces of peace. You are not walking this path alone."
         },
         "closings": [
-            "May His healing peace sustain you in body, mind, and spirit.",
-            "You are held securely in hands that never fail.",
-            "One day at a time, His grace is more than enough.",
-            "May comfort meet you in this very moment."
+            "May His comfort sustain your body and calm your spirit.",
+            "Rest gently tonight, knowing you are held by enduring grace.",
+            "Tomorrow carries fresh endurance; trust each step to God."
         ],
         "ctas": [
-            "If your body needs strength today, whisper Amen and receive His comfort.",
-            "Send this quiet prayer to someone in your life walking through a health trial.",
-            "Breathe in His peace; exhale the fear of the unknown.",
-            "Keep holding onto faith; you are not fighting this battle alone."
-        ],
-        "pinned_comments": [
-            "If you or a loved one is facing health challenges, drop a first name below so we can lift you in prayer. 🕊️",
-            "God sees every tear shed in quiet waiting rooms. Type 'LORD STRENGTHEN ME' if you receive this today.",
-            "Standing in agreement for peace, endurance, and restoration for everyone hurting here today."
+            "Take a quiet breath and rest your body in His care.",
+            "Remember you are valued and never forgotten.",
+            "Save this reflection for moments when you need quiet courage."
         ]
     },
 
     "zero_balance": {
-        "title": "💸 Provisión, Paz y Alivio en Momentos de Escasez",
-        "description": "Fe, sabiduría y confianza en la provisión de Dios ante deudas y presiones económicas.",
-        "target_time_slot": "midday",
-        "hook_badge_text": "GOD OUR PROVIDER",
-        "recommended_image": "jesus_holy_bible.jpg",
-        "scripture": "Philippians 4:19 — And my God will meet all your needs according to the riches of his glory in Christ Jesus.",
-        "hashtags": ["#GodProvides", "#FaithOverWorry", "#FinancialPeace", "#ChristianLiving", "#JehovahJireh"],
+        "title": "🌾 Confianza en Tiempos de Dificultad Económica",
+        "pillar": "faith_hope_trials",
+        "description": "Serenidad y fe cuando las cuentas y las responsabilidades económicas generan presión.",
+        "human_situation": "Hardworking individuals balancing unpaid bills and wondering how to meet next week's necessities.",
+        "central_idea": "Our dignity does not depend on our bank balance; God remains the faithful provider of our daily bread.",
+        "hook_badge_text": "TRUST IN PROVISION",
+        "recommended_image": "holy_cross_calvary.jpg",
+        "scripture": BIBLICAL_CATALOGUE["zero_balance"],
+        "hashtags": ["#FaithfulGod", "#DailyBread", "#ChristianHope", "#TrustingGod"],
         "hooks": [
-            "If you opened your bills today feeling that tight knot of worry in your chest...",
-            "When the numbers don't add up and you wonder how you'll make it through...",
-            "Before you let financial stress rob you of your peace tonight...",
-            "Remember that your worth and your tomorrow are never defined by a bank balance."
+            "If checking your finances today left a knot of worry in your stomach...",
+            "When bills arrive faster than income, take a moment to breathe.",
+            "To every honest worker doing their best to provide for their family...",
+            "Before financial panic keeps you awake through the night..."
         ],
-        "reflections": {
-            "intimate": "Lord, You know the quiet stress of unpaid debts and honest obligations. Open honorable doors of provision, grant wisdom for every decision, and replace anxiety with the steady assurance that You care for this family.",
-            "hopeful": "Father, You feed the birds of the air and clothe the fields with beauty. We trust You for breakthrough, unexpected favor, and the dignity of having our needs met through Your faithful hands.",
-            "reflective": "Financial pressure can feel like a heavy cage, but worry never paid a single bill. Place your honest labor into God's hands and watch how He creates a path where there seemed to be none.",
-            "narrative": "A widow once had nothing left in her house except a single jar of oil, yet God multiplied it until every vessel was full. He is the same God of provision today."
+        "perspectives": {
+            "prayer": "Father, You know every practical need in this home. When numbers do not seem to add up, give us wisdom, open honest doors, and deliver us from the fear of tomorrow.",
+            "scripture_reflection": "Jesus reminded His followers that the birds of the air neither sow nor reap, yet our Heavenly Father feeds them. Do not measure God's care by one difficult season.",
+            "heart_comfort": "Financial stress can make us feel isolated, but your character and hard work are seen by God. He provides manna one day at a time.",
+            "story_lesson": "Many families look back on their leanest chapters not with bitterness, but as the time they discovered the true depth of God's daily provision."
         },
         "closings": [
-            "May unexpected blessings meet you before this week ends.",
-            "Rest in the truth that God provides for His children.",
-            "Hold your head up high; help is closer than you think.",
-            "His faithfulness has brought you this far, and He will not leave you now."
+            "May God grant you wisdom, open doors, and peaceful rest.",
+            "Trust that God sees your honest labor and will provide.",
+            "Rest tonight; panic cannot solve what faith can endure."
         ],
         "ctas": [
-            "Whisper Amen if you trust God to provide for your home.",
-            "Share this encouragement with a family working hard to get ahead.",
-            "Take heart today; God sees your hard work and your integrity.",
-            "Drop your worries at His feet and rest tonight."
-        ],
-        "pinned_comments": [
-            "If you are trusting God for a breakthrough in your finances, type 'GOD WILL PROVIDE' below! 💸",
-            "We are praying for open doors, wisdom, and provision for every working family here.",
-            "Drop a 🙏 if you believe God is preparing a way forward for you right now."
+            "Release the pressure into His hands and take some rest tonight.",
+            "Hold steady; difficult seasons do not last forever.",
+            "Keep doing what is honest, and trust God with the rest."
         ]
     },
 
     "night_anxiety": {
-        "title": "🌌 Ansiedad a las 3 AM (Insomnio y Ataques de Pánico)",
-        "description": "Paz sobrenatural para mentes saturadas de miedo, pensamientos intrusivos y desvelo.",
-        "target_time_slot": "night",
-        "hook_badge_text": "PEACE IN THE NIGHT",
+        "title": "🌙 Calma para la Ansiedad Nocturna",
+        "pillar": "peace_rest_daily",
+        "description": "Paz mental para sobrellevar pensamientos acelerados y encontrar descanso profundo.",
+        "human_situation": "Lying awake at 2 AM with a racing mind replaying the day's regrets and tomorrow's problems.",
+        "central_idea": "The night belongs to God; we can safely surrender the problems we cannot solve while asleep.",
+        "hook_badge_text": "CALM IN THE NIGHT",
         "recommended_image": "jesus_praying_gethsemane.jpg",
-        "scripture": "Psalm 4:8 — In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.",
-        "hashtags": ["#NightPrayer", "#PeaceOfMind", "#OvercomingAnxiety", "#SleepInPeace", "#ChristianCalm"],
+        "scripture": BIBLICAL_CATALOGUE["night_anxiety"],
+        "hashtags": ["#OvercomingAnxiety", "#NightPrayer", "#PeaceOfMind", "#RestInGod"],
         "hooks": [
-            "If you are wide awake at 3 AM with racing thoughts that won't quiet down...",
-            "Tonight, when the house is still but your mind is running in circles...",
-            "To the tired soul staring at the ceiling, feeling overwhelmed by tomorrow...",
-            "Breathe slowly right now. You are safe in the hands of Jesus."
+            "If your mind is racing tonight with thoughts you cannot resolve right now...",
+            "When the quiet of the night makes every problem seem twice as loud...",
+            "Before you spend another hour staring at the ceiling in worry...",
+            "Take a slow breath: you are not required to solve tomorrow at midnight."
         ],
-        "reflections": {
-            "intimate": "Jesus, step into this quiet room. Calm the storm within this chest, silence the racing fears of tomorrow, and blanket this tired mind in heavenly stillness until the dawn arrives.",
-            "hopeful": "Father, You give Your beloved sleep. Dispel the shadows of anxiety, remind this heart that tomorrow is already in Your care, and grant sweet, unbroken rest to every tired muscle.",
-            "reflective": "Nighttime often magnifies our fears, making small shadows feel like giants. But God's presence is closer than the rhythm of your breath. Let go of what you cannot solve tonight.",
-            "narrative": "In the middle of a midnight gale on the Sea of Galilee, Jesus stood up and whispered: 'Peace, be still.' That same voice speaks over your restless thoughts right now."
+        "perspectives": {
+            "prayer": "Lord, quiet the storm of racing thoughts in my mind. You hold the hours of the night in Your hand. Help me release the things I cannot change and receive Your sweet gift of rest.",
+            "scripture_reflection": "Paul wrote to the Philippians to present every worry to God with petition and thanksgiving. God's peace does not always explain the storm; it guards our hearts inside it.",
+            "heart_comfort": "You do not need to figure out the next five years tonight. God promises grace for one sunrise at a time.",
+            "story_lesson": "A shepherd once noted that sheep only lie down when they know their guardian is standing watch. Close your eyes; your Shepherd does not sleep."
         },
         "closings": [
-            "Sleep peacefully; God is keeping watch through the night.",
-            "May quietness and confidence be your strength until morning.",
-            "Every racing thought bows to the quiet peace of Christ.",
-            "You are sheltered, you are safe, and you are deeply loved."
+            "May God quiet your thoughts and grant you sweet, restorative rest.",
+            "Sleep peacefully; God is watching over your tomorrow.",
+            "Let His gentle stillness fill your room tonight."
         ],
         "ctas": [
-            "Close your eyes, breathe gently, and whisper Amen.",
-            "Save this quiet prayer for whenever nighttime feels overwhelming.",
-            "Share this with a friend who struggles with sleep or anxiety.",
-            "Rest tonight; morning will bring brand new grace."
-        ],
-        "pinned_comments": [
-            "If anxiety woke you up tonight, leave a '🙏' below and let us stand with you in prayer right now.",
-            "You are not fighting this dark hour alone. Drop your first name and we will pray for your peace.",
-            "Breathe in God's peace. Type 'AMEN' and let your heart rest."
+            "Close your eyes, breathe gently, and let today go.",
+            "Save this prayer for whenever the night feels heavy.",
+            "Rest in His hands; tomorrow brings fresh mercy."
         ]
     },
 
     "morning_favor": {
-        "title": "🌅 Bendición y Favor de la Mañana",
-        "description": "Comenzar el día coronado de gracia, sabiduría, enfoque y puertas abiertas.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "MORNING BLESSING & FAVOR",
+        "title": "🌅 Gratitud y Sabiduría al Iniciar el Día",
+        "pillar": "peace_rest_daily",
+        "description": "Una perspectiva renovada de propósito, fe y calma para la jornada matutina.",
+        "human_situation": "Waking up to a busy morning needing clarity, patience, and spiritual alignment.",
+        "central_idea": "Each morning is a fresh gift of mercy; starting in quiet reflection anchors the entire day.",
+        "hook_badge_text": "MORNING DEVOTION",
         "recommended_image": "jesus_holy_bible.jpg",
-        "scripture": "Lamentations 3:22-23 — His mercies never come to an end; they are new every morning.",
-        "hashtags": ["#MorningPrayer", "#DailyDevotional", "#NewMercies", "#GodsFavor", "#BlessedDay"],
+        "scripture": BIBLICAL_CATALOGUE["morning_favor"],
+        "hashtags": ["#MorningDevotion", "#DailyWisdom", "#FreshMercy", "#ChristianRoutine"],
         "hooks": [
-            "As this new day begins, start it anchored in the goodness of God.",
-            "Before you check your phone or rush into your morning tasks...",
-            "This sunrise brings a clean slate and fresh mercy just for you.",
-            "May your footsteps today be guided by divine wisdom and peace."
+            "Before the rush of this day begins, pause for one quiet breath.",
+            "This sunrise brings a clean slate and fresh mercy designed just for you.",
+            "Before your calendar fills up with tasks, anchor your heart in peace.",
+            "As you step into today's responsibilities, remember you walk with God."
         ],
-        "reflections": {
-            "intimate": "Heavenly Father, thank You for the gift of breath this morning. Guide my words, order my steps, and let Your kindness shine through me to everyone I meet today.",
-            "hopeful": "Lord, we step into today expecting Your favor. Open doors that need to be opened, close doors that lead to harm, and grant us courage to walk in faith and joy.",
-            "reflective": "Yesterday's mistakes belong to the past; today is wrapped in fresh grace. Walk forward with quiet confidence, knowing that God goes before you into every situation.",
-            "narrative": "Every morning, the sun faithfully rises without hesitation. In that same dependable way, God's faithfulness greets you at the dawn of this day."
+        "perspectives": {
+            "prayer": "Heavenly Father, guide my words and my decisions today. Guard my heart from impatience, give me eyes to notice who needs encouragement, and let Your steady wisdom lead my footsteps.",
+            "scripture_reflection": "Lamentations assures us that God's compassions never fail; they are new every morning. No matter how yesterday ended, today starts with unconditional grace.",
+            "heart_comfort": "You do not need to face the challenges of this day in your own strength. Walk quietly, do what is good, and trust God with the results.",
+            "story_lesson": "Ancient travelers never started a journey without checking their compass. Take thirty seconds right now to center your soul on Christ."
         },
         "closings": [
-            "Walk boldly today; the Lord is on your side.",
-            "May your day be filled with unexpected joy and light.",
-            "His grace will sustain you through every hour ahead.",
-            "Go in peace, knowing you are blessed and favored."
+            "Step forward with calm confidence; God is making a way for you.",
+            "May your day be marked by patience, wisdom, and peace.",
+            "Walk in grace today; you are held by an everlasting love."
         ],
         "ctas": [
-            "Type Amen to receive this morning blessing over your day.",
-            "Send this sunrise prayer to someone you cherish today.",
-            "Step forward with faith; God is making a way for you.",
-            "Dedicate your morning to Him and watch how He leads."
-        ],
-        "pinned_comments": [
-            "Claim your morning blessing before stepping out! Type 'I RECEIVE IT' and have a blessed day! 🌅",
-            "What is one thing you are thanking God for this morning? Let's start the day with gratitude! 🙌",
-            "Lifting up everyone heading out to work or school today. May God bless your hands and mind."
+            "Step forward with peace into the opportunities of today.",
+            "Share this morning blessing with someone you cherish.",
+            "Keep your heart anchored in His kindness today."
         ]
     },
 
     "marriage_healing": {
-        "title": "💍 Restauración y Paciencia en el Matrimonio",
-        "description": "Reconciliación, superación de amarguras y reencuentro del amor y el respeto mutuo.",
-        "target_time_slot": "night",
+        "title": "💍 Paciencia y Restauración en el Matrimonio",
+        "pillar": "family_relationships",
+        "description": "Acompañamiento para superar silencios dolorosos, reavivar el afecto y perdonar.",
+        "human_situation": "A couple living in polite emotional distance, wishing to bridge the gap with kindness.",
+        "central_idea": "Love is sustained not by constant perfection, but by the quiet courage to forgive and rebuild trust.",
         "hook_badge_text": "HEALING IN MARRIAGE",
-        "recommended_image": "jesus_comforting_embrace.jpg",
-        "scripture": "1 Corinthians 13:7 — Love bears all things, believes all things, hopes all things, endures all things.",
-        "hashtags": ["#MarriagePrayer", "#ChristianMarriage", "#LoveAndRespect", "#RestorationInGod", "#DailyFaith"],
+        "recommended_image": "holy_cross_calvary.jpg",
+        "scripture": BIBLICAL_CATALOGUE["marriage_healing"],
+        "hashtags": ["#ChristianMarriage", "#ForgivenessInLove", "#HealthyRelationships", "#MarriageMatters"],
         "hooks": [
-            "If silence and frustration have built walls inside your marriage...",
-            "When words were spoken in anger and you miss the warmth you once shared...",
-            "To every couple fighting silent battles to keep their covenant strong...",
-            "Love isn't the absence of conflict; it's the willingness to forgive and heal."
+            "If emotional silence has created distance in your marriage lately...",
+            "When daily stress makes patience run thin between two people who love each other...",
+            "Before you let resentment settle into a hard wall in your relationship...",
+            "To anyone hoping for gentleness and renewed warmth at home..."
         ],
-        "reflections": {
-            "intimate": "Lord, soften the hardened places in our hearts. Replace bitterness with understanding, heal quiet wounds, and rekindle the tender love and patience that first brought us together.",
-            "hopeful": "Father, what was fractured by misunderstandings can be rebuilt with Your grace. Teach us to listen with compassion, to speak with kindness, and to stand united against every challenge.",
-            "reflective": "A lasting marriage is made of two imperfect people choosing grace day after day. When you invite Christ into your conversation, pride gives way to genuine restoration.",
-            "narrative": "A three-strand cord is not easily broken. When God is the center strand of your home, no storm is strong enough to tear your bond apart."
+        "perspectives": {
+            "prayer": "Lord, soften where things have grown defensive. Give us the courage to speak with kindness, the humility to listen without defending, and the grace to forgive past misunderstandings.",
+            "scripture_reflection": "Colossians instructs us to bear with one another and forgive as the Lord forgave us. A strong marriage is built by two imperfect people who refuse to stop extending grace.",
+            "heart_comfort": "Reconciliation rarely happens through one grand speech; it grows through small acts of gentleness repeated day after day.",
+            "story_lesson": "Gold is refined through heat and careful patience. Even relationships that feel strained can discover deeper maturity on the other side of honesty."
         },
         "closings": [
-            "May peace and gentleness return to your home tonight.",
-            "Healing takes time; trust God with the process of restoration.",
-            "Grace can rebuild what pride almost destroyed.",
-            "May your love grow deeper and more patient with each passing day."
+            "May God restore gentleness and mutual respect in your home.",
+            "May peace guard your conversation and your shared journey.",
+            "Trust that God is able to heal what feels bruised."
         ],
         "ctas": [
-            "Whisper Amen and choose grace for your spouse today.",
-            "Keep praying for your home; God specializes in restoration.",
-            "Share this blessing with a couple walking through a tough season.",
-            "Take the first step toward peace with a kind word tonight."
-        ],
-        "pinned_comments": [
-            "Every marriage covered in prayer has hope. Type your initials below so we can pray for your home! ❤️",
-            "Standing in agreement for restoration, peace, and mutual love in every home represented here.",
-            "Drop a 🙏 if you believe God is capable of healing and renewing your marriage."
+            "Choose kindness in one small conversation today.",
+            "May your home be blessed with patience and renewed warmth.",
+            "Hold onto grace; restoration begins with a humble heart."
         ]
     },
 
     "healing_depression": {
-        "title": "🌧️ Alivio ante la Depresión Silenciosa y el Desánimo",
-        "description": "Luz en la oscuridad, compañía divina y renovación del deseo de vivir para el alma abatida.",
-        "target_time_slot": "night",
-        "hook_badge_text": "LIGHT IN THE SHADOWS",
+        "title": "🌿 Esperanza en Medio del Desánimo y la Tristeza",
+        "pillar": "grief_solitude_comfort",
+        "description": "Compañía compasiva para quienes sienten cansancio emocional y falta de energía.",
+        "human_situation": "Waking up feeling numb, overwhelmed by everyday tasks, and battling quiet despair.",
+        "central_idea": "God's love does not demand cheerful performance; He stays near to the weary in the quietest valley.",
+        "hook_badge_text": "HOPE IN THE VALLEY",
         "recommended_image": "jesus_comforting_embrace.jpg",
-        "scripture": "Psalm 34:18 — The Lord is close to the brokenhearted and saves those who are crushed in spirit.",
-        "hashtags": ["#HopeInChrist", "#MentalHealthFaith", "#GodHearsYou", "#OvercomingDepression", "#HealingHeart"],
+        "scripture": BIBLICAL_CATALOGUE["healing_depression"],
+        "hashtags": ["#MentalHealthAndFaith", "#GodIsNear", "#QuietHope", "#GentleGrace"],
         "hooks": [
-            "If smiling feels exhausting and you feel an unseen heaviness inside today...",
-            "To the heart that feels hollow and tired of trying to stay strong...",
-            "When the world moves fast around you but your soul feels frozen in sadness...",
-            "It is okay not to be okay right now; you don't have to carry this alone."
+            "If just getting through today felt like a quiet, exhausting battle...",
+            "To anyone carrying an emotional heaviness they cannot easily explain...",
+            "When sadness feels like a thick fog that words cannot lift...",
+            "You do not have to pretend to be strong before God today."
         ],
-        "reflections": {
-            "intimate": "Jesus, You wept at the graveside and You know the ache of deep sorrow. Draw near to this weary spirit. Lift the dark fog, remind this soul of its infinite value, and whisper that brighter days are ahead.",
-            "hopeful": "Father, You are the Lifter of our heads. Breathe fresh purpose into this heart, silence the inner voices of despair, and rekindle the quiet joy of simply being alive in Your love.",
-            "reflective": "Depression often whispers that nobody cares, but that is a lie. God counts every quiet tear, and His presence sits beside you in the stillness without judgment.",
-            "narrative": "Even the prophet Elijah once sat under a tree and wished he could give up. But God didn't scold him; He sent an angel with food, rest, and a gentle whisper of hope."
+        "perspectives": {
+            "prayer": "Father, You see the tears cried in secret and the fatigue no one notices. Meet me in this quiet place. Be my breath when words fail, and remind my soul that I am held and valued.",
+            "scripture_reflection": "David wrote in Psalm 34 that God is close to the brokenhearted. He does not turn away from our weakness; He draws near with gentle comfort.",
+            "heart_comfort": "Having a hard season does not mean your faith is broken. Even Elijah sat under the broom tree needing rest and nourishment before continuing his journey.",
+            "story_lesson": "Seeds sprout in darkness long before breaking into the sunlight. Trust that quiet healing is taking root even when you cannot feel it."
         },
         "closings": [
-            "You are deeply needed, you are cherished, and your story is not finished.",
-            "May light gently break through the clouds of your spirit today.",
-            "Hold on through this night; joy comes with the morning light.",
-            "God holds you close, exactly as you are right now."
+            "Take one gentle step at a time; you are never abandoned.",
+            "May God's tender presence bring calm to your spirit tonight.",
+            "You are deeply loved, exactly as you are today."
         ],
         "ctas": [
-            "Whisper Amen and let yourself rest in His gentle presence.",
-            "Send this gentle message to someone who might be struggling in silence.",
-            "Take today one single breath at a time; you are not forgotten.",
-            "You matter deeply to God; never let the darkness tell you otherwise."
-        ],
-        "pinned_comments": [
-            "If you are carrying a heavy heart today, drop a 🤍 below. We are surrounding you in prayer and love.",
-            "Your life has purpose and beauty ahead. Type 'HOLD ON' as a reminder for your spirit today.",
-            "You are loved beyond measure. Never walk through dark valleys alone."
+            "Be gentle with yourself today; rest in His care.",
+            "Save this reminder whenever your spirit needs quiet reassurance.",
+            "Take heart; the morning light will return."
         ]
     },
 
     "job_breakthrough": {
-        "title": "🚪 Puertas Abiertas para Desempleo y Trabajo",
-        "description": "Dignidad, provisión y nuevas oportunidades laborales para quien busca sustento.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "CAREER & JOB FAVOR",
-        "recommended_image": "jesus_holy_bible.jpg",
-        "scripture": "Revelation 3:8 — See, I have placed before you an open door that no one can shut.",
-        "hashtags": ["#JobSearchFaith", "#OpenDoors", "#GodsProvision", "#CareerBreakthrough", "#BlessedWork"],
+        "title": "💼 Dirección y Paz en la Búsqueda de Empleo",
+        "pillar": "faith_hope_trials",
+        "description": "Confianza y paciencia ante la incertidumbre laboral, entrevistas y decisiones.",
+        "human_situation": "Submitting resumes, waiting on unanswered emails, and questioning professional purpose.",
+        "central_idea": "Closed doors can redirect our steps; God's guidance is working even during the silence.",
+        "hook_badge_text": "DIRECTION & PURPOSE",
+        "recommended_image": "jesus_reaching_hand.jpg",
+        "scripture": BIBLICAL_CATALOGUE["job_breakthrough"],
+        "hashtags": ["#CareerFaith", "#OpenDoors", "#TrustingGodsPlan", "#WorkWithPurpose"],
         "hooks": [
-            "If you've sent application after application and silence is all you've received...",
-            "When closed doors make you question your worth and your future...",
-            "Before you walk into that interview or send another resume today...",
-            "Remember: man's rejection is often God's redirection to something better."
+            "If you have been waiting anxiously on job responses or career direction...",
+            "When closed doors make you question your value and abilities...",
+            "To anyone striving honestly to find an open opportunity today...",
+            "Before frustration convinces you that your efforts are in vain..."
         ],
-        "reflections": {
-            "intimate": "Lord, You see the honest desire of this heart to work, provide, and serve. Open the right doors that no human can shut, connect this person with people of integrity, and renew their confidence today.",
-            "hopeful": "Father, grant divine favor in every interview and application. Let their skills shine, provide a workplace of dignity and peace, and supply every need according to Your riches.",
-            "reflective": "Waiting on a job can test our patience, but seasons of preparation are never wasted. Trust that God is preparing an opportunity that aligns with your gifts.",
-            "narrative": "Joseph went from a forgotten prison cell to leading a nation's resources in a single day. God can change your circumstances in moments you never anticipated."
+        "perspectives": {
+            "prayer": "Lord, lead me to honest work where my skills can serve and provide. Grant peace in the waiting, protect my mind from discouragement, and order my steps toward the right door.",
+            "scripture_reflection": "Proverbs 3 reminds us to trust God with all our heart and lean not on our own understanding. A delay in the natural world is often preparation in the spiritual.",
+            "heart_comfort": "Your identity is far greater than your job title. Do what you can with integrity today, and leave what you cannot control with God.",
+            "story_lesson": "Many doors that closed in tears later proved to be protections that saved people from wrong paths. Trust the timing of your life."
         },
         "closings": [
-            "The right door will open at the exact right moment.",
-            "Walk into today with your head held high and your faith steady.",
-            "Your gifts will make room for you in due season.",
-            "May favor go before you and peace follow behind you."
+            "May God open the right door and grant you peace while you wait.",
+            "Walk forward with dignity; your labor in faith is not forgotten.",
+            "Trust that guidance is already preparing the road ahead."
         ],
         "ctas": [
-            "Type Amen and claim an open door of opportunity today.",
-            "Share this encouragement with someone seeking employment right now.",
-            "Keep applying, keep preparing, and keep trusting His timing.",
-            "May your hard work be rewarded with honor and peace."
-        ],
-        "pinned_comments": [
-            "Drop your field of work or first name below! We are agreeing with you for an open door this week. 💼",
-            "What kind of job are you praying for? Type it below so our community can stand with you!",
-            "God knows your needs before you ask. Type 'AMEN' in faith for new employment."
+            "Keep taking honest steps; do not lose heart.",
+            "May your efforts be blessed with clarity and open doors.",
+            "Rest tonight knowing your future is in good hands."
         ]
     },
 
     "lonely_widow": {
-        "title": "🕊️ Consuelo para Quien Atraviesa Soledad o Duelo",
-        "description": "Amor entrañable, compañía divina y fortaleza para viudas, viudos y almas solitarias.",
-        "target_time_slot": "night",
-        "hook_badge_text": "COMFORT IN LONELINESS",
+        "title": "🕊️ Consuelo en la Soledad y la Pérdida del Cónyuge",
+        "pillar": "grief_solitude_comfort",
+        "description": "Acompañamiento respetuoso para quienes enfrentan la ausencia de su compañero de vida.",
+        "human_situation": "Sitting in an empty living room facing quiet evenings and fond, bittersweet memories.",
+        "central_idea": "Though a companion has passed, God's personal covenant of comfort remains unbroken.",
+        "hook_badge_text": "COMFORT IN SOLITUDE",
         "recommended_image": "jesus_comforting_embrace.jpg",
-        "scripture": "Psalm 68:5 — A father to the fatherless, a defender of widows, is God in his holy dwelling.",
-        "hashtags": ["#ComfortInGrief", "#NeverAlone", "#GodOurComfort", "#PeaceInSolitude", "#ChristianFaith"],
+        "scripture": BIBLICAL_CATALOGUE["lonely_widow"],
+        "hashtags": ["#ComfortForGrief", "#GodIsNear", "#GentlePeace", "#SolitudeToSanctuary"],
         "hooks": [
-            "If the silence in your home feels louder and heavier tonight...",
-            "When an empty chair or a quiet hallway brings back memories and tears...",
-            "To the precious soul feeling overlooked or forgotten by the world...",
-            "God sees you in your solitude, and you are precious in His sight."
+            "If the house feels particularly quiet and empty this evening...",
+            "To the faithful heart cherishing precious memories through quiet tears...",
+            "When loneliness seems to settle in as the sun goes down...",
+            "You are not forgotten, even in the quietest hours of your home."
         ],
-        "reflections": {
-            "intimate": "Jesus, sit beside this dear soul tonight. In the quiet hours when loneliness aches the most, fill this room with Your comforting presence and wrap this heart in tender love.",
-            "hopeful": "Father, You are the defender of the lonely and the faithful companion of the brokenhearted. Send caring community, bring warm memories that bring smiles, and give strength for each new sunrise.",
-            "reflective": "Being alone in a room does not mean being abandoned by God. His spirit fills the empty spaces with a warmth and assurance that no earthly voice can match.",
-            "narrative": "Ruth and Naomi walked through deep loss together, yet God wrote a story of redemption and family that blessed generations. He is writing your story of hope even now."
+        "perspectives": {
+            "prayer": "Lord Jesus, fill this quiet room with Your tender presence. Comfort my memories, soothe the ache of missing someone dearly loved, and remind me that Your love never departs.",
+            "scripture_reflection": "Scripture repeatedly honors the dignity of those who carry bereavement, assuring that God Himself stands as their defender and closest companion.",
+            "heart_comfort": "Grief is love's enduring witness. Give yourself permission to remember with gratitude while leaning into God's quiet companionship today.",
+            "story_lesson": "A faithful widow once wrote that when her companion left, she discovered that prayer turned her loneliest chair into a sanctuary of communion with God."
         },
         "closings": [
-            "You are never truly alone; Christ walks with you through every room.",
-            "May sweet memories bring peace and comfort to your soul tonight.",
-            "His love is an anchor that holds through every quiet season.",
-            "Rest gently in the knowledge that you are cherished by God."
+            "May God's gentle peace warm your home and quiet your soul.",
+            "You are cherished and surrounded by eternal compassion.",
+            "Rest gently tonight, wrapped in His enduring care."
         ],
         "ctas": [
-            "Whisper Amen and let His comfort rest upon your shoulders.",
-            "Send this gentle prayer to someone who lives alone or lost a spouse.",
-            "Take comfort tonight; your life continues to have value and beauty.",
-            "May tomorrow bring a reminder that you are loved."
-        ],
-        "pinned_comments": [
-            "Sending a warm hug and heartfelt prayers to anyone feeling lonely tonight. Leave a ❤️ below.",
-            "You are not forgotten by God or by this community. We are holding you in prayer tonight.",
-            "Drop a 🙏 if you are asking God for peace and comfort in a quiet house tonight."
+            "May your heart find sweet peace and gentle rest tonight.",
+            "Remember that you walk with an everlasting friend.",
+            "Save this prayer whenever quiet moments feel heavy."
         ]
     },
 
     "addiction_chains": {
-        "title": "⛓️ Rompimiento de Hábitos Ocultos y Cadenas",
-        "description": "Fuerza, sobriedad y libertad en Cristo para vencer patrones destructivos y dependencias.",
-        "target_time_slot": "night",
-        "hook_badge_text": "FREEDOM & SOBRIETY",
+        "title": "⛓️ Esperanza y Libertad ante Hábitos Dañinos",
+        "pillar": "faith_hope_trials",
+        "description": "Ánimo diario para quienes luchan por romper cadenas y reconstruir su vida con sobriedad.",
+        "human_situation": "Struggling with repeated relapses, secret guilt, and the desire to break harmful patterns.",
+        "central_idea": "Freedom is built one honest decision at a time, backed by God's non-condemning grace.",
+        "hook_badge_text": "STEPPING INTO FREEDOM",
         "recommended_image": "holy_cross_calvary.jpg",
-        "scripture": "John 8:36 — If the Son sets you free, you will be free indeed.",
-        "hashtags": ["#FreedomInChrist", "#BreakingChains", "#RecoveryFaith", "#SobrietyThroughGrace", "#DailyOvercoming"],
+        "scripture": BIBLICAL_CATALOGUE["addiction_chains"],
+        "hashtags": ["#OvercomingStruggles", "#GraceToHeal", "#DailyRecovery", "#FreedomInChrist"],
         "hooks": [
-            "If you are fighting a quiet habit that leaves you feeling guilty and trapped...",
-            "When you promised yourself you wouldn't fall again, but stumbled today...",
-            "To anyone carrying a secret battle they are ashamed to admit to others...",
-            "Condemnation will not heal you, but the grace of Christ can set you free."
+            "If you fell today and feel tempted to give up on yourself completely...",
+            "To anyone fighting a quiet battle against habits they despise...",
+            "Before shame convinces you that you are beyond redemption...",
+            "True freedom does not require instant perfection; it starts with honesty."
         ],
-        "reflections": {
-            "intimate": "Lord, You see the struggle behind closed doors. Break the power of cravings, heal the underlying pain driving this habit, and grant the courage to reach out for help and walk in light.",
-            "hopeful": "Father, where sin and weakness abounded, Your grace abounds all the more. Strengthen this resolve, provide trustworthy accountability, and restore self-control and clear peace to this mind.",
-            "reflective": "Recovery is won one day, one prayer, and one choice at a time. Do not let one stumble define your journey; get back up, for the righteous fall seven times and rise again.",
-            "narrative": "Peter once denied knowing Jesus in a moment of fear, yet Christ met him on the shore, restored his dignity, and called him to lead. Your past does not disqualify your future."
+        "perspectives": {
+            "prayer": "Lord, deliver me from the compulsions that bring harm. Strengthen my resolve in moments of vulnerability, surround me with honest support, and give me the grace to choose what brings life.",
+            "scripture_reflection": "Jesus said that whoever the Son sets free is free indeed. His grace is not a license to stay trapped, but divine power to begin walking out.",
+            "heart_comfort": "A stumble along the journey does not erase the progress you have made. Stand back up, dust off your knees, and take the next right step.",
+            "story_lesson": "Chains are not broken by brute force in a single second; they are dismantled link by link through daily humility and community."
         },
         "closings": [
-            "Stand strong; freedom is a journey of grace step by step.",
-            "His power is made perfect in your moments of deepest weakness.",
-            "You are not a captive to your past; tomorrow is a fresh start.",
-            "May His strength be your shield when temptations arise."
+            "May God grant you sober clarity and enduring courage.",
+            "You are not defined by past stumbles, but by God's grace to rebuild.",
+            "Take heart; one day of victory at a time."
         ],
         "ctas": [
-            "Type Amen if you are choosing to walk toward freedom today.",
-            "Share this with someone fighting a quiet battle for their life.",
-            "Take courage; tomorrow morning is a clean page waiting for you.",
-            "Keep standing; victory belongs to those who never stop getting back up."
-        ],
-        "pinned_comments": [
-            "Drop a 'FREEDOM' below if you are choosing to take one step toward recovery and grace today! 🕊️",
-            "No judgment here, only prayer and support. Drop your initial so we can pray for your strength.",
-            "One day at a time, through Christ who strengthens us. Type AMEN in faith."
+            "Do not carry this in secret; reach out and choose life today.",
+            "Take one honest, courageous breath and begin again.",
+            "Hold onto grace; your story is not finished."
         ]
     },
 
     "elderly_parents": {
-        "title": "👵 Bendición y Cuidado de Padres Ancianos",
-        "description": "Gratitud, salud y protección sobre nuestros padres y abuelos en sus años dorados.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "HONORING AGING PARENTS",
+        "title": "👵 Cuidado y Bendición para Padres Ancianos",
+        "pillar": "family_relationships",
+        "description": "Amor, paciencia y fortaleza para quienes cuidan a padres mayores o abuelos.",
+        "human_situation": "Adult children balancing work while caring for aging parents facing declining memory or mobility.",
+        "central_idea": "Honoring our parents in their frailty reflects God's gentle, lifelong covenant with humanity.",
+        "hook_badge_text": "HONORING OUR ELDERS",
         "recommended_image": "jesus_comforting_embrace.jpg",
-        "scripture": "Isaiah 46:4 — Even to your old age and gray hairs I am he, I am he who will sustain you.",
-        "hashtags": ["#AgingParents", "#HonoringFamily", "#EldersBlessing", "#FaithfulGod", "#DailyPrayer"],
+        "scripture": BIBLICAL_CATALOGUE["elderly_parents"],
+        "hashtags": ["#CaringForAgingParents", "#HonoringElders", "#FamilyDevotion", "#ChristianCaregiving"],
         "hooks": [
-            "To every son and daughter watching their parents grow fragile with age...",
-            "If you cherish the hands that once held yours when you were small...",
-            "Take a moment today to cover your aging mother or father in prayer...",
-            "Those who gave us our foundation deserve our gentlest love and honor."
+            "If you spent today helping an aging parent or grandparent navigate frailty...",
+            "When caregiving leaves your own physical energy depleted...",
+            "To everyone honoring the generation that once carried and raised them...",
+            "Take a quiet moment to remember the sacred value of your daily care."
         ],
-        "reflections": {
-            "intimate": "Lord, preserve the strength, memory, and dignity of our aging parents. Protect their steps from falls, ease their daily aches, and fill their golden years with peace, joy, and loving care.",
-            "hopeful": "Father, thank You for the sacrifices they made to raise us. Bless their homes with warmth, surround them with attentive family, and grant us patience and gentleness as we care for them.",
-            "reflective": "Aging is a sacred chapter of life. Even when memory fades or footsteps slow down, the soul remains precious and fully seen by God.",
-            "narrative": "God promised to carry His people even until gray hairs cover their heads. That same divine faithfulness walks with your parents every single day."
+        "perspectives": {
+            "prayer": "Father, bless our aging parents with dignity, comfort, and peaceful minds. Grant me patience when routine becomes repetitive, and give me a heart that honors their legacy with love.",
+            "scripture_reflection": "God promises in Isaiah that even to gray hairs, He is the One who will sustain us. Serving an aging parent is holy service done directly unto Christ.",
+            "heart_comfort": "The gentleness you show to an elderly mother or father in their vulnerability writes eternal goodness into your family's story.",
+            "story_lesson": "Hands that once worked tirelessly to provide now rest gently in yours. Treasure these quiet moments; they are holy ground."
         },
         "closings": [
-            "May their days be peaceful and their hearts full of joy.",
-            "God's loving hands sustain them through every season.",
-            "May they feel honored, valued, and deeply loved today.",
-            "Peace and gentle health over your family's elders."
+            "May God grant peace to your parents and renewed strength to you.",
+            "May patience and love fill your home throughout the week.",
+            "Rest tonight, knowing your caregiving is seen and blessed."
         ],
         "ctas": [
-            "Whisper Amen and send a loving message to your parents today.",
-            "Share this prayer to honor the fathers and mothers who sacrificed for us.",
-            "Call them, hug them, and let them know they are cherished.",
-            "May your family be blessed for honoring those who came before."
-        ],
-        "pinned_comments": [
-            "Drop the first name of your parents or grandparents below so we can bless them in prayer today! ❤️",
-            "Typing 'HONOR' to celebrate every loving parent and grandparent walking in grace today.",
-            "May God protect and comfort our elders across the world today. Type AMEN."
+            "Take care of your own spirit so you can continue to love well.",
+            "May grace guide every conversation with your family.",
+            "Rest peacefully tonight in God's sustaining grace."
         ]
     },
 
     "single_parent": {
-        "title": "🤱 Fuerza y Provisión para Madres y Padres Solteros",
-        "description": "Fuerzas renovadas, sabiduría y sustento para quienes crían a sus hijos sin ayuda.",
-        "target_time_slot": "night",
+        "title": "🤱 Fortaleza para la Madre o Padre Soltero",
+        "pillar": "family_relationships",
+        "description": "Apoyo espiritual para quienes educan y sostienen su hogar con entrega diaria.",
+        "human_situation": "Single mothers and fathers shouldering work, meals, discipline, and emotional presence alone.",
+        "central_idea": "You may be parenting solo, but you are never without the active partnership of God.",
         "hook_badge_text": "STRENGTH FOR SINGLE PARENTS",
         "recommended_image": "jesus_reaching_hand.jpg",
-        "scripture": "Isaiah 40:29 — He gives strength to the weary and increases the power of the weak.",
-        "hashtags": ["#SingleMomStrong", "#SingleDadFaith", "#ParentingGrace", "#GodProvides", "#DailyPrayer"],
+        "scripture": BIBLICAL_CATALOGUE["single_parent"],
+        "hashtags": ["#SingleParenting", "#StrengthForMoms", "#FaithfulFather", "#ParentingGrace"],
         "hooks": [
-            "To the single parent who collapses into bed exhausted after doing it all alone...",
-            "When you carry the emotional and financial weight of both roles every single day...",
-            "If you ever wonder if you are doing enough for your children...",
-            "Take heart: God sees every hidden sacrifice you make with love."
+            "If you put the children to bed tonight completely worn out from doing it all...",
+            "When carrying both the provider and caregiver roles feels overwhelming...",
+            "To every single mother and father giving everything for their children...",
+            "Before you let guilt tell you that you are not doing enough..."
         ],
-        "reflections": {
-            "intimate": "Father, You see the quiet tears behind closed doors when the kids are asleep. Multiply my energy, provide for every bill, and let my children grow up knowing they are deeply cherished and protected.",
-            "hopeful": "Lord, be the co-parent in this home. When my patience wears thin, grant me wisdom; when resources seem small, multiply them; and let peace reign in our living room.",
-            "reflective": "Doing the work of two is heavy, but God's strength is made strong in your weariness. Your children will one day look back and call you blessed for your faithful love.",
-            "narrative": "Hagar was alone in the desert with her child and ran out of water, but God opened her eyes to a spring of fresh water. He is 'the God who sees you' in every dry season."
+        "perspectives": {
+            "prayer": "Lord, give me strength for today and peaceful trust for tomorrow. Supply what is lacking in my resources, protect my children's hearts, and let them grow up knowing they are deeply loved.",
+            "scripture_reflection": "Hagar discovered in the desert that God is 'the One who sees me'. When no other adult shares the load, the Creator Himself watches over your little family.",
+            "heart_comfort": "Your children do not need a perfect parent with infinite energy; they need your steady love and the peace that comes from seeing you trust God.",
+            "story_lesson": "Loaves and fishes multiplied in hands that offered what little they had. Offer your honest daily effort, and watch God multiply it."
         },
         "closings": [
-            "You are doing an extraordinary job; do not lose heart.",
-            "May tonight bring deep, restful sleep to your tired body.",
-            "Your children are blessed because of your faithful love.",
-            "God is fighting beside you in every single battle."
+            "May God renew your energy and guard your precious home tonight.",
+            "Rest your mind; your dedication is bearing eternal fruit.",
+            "You are doing better than you think; sleep in peace."
         ],
         "ctas": [
-            "Whisper Amen and let God carry the weight tonight.",
-            "Send this to a single mother or father who deserves encouragement today.",
-            "Rest your mind; tomorrow is another day to shine.",
-            "You are stronger than you realize through Christ."
-        ],
-        "pinned_comments": [
-            "To every single mom and dad reading this: you are our heroes. Drop a 🤍 so we can cover you in prayer!",
-            "You are not raising your family alone; God is in your home. Type 'AMEN' in faith.",
-            "Lifting up every single-parent household tonight for peace, wisdom, and abundance."
+            "Breathe, put down the mental checklist, and get some rest.",
+            "Save this prayer for days when energy runs low.",
+            "Remember that you are cherished and never alone."
         ]
     },
 
     "sick_grandchild": {
-        "title": "👶 Oración de Abuelos por la Salud de sus Nietos",
-        "description": "Intercesión tierna y amorosa por la salud, protección y bienestar de los nietos.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "PRAYER FOR GRANDCHILDREN",
-        "recommended_image": "jesus_reaching_hand.jpg",
-        "scripture": "Proverbs 17:6 — Children’s children are a crown to the aged, and parents are the pride of their children.",
-        "hashtags": ["#PrayingGrandparents", "#GrandchildrenBlessing", "#FamilyFaith", "#HealingPrayer", "#DailyFaith"],
+        "title": "🧸 Oración por la Salud de un Nieto o Nieta",
+        "pillar": "family_relationships",
+        "description": "Súplica tierna y confiada de abuelos por la sanidad y cuidado de los pequeños.",
+        "human_situation": "A grandparent praying from afar while a little one deals with fever, surgery, or sickness.",
+        "central_idea": "The generational prayers of grandparents weave an enduring canopy of blessing over little lives.",
+        "hook_badge_text": "PRAYER FOR A GRANDCHILD",
+        "recommended_image": "jesus_comforting_embrace.jpg",
+        "scripture": BIBLICAL_CATALOGUE["sick_grandchild"],
+        "hashtags": ["#GrandparentsPrayer", "#ChildrensHealth", "#FamilyFaith", "#GenerationalGrace"],
         "hooks": [
-            "There is no love quite like the tender heart of a praying grandparent...",
-            "If your grandchild is on your mind and in your prayers today...",
-            "Before you start your day, speak a blessing over the generation to come...",
-            "When grandparents pray, heaven listens with tender care."
+            "If your heart is aching tonight for a grandchild who is sick or hurting...",
+            "To every grandmother and grandfather carrying a little one in prayer...",
+            "When you wish you could take their fever or pain away yourself...",
+            "Before you sleep, place that precious little life into Jesus' gentle arms."
         ],
-        "reflections": {
-            "intimate": "Lord Jesus, place Your gentle hands upon my precious grandchildren. Guard their bodies from sickness, protect their innocent hearts from harm, and surround their schools and homes in peace.",
-            "hopeful": "Father, let health, wisdom, and joy overflow in their young lives. Guide their steps into purpose, keep them grounded in truth, and let them know the beauty of Your faithful love.",
-            "reflective": "The prayers of a grandmother and grandfather create a spiritual canopy that outlives generations. Never underestimate the power of your quiet blessings.",
-            "narrative": "Timothy’s sincere faith first lived in his grandmother Lois and his mother Eunice. Your prayers are planting seeds of faith that will flourish for decades to come."
+        "perspectives": {
+            "prayer": "Lord Jesus, You welcomed children with joy. Lay Your gentle hand upon this little child tonight. Cool the fever, ease the pain, bring wise guidance to doctors, and grant peaceful sleep to their parents.",
+            "scripture_reflection": "Jesus stopped crowds to blessing small children, reminding us that the kingdom of heaven belongs to such as these. Your prayers for them carry immense weight in heaven.",
+            "heart_comfort": "Grandparents carry a unique spiritual mantle. While doctors provide medicine, your prayers surround that child with celestial peace.",
+            "story_lesson": "Timothy's unfeigned faith was first nurtured in his grandmother Lois. The faith you invest over your grandchildren will outlast your own lifetime."
         },
         "closings": [
-            "May your grandchildren grow strong, healthy, and blessed.",
-            "God's angels are encamped around your family's little ones.",
-            "Your prayers are the greatest gift you could ever give them.",
-            "Peace and protection upon every child in your family line."
+            "May God restore health, laughter, and energy to that precious child.",
+            "Rest in the assurance that Jesus watches over their crib tonight.",
+            "Peace be upon their little body and upon your faithful heart."
         ],
         "ctas": [
-            "Type Amen and send a blessing to your grandchildren today.",
-            "Share this with a proud grandmother or grandfather.",
-            "Keep speaking life and faith over your family's future.",
-            "May your family rejoice in health and laughter together."
-        ],
-        "pinned_comments": [
-            "Grandparents: what are the first names of your grandchildren? We are blessing each one in prayer today! 👶",
-            "Type 'GOD BLESS MY GRANDKIDS' to cover them in faith and protection today!",
-            "Praying for every grandchild represented here to walk in health, wisdom, and joy."
+            "Trust that child into the safest hands in the universe.",
+            "May your prayers bring comfort to the whole family.",
+            "Rest gently tonight, knowing God hears a grandparent's whisper."
         ]
     },
 
     "court_legal": {
-        "title": "⚖️ Justicia, Favor y Paz en Procesos Legales",
-        "description": "Serenidad, discernimiento y favor divino en trámites judiciales, contratos y audiencias.",
-        "target_time_slot": "midday",
-        "hook_badge_text": "FAVOR IN LEGAL MATTERS",
+        "title": "⚖️ Paz y Justicia en Procesos Legales o Disputas",
+        "pillar": "faith_hope_trials",
+        "description": "Serenidad y rectitud para quienes enfrentan litigios, contratos o audiencias.",
+        "human_situation": "Waiting on court dates, legal mediation, or dealing with unfair accusations.",
+        "central_idea": "Human courts are imperfect, but God's justice and truth ultimately defend the humble.",
+        "hook_badge_text": "JUSTICE & INTEGRITY",
         "recommended_image": "holy_cross_calvary.jpg",
-        "scripture": "Psalm 37:5-6 — Commit your way to the Lord; trust in him and he will act: he will bring forth your justice as the light.",
-        "hashtags": ["#JusticeInGod", "#LegalFavor", "#FaithOverFear", "#TruthPrevails", "#DailyPrayer"],
+        "scripture": BIBLICAL_CATALOGUE["court_legal"],
+        "hashtags": ["#PeaceInDisputes", "#IntegrityAndTruth", "#TrustInGod", "#FaithInTrials"],
         "hooks": [
-            "If legal paperwork, hearings, or disputes are causing you sleepless nights...",
-            "When you feel powerless against unfair systems or difficult adversaries...",
-            "Before you enter that court room or sign those important documents...",
-            "Remember that the ultimate Judge of all the earth is committed to truth."
+            "If an unresolved legal dispute or paperwork has been keeping you anxious...",
+            "When facing unfair treatment or waiting on judicial decisions...",
+            "To anyone striving for truth and fairness in an exhausting conflict...",
+            "Before worry consumes another evening over legal outcomes..."
         ],
-        "reflections": {
-            "intimate": "Lord, You know the truth of my situation. Dispel false accusations, grant wisdom to my counsel, and let honesty and fairness prevail over every paper and proceeding.",
-            "hopeful": "Father, grant supernatural favor before judges, mediators, and officials. Settle what was contentious, bring an honorable resolution, and restore peace to my mind and home.",
-            "reflective": "Legal battles can feel draining and intimidating, but God is your advocate. Walk with integrity and truth, for truth has a quiet power that outlasts every storm.",
-            "narrative": "Daniel stood before envious accusers and unjust decrees, yet God silenced the lions and vindicated his righteousness in the sight of all. He is the same defender today."
+        "perspectives": {
+            "prayer": "Lord, You love justice and uphold the humble. Guide attorneys with truth, grant discernment to judges, calm my uneasy heart, and let righteousness prevail in this situation.",
+            "scripture_reflection": "Psalm 37 reminds us to commit our way to the Lord; He will bring forth your vindication like the light. We do not have to resort to bitterness to stand for what is right.",
+            "heart_comfort": "Legal battles can feel overwhelming, but your peace does not belong to an earthly courtroom. Keep your integrity clean and leave the outcome with God.",
+            "story_lesson": "Daniel faced the highest court in Babylon with calm devotion, and God shut the lions' mouths. Truth always outlives false accusations."
         },
         "closings": [
-            "May clarity, justice, and peace be granted to you.",
-            "God goes before you into every legal meeting and room.",
-            "Rest your mind; truth will stand tall in the end.",
-            "May a peaceful resolution bring this chapter to a close."
+            "May God grant clarity, fair resolution, and quiet peace of mind.",
+            "Walk with integrity; God defends those who seek what is honest.",
+            "Rest tonight, knowing truth is never abandoned by heaven."
         ],
         "ctas": [
-            "Whisper Amen and trust God to advocate for your case.",
-            "Share this prayer with someone fighting an exhausting legal battle.",
-            "Stand firm in honesty; integrity always wins in the end.",
-            "May God grant you peace in the midst of the process."
-        ],
-        "pinned_comments": [
-            "If you have an upcoming court date or legal battle, drop a '⚖️' so we can agree for truth and favor.",
-            "Praying for fairness, peace, and victory for everyone facing legal disputes right now. Type AMEN.",
-            "God is your defender. Stand in faith and peace today."
+            "Commit the situation into His hands and take a peaceful breath.",
+            "Keep doing what is upright, and let peace guard your heart.",
+            "May wisdom prevail in every legal step ahead."
         ]
     },
 
     "restless_sleep": {
-        "title": "🛌 Descanso Profundo y Sueño Reparador",
-        "description": "Desconexión de preocupaciones del día y descanso tranquilo durante toda la noche.",
-        "target_time_slot": "night",
-        "hook_badge_text": "DEEP REST & SLEEP",
+        "title": "🛌 Reposo Profundo y Desconexión del Estrés",
+        "pillar": "peace_rest_daily",
+        "description": "Una invitación a desconectar la mente, soltar el control y descansar en paz.",
+        "human_situation": "Physical tiredness combined with mental tension that prevents drifting off to sleep.",
+        "central_idea": "Sleep is an act of trust; it acknowledges that God works while we are resting.",
+        "hook_badge_text": "PEACEFUL SLEEP",
         "recommended_image": "jesus_praying_gethsemane.jpg",
-        "scripture": "Proverbs 3:24 — When you lie down, you will not be afraid; when you lie down, your sleep will be sweet.",
-        "hashtags": ["#SweetSleep", "#NightPeace", "#RestInGod", "#SleepWell", "#ChristianNight"],
+        "scripture": BIBLICAL_CATALOGUE["restless_sleep"],
+        "hashtags": ["#SweetSleep", "#NightPeace", "#RestInChrist", "#BedtimeDevotion"],
         "hooks": [
-            "Tonight, put down the tasks you couldn't finish today...",
-            "Your mind was not created to carry 24 hours of worry without sleep...",
-            "Before your head touches the pillow, breathe out every burden...",
-            "Sleep is God's gift to human beings; receive it in peace tonight."
+            "Before you close your eyes carrying the unsolved problems of today...",
+            "If your pillow feels like a place of thinking instead of resting tonight...",
+            "Take one long, deliberate breath and set down your mental burden.",
+            "You have done what was in your power today; now let sleep do its work."
         ],
-        "reflections": {
-            "intimate": "Jesus, quiet my thoughts as the day comes to an end. Release the tension in my shoulders, calm my breathing, and let my heart rest safely in Your constant care.",
-            "hopeful": "Father, grant me sweet, deep, and uninterrupted sleep. Recharge my mind, restore my body, and let me wake up with gratitude and clear vision for tomorrow.",
-            "reflective": "Trusting God means admitting that the world continues to turn while you sleep. Give Him the controls of your life and let yourself truly rest tonight.",
-            "narrative": "Jesus slept peacefully in the back of the boat while the waves were roaring, because His soul was anchored in His Father's love. Rest in that same calm tonight."
+        "perspectives": {
+            "prayer": "Father, I surrender my unfinished tasks into Your care. Relax the tension in my shoulders, quiet my thoughts, and grant me deep, uninterrupted sleep under Your watch.",
+            "scripture_reflection": "Psalm 4:8 says: 'In peace I will lie down and sleep, for You alone, Lord, make me dwell in safety.' Sleep is a reminder that we are creatures, not controllers of the universe.",
+            "heart_comfort": "Rehearsing tomorrow's meetings or bills in bed changes nothing. Trust that God has already walked into your tomorrow.",
+            "story_lesson": "Jesus slept peacefully in the boat during a tempest because His heart was anchored in the Father. Rest in that same quiet assurance tonight."
         },
         "closings": [
-            "May your sleep be peaceful, restorative, and sweet tonight.",
-            "Leave tomorrow's cares for tomorrow; tonight is for resting.",
-            "You are guarded by the God who never sleeps.",
-            "May your morning begin with refreshed energy and peace."
+            "May your sleep be deep, sweet, and restorative for the morning.",
+            "Rest peacefully; God remains awake and watching over your life.",
+            "Let gentle silence fill your room and grant you rest."
         ],
         "ctas": [
-            "Whisper Amen, turn off your screen, and rest peacefully.",
-            "Save this quiet bedtime prayer for whenever you need calm.",
-            "Share this with someone who has been having trouble sleeping.",
-            "Let peace be your blanket tonight."
-        ],
-        "pinned_comments": [
-            "Goodnight and sweet dreams in Jesus. Type 'REST IN PEACE' and sleep well tonight. 🛌",
-            "Dropping a prayer of deep sleep and peaceful dreams over everyone here tonight.",
-            "May God's angels guard your bedside. Type AMEN and rest."
+            "Turn off your screen, take a deep breath, and rest.",
+            "May peaceful slumber restore your mind and body.",
+            "Goodnight; wake up to fresh mercy tomorrow."
         ]
     },
 
     "gratitude_harvest": {
-        "title": "🌾 Cosecha de Agradecimiento y Alabanza",
-        "description": "Reconocer las bondades cotidianas de Dios y cultivar un corazón lleno de alegría.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "HEART OF GRATITUDE",
+        "title": "🌾 Gratitud por las Bendiciones Cotidianas",
+        "pillar": "gratitude_wisdom_growth",
+        "description": "Reconocer las pequeñas cosas buenas, la fidelidad de Dios y la alegría del corazón.",
+        "human_situation": "Rushing through life without pausing to celebrate small victories and everyday provisions.",
+        "central_idea": "Gratitude shifts our focus from what is lacking to the quiet abundance already present.",
+        "hook_badge_text": "A HEART OF THANKS",
         "recommended_image": "jesus_holy_bible.jpg",
-        "scripture": "1 Thessalonians 5:18 — Give thanks in all circumstances; for this is God’s will for you in Christ Jesus.",
-        "hashtags": ["#GratitudeDaily", "#ThankYouJesus", "#BlessedAndGrateful", "#PraiseGod", "#JoyfulHeart"],
+        "scripture": BIBLICAL_CATALOGUE["gratitude_harvest"],
+        "hashtags": ["#GratitudeDaily", "#ThankfulHeart", "#CountYourBlessings", "#ChristianJoy"],
         "hooks": [
-            "What if you woke up today with only the things you thanked God for yesterday?",
-            "Gratitude turns what we have into more than enough.",
-            "Before complaining about what's missing, let's celebrate what remains.",
-            "A thankful heart is the secret to unbroken peace in every season."
+            "Before today ends, name three simple things that went right.",
+            "It is easy to focus on what is missing, but pause to notice what remains.",
+            "Take thirty seconds right now to thank God for the gift of another day.",
+            "A grateful heart turns an ordinary evening into a celebration of grace."
         ],
-        "reflections": {
-            "intimate": "Lord, thank You for the breath in my lungs, the roof over my head, and the simple blessings I so easily overlook. Teach me to see Your goodness in every ordinary moment.",
-            "hopeful": "Father, we praise You for doors You opened, trials You brought us through, and the quiet ways You care for our family every single day. Our hearts are full of thanksgiving.",
-            "reflective": "Complaining magnifies our problems, but praise magnifies our God. When you shift your gaze to gratitude, joy naturally returns to your heart.",
-            "narrative": "Ten lepers were cleansed on the road, but only one returned to fall at Jesus' feet and say thank you. Let us be the one who pauses to say: Thank You, Lord."
+        "perspectives": {
+            "prayer": "Lord God, thank You for the breath in my lungs, the roof over my head, and the daily mercies I so often take for granted. Teach me to walk with eyes open to Your quiet goodness.",
+            "scripture_reflection": "Paul encouraged believers to give thanks in all circumstances. Gratitude is not pretending trials do not exist; it is choosing to remember that God's goodness is bigger.",
+            "heart_comfort": "When we count our blessings rather than our complaints, anxiety begins to lose its grip and deep contentment takes its place.",
+            "story_lesson": "The traveler who stops to thank the well-keeper drinks with greater joy. Cultivate gratitude; it transforms the ordinary into the sacred."
         },
         "closings": [
-            "May thanksgiving fill your home with light and joy today.",
-            "Count your blessings, and you will soon lose count.",
-            "A grateful spirit is an unstoppable force of joy.",
-            "May your day overflow with smiles and genuine praise."
+            "May your evening be filled with contentment and joy.",
+            "Walk forward with a thankful heart that sees God's goodness.",
+            "Rest well tonight, thankful for the gift of today."
         ],
         "ctas": [
-            "Type 'THANK YOU JESUS' in the comments to praise His name!",
-            "Share one blessing you are grateful for today.",
-            "Send this gratitude reminder to someone who brings joy to your life.",
-            "Celebrate today; life is a precious gift from God."
-        ],
-        "pinned_comments": [
-            "Name ONE thing you are genuinely thankful for today! Let's fill the comments with gratitude! 🙌",
-            "Typing 'THANK YOU JESUS' for life, health, and grace today!",
-            "Praise turns ordinary days into extraordinary blessings. Amen!"
+            "Whisper a quiet thank You before turning out the light.",
+            "Share a word of gratitude with someone who blessed your week.",
+            "Sleep with a grateful heart tonight."
         ]
     },
 
     "unspoken_prayer": {
-        "title": "🤫 Por la Petición Secreta del Corazón",
-        "description": "Oración por aquel anhelo o herida profunda que no le has contado a nadie.",
-        "target_time_slot": "night",
-        "hook_badge_text": "UNSPOKEN PRAYER",
-        "recommended_image": "jesus_praying_gethsemane.jpg",
-        "scripture": "Romans 8:26 — The Spirit himself intercedes for us through wordless groans.",
-        "hashtags": ["#UnspokenPrayer", "#GodKnowsYourHeart", "#SecretPetitions", "#FaithInTheDark", "#DailyIntercession"],
+        "title": "🤫 Por la Petición que Nadie Más Conoce",
+        "pillar": "peace_rest_daily",
+        "description": "Acompañamiento íntimo para oraciones secretas, silencios profundos y cargas personales.",
+        "human_situation": "Carrying a burden too private, sensitive, or painful to share even with close friends.",
+        "central_idea": "God understands the prayer behind our sighs before we find the words to articulate it.",
+        "hook_badge_text": "THE UNSPOKEN BURDEN",
+        "recommended_image": "jesus_comforting_embrace.jpg",
+        "scripture": BIBLICAL_CATALOGUE["unspoken_prayer"],
+        "hashtags": ["#GodHearsYou", "#UnspokenPrayer", "#QuietTrust", "#SecretPrayer"],
         "hooks": [
-            "This prayer is for the secret burden you haven't told a single soul...",
-            "God hears the prayers you are unable to put into words tonight...",
-            "For the silent tears cried into a pillow when nobody was looking...",
-            "You don't need eloquent words for God to understand your heart."
+            "If you are carrying a prayer tonight that you cannot say out loud to anyone...",
+            "To the heart holding a burden too tender or private to explain...",
+            "When words fail and only a quiet sigh can describe how you feel...",
+            "You do not have to explain your heart to the One who made it."
         ],
-        "reflections": {
-            "intimate": "Jesus, You know every detail of this unspoken ache. You know what was hurt, what is needed, and what cannot be spoken aloud. Meet this soul in the quietest chamber of their heart with gentle grace.",
-            "hopeful": "Father, hear the silent sigh of this weary spirit. Work behind the scenes on what seems impossible, bring healing where shame once hid, and reveal Your faithful love.",
-            "reflective": "Sometimes the deepest prayers are simply sitting before God in silence, letting Him look upon your heart with love. He understands what you cannot explain.",
-            "narrative": "Hannah wept silently in the temple, moving her lips without making a sound, yet God heard her heart and answered her with joy. He hears your silent whisper too."
+        "perspectives": {
+            "prayer": "Lord, You know the thoughts I cannot put into sentences. Read the quiet ache of my heart. Where I am confused, bring light; where I am weary, bring rest; and hold this situation in Your mercy.",
+            "scripture_reflection": "Romans 8 assures us that the Spirit Himself intercedes for us with groanings too deep for words. God does not demand articulate speeches; He listens to the posture of the soul.",
+            "heart_comfort": "There is profound relief in knowing that the God of the universe knows your entire story and still looks upon you with unconditional kindness.",
+            "story_lesson": "Hannah wept silently in the temple, moving her lips without making a sound, and God heard her deepest longing. Your silent prayer is already received."
         },
         "closings": [
-            "God knows, God cares, and God is already working.",
-            "Rest easy; your silent prayer has been received in heaven.",
-            "You are fully seen, fully understood, and never judged.",
-            "May quiet peace settle over your unspoken petition tonight."
+            "May God's understanding presence surround you in the quiet.",
+            "Rest tonight, knowing that what is hidden is safely held.",
+            "Peace be upon your spirit; God is working in secret."
         ],
         "ctas": [
-            "Just whisper Amen; God knows every detail.",
-            "Save this prayer as a reminder that your tears are never ignored.",
-            "Share this with someone who carries their battles quietly.",
-            "Sleep in peace tonight; God has heard your heart."
-        ],
-        "pinned_comments": [
-            "No words needed. Just leave a '🕊️' or '🙏' below, and we will agree in prayer for your unspoken request.",
-            "God knows your heart's petition tonight. Type 'HE KNOWS' in faith.",
-            "Lifting every silent prayer and heavy heart to the Lord tonight. You are not alone."
+            "Release that silent weight into His care tonight.",
+            "You are fully known and deeply loved; rest well.",
+            "Save this reminder for moments when words feel too small."
         ]
     },
 
     "spiritual_warfare": {
-        "title": "⚔️ Armadura de Dios y Fortaleza Espiritual",
-        "description": "Firmeza en la fe, discernimiento y victoria espiritual sobre ataques de duda y temor.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "ARMOR OF GOD",
+        "title": "⚔️ Firmeza y Paz frente al Desánimo y la Opresión",
+        "pillar": "faith_hope_trials",
+        "description": "Recordatorio de que la victoria espiritual se vive desde la serenidad, la verdad y la fe.",
+        "human_situation": "Feeling under heavy emotional assault, persistent discouragement, or spiritual dryness.",
+        "central_idea": "Spiritual victory is not panic or shouting; it is standing calm and rooted in the truth of Christ.",
+        "hook_badge_text": "STANDING FIRM IN FAITH",
         "recommended_image": "holy_cross_calvary.jpg",
-        "scripture": "Ephesians 6:11 — Put on the full armor of God, so that you can take your stand against the devil’s schemes.",
-        "hashtags": ["#ArmorOfGod", "#SpiritualVictory", "#FaithOverFear", "#MightyInGod", "#ChristianWarrior"],
+        "scripture": BIBLICAL_CATALOGUE["spiritual_warfare"],
+        "hashtags": ["#SpiritualArmor", "#FaithfulStand", "#VictoryInChrist", "#SteadfastSoul"],
         "hooks": [
-            "If you felt spiritual resistance, doubt, and heaviness hitting you today...",
-            "The battle in your mind is real, but the victory of Christ is greater...",
-            "Put on the armor of God before you face the challenges of this day...",
-            "Stand firm; the enemy only attacks what carries divine purpose."
+            "If discouragement has been whispering that your efforts do not matter...",
+            "When everyday trials feel like a relentless spiritual opposition...",
+            "Before you let defeatist thoughts dictate your mood tomorrow...",
+            "Remember who holds your life; no weapon formed against truth can prevail."
         ],
-        "reflections": {
-            "intimate": "Lord Jesus, I take my stand in Your finished work. Clothe my mind in the helmet of salvation, guard my heart with righteousness, and let the shield of faith extinguish every fiery dart of fear.",
-            "hopeful": "Father, no weapon formed against our home will prosper. We speak peace where confusion tries to enter, and we declare that light triumphs over darkness in our family.",
-            "reflective": "Spiritual warfare is not fought with loud arguments, but with quiet, unshakable faith in God's promises. When you submit to God and resist fear, peace takes over.",
-            "narrative": "David stood before Goliath with nothing but a sling and the name of the Lord of Hosts. When God is on your side, giants fall before your faith."
+        "perspectives": {
+            "prayer": "Lord, put on me the whole armor of God. Guard my mind with truth, protect my heart with righteousness, extinguish every flaming arrow of fear, and let me stand immovable in Your peace.",
+            "scripture_reflection": "Ephesians teaches that our strength comes from standing in the Lord's mighty power. Notice the instruction is simply to stand firm, anchored in what Christ has already won.",
+            "heart_comfort": "Opposition often appears strongest when you are closest to a breakthrough. Do not give ground to fear; keep doing what is honorable.",
+            "story_lesson": "A lighthouse does not fight the storm with noise; it simply keeps its light burning bright. Stand firm and let your faith shine."
         },
         "closings": [
-            "Walk in victory today; Christ has overcome the world.",
-            "No weapon of fear can prevail against God's promises.",
-            "You are more than a conqueror through Christ who loves you.",
-            "May the peace of God stand guard over your mind."
+            "May the Lord strengthen your heart and silence every anxious lie.",
+            "Stand firm in grace; victory is already anchored in Christ.",
+            "Rest securely tonight; God is your shield and defense."
         ],
         "ctas": [
-            "Type Amen and stand firm in faith today!",
-            "Share this with someone fighting a hard spiritual battle.",
-            "Do not back down; your breakthrough is closer than you think.",
-            "Walk with bold confidence in the Lord today."
-        ],
-        "pinned_comments": [
-            "Type 'VICTORY IN JESUS' to declare your faith over fear today! 🛡️",
-            "Standing together in the armor of God. No weapon formed against us shall prosper. Amen!",
-            "Drop a ⚔️ if you are standing firm in faith today!"
+            "Take courage, stand firm in faith, and rest tonight.",
+            "Hold onto truth; lies cannot survive in God's light.",
+            "May your soul be filled with quiet, victorious peace."
         ]
     },
 
     "business_blessing": {
-        "title": "💼 Bendición, Integridad y Crecimiento en el Trabajo",
-        "description": "Sabiduría comercial, honestidad y puertas abiertas para emprendedores y trabajadores.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "FAVOR IN WORK & BUSINESS",
-        "recommended_image": "jesus_holy_bible.jpg",
-        "scripture": "Deuteronomy 28:8 — The Lord will send a blessing on your barns and on everything you put your hand to.",
-        "hashtags": ["#FaithInBusiness", "#ChristianEntrepreneur", "#HonestWork", "#KingdomFavor", "#DailyProverbs"],
+        "title": "🏪 Integridad y Prosperidad en el Trabajo y Negocio",
+        "pillar": "gratitude_wisdom_growth",
+        "description": "Sabiduría para emprender, servir con honestidad y administrar los recursos con fe.",
+        "human_situation": "Managing a small business, client relations, and seeking ethical growth with peace.",
+        "central_idea": "True prosperity is having enough to provide, bless others, and walk with an uncompromised conscience.",
+        "hook_badge_text": "INTEGRITY IN WORK",
+        "recommended_image": "holy_cross_calvary.jpg",
+        "scripture": BIBLICAL_CATALOGUE["business_blessing"],
+        "hashtags": ["#FaithInBusiness", "#HonestLabor", "#KingdomEthics", "#DailyIntegrity"],
         "hooks": [
-            "Before you open your store, start your shift, or meet your clients today...",
-            "If you are working hard to build a business with integrity and faith...",
-            "May God's favor accompany the honest labor of your hands today...",
-            "Success rooted in integrity and service brings lasting peace."
+            "If managing your work or small business brought stress to your shoulders today...",
+            "When commercial decisions require wisdom, honesty, and courage...",
+            "To every entrepreneur and worker striving to build something honest...",
+            "Commit your daily labor to God before planning tomorrow's steps."
         ],
-        "reflections": {
-            "intimate": "Lord, bless the work of my hands today. Grant me creative wisdom, fair dealing with every customer, and favor with clients, employees, and partners.",
-            "hopeful": "Father, we dedicate our enterprise to Your glory. May our work be a blessing to our community, provide honorable wages, and reflect Your goodness in the marketplace.",
-            "reflective": "Doing business with faith means placing service above greed and integrity above shortcuts. God honors honest weights and diligent effort.",
-            "narrative": "Lydia of Philippi was a hardworking businesswoman whose home and heart became a center of generosity and gospel light. May your work shine just as brightly."
+        "perspectives": {
+            "prayer": "Lord, bless the work of our hands. Grant creative wisdom in solving problems, integrity in every transaction, kindness toward customers and staff, and fair provision for our families.",
+            "scripture_reflection": "Proverbs 16:3 instructs us to commit our work to the Lord, and our plans will be established. When business serves people rather than greed, God's favor attends it.",
+            "heart_comfort": "Success in the kingdom of God is measured by faithfulness and generosity, not just balance sheets. Keep serving with excellence.",
+            "story_lesson": "Honest craftsmen throughout history left lasting reputations by working as unto the Lord. May your daily vocation reflect His integrity."
         },
         "closings": [
-            "May your business flourish and bless many families.",
-            "May divine wisdom guide every contract and decision today.",
-            "Favor, integrity, and prosperity over your honest labor.",
-            "May your work bring glory to God and peace to your home."
+            "May God prosper your honest efforts and grant you wisdom.",
+            "Walk with integrity; honest labor always bears good fruit.",
+            "Rest tonight, knowing God establishes what is done in truth."
         ],
         "ctas": [
-            "Type Amen to claim divine favor over your work today.",
-            "Share this blessing with a small business owner you respect.",
-            "Keep serving with excellence; God sees your dedication.",
-            "May your efforts yield an abundant and honorable harvest."
-        ],
-        "pinned_comments": [
-            "Drop the name of your business, craft, or job below! We want to pray over your work today. 💼",
-            "May God bless every hardworking hand here today. Type 'AMEN' in faith!",
-            "Praying for favor, honesty, and financial breakthrough for your projects."
+            "Commit tomorrow's projects to God and enjoy your evening.",
+            "Keep serving people with honesty and excellence.",
+            "May your work bring blessing to your community."
         ]
     },
 
     "forgiving_past": {
-        "title": "🕊️ Liberación del Rencor y Sanidad del Pasado",
-        "description": "Paz interior, soltar el resentimiento y sanar memorias dolorosas a través del perdón.",
-        "target_time_slot": "night",
-        "hook_badge_text": "FREEDOM THROUGH FORGIVENESS",
-        "recommended_image": "jesus_comforting_embrace.jpg",
-        "scripture": "Colossians 3:13 — Bear with each other and forgive one another... Forgive as the Lord forgave you.",
-        "hashtags": ["#ForgivenessHeals", "#LetGoAndLetGod", "#InnerPeace", "#GraceWins", "#DailyFaith"],
+        "title": "🕊️ Sanar y Soltar Heridas del Pasado",
+        "pillar": "gratitude_wisdom_growth",
+        "description": "Liberación del rencor, reconciliación interior y el poder transformador del perdón.",
+        "human_situation": "Remembering an old betrayal or hurt that still stirs anger and robs present peace.",
+        "central_idea": "Forgiveness does not excuse what was wrong; it sets the prisoner free and discovers the prisoner was you.",
+        "hook_badge_text": "FREEDOM TO FORGIVE",
+        "recommended_image": "holy_cross_calvary.jpg",
+        "scripture": BIBLICAL_CATALOGUE["forgiving_past"],
+        "hashtags": ["#HealingThroughForgiveness", "#LettingGo", "#InnerPeace", "#GraceWins"],
         "hooks": [
-            "If holding onto past hurt is drinking poison and expecting the other person to suffer...",
-            "Forgiveness does not excuse what they did; it frees you from carrying their weight...",
-            "Tonight, choose to release the bitterness that has chained your heart...",
-            "True peace begins when you stop replaying old wounds in your mind."
+            "If an old hurt or bitter memory resurfaced to trouble your heart today...",
+            "When carrying resentment feels like holding onto burning embers...",
+            "Before you let yesterday's wounds dictate how you love tomorrow...",
+            "True emotional freedom begins when we choose to release what hurt us."
         ],
-        "reflections": {
-            "intimate": "Lord, I hand You the hurt that cut deep. Heal the scar, release me from the need for revenge, and give me the grace to release them into Your hands so I may walk freely.",
-            "hopeful": "Father, You forgave me when I had nothing to offer. Cleanse my heart from resentment, replace bitter memories with Your love, and let my future be unburdened by yesterday.",
-            "reflective": "Forgiving someone is an act of courage, not weakness. When you surrender the right to get even, God steps in and becomes your healer and defender.",
-            "narrative": "Joseph wept and embraced the brothers who once sold him into slavery, saying: 'You intended to harm me, but God intended it for good.' Forgiveness turns pain into redemption."
+        "perspectives": {
+            "prayer": "Lord Jesus, You forgave those who wounded You on the cross. Heal the tender places in my memory. Give me the strength to release resentment, let go of bitterness, and walk in freedom.",
+            "scripture_reflection": "Ephesians calls us to be kind and tenderhearted, forgiving each other as God in Christ forgave us. Forgiveness is not saying the offense was acceptable; it is placing justice in God's hands.",
+            "heart_comfort": "You do not forgive to please the person who harmed you; you forgive so their mistake no longer controls your peace of mind.",
+            "story_lesson": "A closed fist cannot receive new blessings. Open your hands, let the past fall away, and receive God's fresh grace for today."
         },
         "closings": [
-            "May freedom and light fill your heart as you let go.",
-            "You deserve the peace that only forgiveness can unlock.",
-            "Leave the verdict to God; take your peace and walk forward.",
-            "A lighter heart and sweet rest are waiting for you tonight."
+            "May God heal your memories and fill your heart with light.",
+            "Walk in freedom; your future is not held hostage by your past.",
+            "Rest peacefully tonight in the liberty of forgiveness."
         ],
         "ctas": [
-            "Whisper Amen and let the heavy weight drop from your chest.",
-            "Choose freedom tonight; your heart is too precious to hold grudges.",
-            "Share this message of healing with someone carrying old pain.",
-            "May God's tender mercy heal your deepest memories."
-        ],
-        "pinned_comments": [
-            "Type 'I CHOOSE PEACE' if you are releasing past hurts into God's hands tonight. 🕊️",
-            "Forgiveness is a gift you give to yourself. Praying for healing hearts tonight.",
-            "Leave a ❤️ if you are choosing to walk forward in grace."
+            "Release one painful memory into His hands tonight.",
+            "Choose freedom and let your heart breathe again.",
+            "May quiet healing mend every past wound."
         ]
     },
 
     "grief_loss": {
-        "title": "🕯️ Consuelo ante la Pérdida de un Ser Querido",
-        "description": "Abrazo celestial, esperanza eterna y fortaleza en el proceso de duelo.",
-        "target_time_slot": "night",
-        "hook_badge_text": "COMFORT IN GRIEF",
+        "title": "🖤 Consuelo en el Duelo y la Despedida",
+        "pillar": "grief_solitude_comfort",
+        "description": "Acompañamiento respetuoso para transitar el luto y recordar con esperanza eterna.",
+        "human_situation": "Navigating anniversaries, empty chairs, and the quiet ache of losing a loved one.",
+        "central_idea": "Christian hope does not deny tears; it anchors grief in the promise of resurrection and reunion.",
+        "hook_badge_text": "COMFORT IN MOURNING",
         "recommended_image": "jesus_comforting_embrace.jpg",
-        "scripture": "Revelation 21:4 — He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain.",
-        "hashtags": ["#ComfortInGrief", "#HopeInHeaven", "#GriefSupport", "#GodComforts", "#ChristianHope"],
+        "scripture": BIBLICAL_CATALOGUE["grief_loss"],
+        "hashtags": ["#GriefSupport", "#ComfortInChrist", "#EternalHope", "#PreciousMemories"],
         "hooks": [
-            "To the heart aching tonight over someone dearly loved and sorely missed...",
-            "When grief hits in quiet waves and the world expects you to just move on...",
-            "Tears are not a sign of weak faith; they are sacred tributes of deep love...",
-            "Jesus wept with grieving friends, and He sits right beside you tonight."
+            "To anyone sitting with an empty chair and a heart full of memories tonight...",
+            "When grief catches you unexpectedly in the middle of an ordinary day...",
+            "If you have been holding back tears to stay strong for others...",
+            "It is okay to weep; Jesus Himself wept at the tomb of His friend."
         ],
-        "reflections": {
-            "intimate": "Jesus, You know the hollow ache of missing someone who meant the world. Comfort this wounded spirit, hold this heart when the waves of grief roll in, and anchor us in the hope of eternal reunion.",
-            "hopeful": "Father, thank You for the precious gift of their life and the love they shared. Grant us strength to honor their memory, peace in our quiet hours, and assurance that they rest in Your light.",
-            "reflective": "Grief changes shape over time, but God's compassion never fades. Allow yourself to mourn without guilt, knowing that God holds every tear in His bottle.",
-            "narrative": "At Lazarus's tomb, before performing a miracle, Jesus stopped and wept with Mary and Martha. He shares in your sorrow and promises that death never has the final word."
+        "perspectives": {
+            "prayer": "Father of mercies, wrap Your comfort around this grieving heart. When memories bring tears, let them also bring gratitude for the love we shared. Hold us steady until the morning of eternity.",
+            "scripture_reflection": "Revelation promises a day when God will wipe away every tear from their eyes, and death shall be no more. Grief is painful, but it is not without eternal hope.",
+            "heart_comfort": "Take your time. Healing after great loss does not happen by forgetting; it happens by learning to carry their memory with tender honor.",
+            "story_lesson": "Love never dies; it simply changes address into the presence of God. Treasure what was given, and rest in His promises."
         },
         "closings": [
-            "May the peace of heaven hold your heart together tonight.",
-            "Their memory is a treasure; God's comfort is your companion.",
-            "You are held by the God who promises to wipe away every tear.",
-            "Rest gently tonight, surrounded by divine comfort."
+            "May the God of all comfort cradle your tender heart tonight.",
+            "May sweet memories bring quiet peace alongside your tears.",
+            "Rest gently; those we love in Christ are never truly lost."
         ],
         "ctas": [
-            "Whisper Amen and let yourself be held by His grace tonight.",
-            "Send this gentle comfort to someone who recently lost a loved one.",
-            "Take your time to heal; God is walking every step with you.",
-            "May warm memories bring a gentle smile to your soul."
-        ],
-        "pinned_comments": [
-            "If you are missing a loved one tonight, leave their first name below. We honor their memory and pray for your peace. 🕯️",
-            "Lifting up every grieving family tonight. You are not alone in your sorrow.",
-            "May the God of all comfort wrap you in His loving arms. Type AMEN."
+            "Be kind to your grieving heart today; rest in His arms.",
+            "Save this reflection whenever the ache of loss returns.",
+            "May eternal hope sustain your soul through the night."
         ]
     },
 
     "guidance_direction": {
-        "title": "🧭 Sabiduría y Dirección ante Decisiones Difíciles",
-        "description": "Claridad mental, discernimiento espiritual y confianza en el camino correcto.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "DIVINE GUIDANCE & WISDOM",
-        "recommended_image": "jesus_holy_bible.jpg",
-        "scripture": "Proverbs 3:5-6 — Trust in the Lord with all your heart... and he will make your paths straight.",
-        "hashtags": ["#DivineGuidance", "#GodsWill", "#WisdomFromAbove", "#TrustingGod", "#DailyDirection"],
+        "title": "🧭 Sabiduría y Dirección para Tomar Decisiones",
+        "pillar": "faith_hope_trials",
+        "description": "Claridad y paz cuando nos encontramos en encrucijadas importantes de la vida.",
+        "human_situation": "Facing major choices regarding career, family moves, or ethical dilemmas without clear answers.",
+        "central_idea": "God guides our steps not by revealing the entire map at once, but by lighting the next step.",
+        "hook_badge_text": "WISDOM FOR THE ROAD",
+        "recommended_image": "holy_cross_calvary.jpg",
+        "scripture": BIBLICAL_CATALOGUE["guidance_direction"],
+        "hashtags": ["#DivineGuidance", "#GodsWill", "#WisdomDaily", "#NextSteps"],
         "hooks": [
-            "If you are standing at a crossroads, unsure of which path to take...",
-            "When so many voices give advice that your mind feels confused and loud...",
-            "Before you make that life-altering choice or sign that agreement...",
-            "Ask for the quiet wisdom that comes from above."
+            "If you are standing at an important crossroads unsure of which path to take...",
+            "When big decisions make your mind feel overwhelmed with questions...",
+            "Before you let decision fatigue force a hasty or anxious choice...",
+            "God does not call you to guess His will; He invites you to walk with Him."
         ],
-        "reflections": {
-            "intimate": "Lord, silence the noise of worldly opinions. Give me clarity of mind, peace in my spirit, and the courage to take the next faithful step according to Your will.",
-            "hopeful": "Father, Your word is a lamp to my feet and a light to my path. Make the crooked places straight, remove confusion, and confirm the right road with Your unmistakable peace.",
-            "reflective": "God rarely gives a ten-year roadmap; He gives daily light for the next step. Walk in obedience with what you know today, and tomorrow will unfold in His timing.",
-            "narrative": "God guided the Israelites with a pillar of cloud by day and a pillar of fire by night. He will never leave you wandering in the wilderness without His direction."
+        "perspectives": {
+            "prayer": "Lord, give me clarity of mind and peace in my spirit. Close doors that would bring harm, open pathways aligned with Your truth, and quiet every voice of panic.",
+            "scripture_reflection": "Psalm 32:8 promises: 'I will instruct you and teach you in the way you should go.' Guidance comes through daily communion and wise counsel, not anxious calculation.",
+            "heart_comfort": "You do not need to see all ten miles ahead; you only need enough light for the step right in front of you. Take it in faith.",
+            "story_lesson": "Ancient seafarers navigated by fixed stars, not by the shifting waves. Anchor your decisions on eternal principles of integrity and love."
         },
         "closings": [
-            "May divine clarity replace every doubt in your mind.",
-            "Trust the process; God is ordering your steps.",
-            "When God guides, He always provides.",
-            "Walk forward in peace; your tomorrow is secure."
+            "May God make your path clear and fill your heart with peace.",
+            "Step forward with calm confidence; wisdom goes before you.",
+            "Rest tonight, knowing your steps are guided by faithful hands."
         ],
         "ctas": [
-            "Type Amen and ask for divine wisdom over your decisions today.",
-            "Share this with someone facing a major life crossroad.",
-            "Be patient with yourself; God is leading you with love.",
-            "May your choices bring lasting peace and honor."
-        ],
-        "pinned_comments": [
-            "If you are asking God for guidance in a decision, type 'LEAD ME LORD' below! 🧭",
-            "Praying for clarity, discernment, and peace for everyone at a crossroads today.",
-            "Trust in the Lord with all your heart. Drop a 🙏 in agreement."
+            "Take one prayerful step at a time; trust the process.",
+            "May wisdom illuminate every choice on your horizon.",
+            "Sleep peacefully; clarity often arrives with the morning light."
         ]
     },
 
     "strength_weary": {
-        "title": "⚡ Renovación de Fuerzas para el Cansado y Agotado",
-        "description": "Energía renovada, descanso espiritual y aliento para quien siente que ya no puede más.",
-        "target_time_slot": "midday",
+        "title": "🦅 Nuevas Fuerzas para el Alma Cansada",
+        "pillar": "faith_hope_trials",
+        "description": "Renovación espiritual y física cuando la rutina o las cargas han agotado la energía.",
+        "human_situation": "Working two jobs, managing chronic fatigue, and feeling physically and emotionally drained.",
+        "central_idea": "Human stamina has limits, but the Creator's strength is an inexhaustible spring.",
         "hook_badge_text": "RENEWED STRENGTH",
         "recommended_image": "jesus_reaching_hand.jpg",
-        "scripture": "Isaiah 40:31 — Those who hope in the Lord will renew their strength. They will soar on wings like eagles.",
-        "hashtags": ["#RenewedStrength", "#WingsLikeEagles", "#NeverGiveUp", "#GodOurRefuge", "#DailyEncouragement"],
+        "scripture": BIBLICAL_CATALOGUE["strength_weary"],
+        "hashtags": ["#RenewedStrength", "#WearySoul", "#WaitOnTheLord", "#DailyGrace"],
         "hooks": [
-            "If you are doing your best, but your emotional tank is running on empty...",
-            "When being strong for everyone else has left you completely drained...",
-            "To the exhausted heart that wonders how it will finish this week...",
-            "You were never meant to carry this mountain in your own strength."
+            "If your energy is completely running on empty tonight...",
+            "When carrying everyone else's needs has left you feeling exhausted...",
+            "To the tired soul who kept going today despite feeling depleted...",
+            "Before you fall asleep feeling guilty for needing physical rest..."
         ],
-        "reflections": {
-            "intimate": "Jesus, I lay my fatigue at Your feet. Recharge my spirit, breathe fresh energy into my weary body, and let Your supernatural power be made visible in my weakness.",
-            "hopeful": "Father, You do not grow faint or weary. Lift this soul above the storm on wings like eagles. Grant patience for today and renewed hope for tomorrow.",
-            "reflective": "Rest is not quitting; it is an act of trust. Taking a moment to pause and surrender your burdens allows God to renew what striving could never accomplish.",
-            "narrative": "Moses' hands grew heavy during battle, so Aaron and Hur held up his hands until sunset and victory was won. God surrounds you with grace to hold you up today."
+        "perspectives": {
+            "prayer": "Lord God, You never grow tired or weary. Pour fresh strength into this tired body. Renew my endurance, heal my fatigue, and remind me that rest is holy in Your sight.",
+            "scripture_reflection": "Isaiah 40:31 promises that those who wait on the Lord will renew their strength; they will soar on wings like eagles. Waiting on God is quiet replenishment, not passive waiting.",
+            "heart_comfort": "Rest is not a reward you earn only after finishing everything; it is a necessity given by God to preserve your life. Receive it with gratitude.",
+            "story_lesson": "Even the mightiest eagle rests on high rocks to let the wind lift its wings. Let God's gentle grace carry you tonight."
         },
         "closings": [
-            "May fresh vigor and peaceful strength enter your soul.",
-            "You are stronger than you feel, because Christ lives in you.",
-            "Tomorrow's strength will meet you when tomorrow comes.",
-            "Rest in His hands; you do not have to do this alone."
+            "May God renew your energy and refresh your tired spirit.",
+            "Sleep deeply tonight, held in the arms of the Almighty.",
+            "Tomorrow carries renewed stamina; rest in peace."
         ],
         "ctas": [
-            "Whisper Amen and let Him be your strength today.",
-            "Send this to someone who carries heavy loads for their family.",
-            "Take a deep breath and give yourself permission to pause.",
-            "May joy return to your steps before this day ends."
-        ],
-        "pinned_comments": [
-            "Drop a '⚡' or type 'RENEW MY STRENGTH' if your spirit needed this today!",
-            "Praying for renewed energy, joyful hope, and peaceful rest for every tired soul here.",
-            "God is your strength in moments of weakness. Type AMEN in faith."
+            "Put down your burdens, close your eyes, and rest.",
+            "You have done enough today; receive His peace.",
+            "May your soul wake up refreshed and renewed."
         ]
     },
 
     "peace_in_storm": {
-        "title": "⛈️ Paz en Medio de la Tormenta y la Crisis",
-        "description": "Ancla de fe y serenidad cuando las circunstancias externas parecen salirse de control.",
-        "target_time_slot": "night",
-        "hook_badge_text": "PEACE IN THE STORM",
-        "recommended_image": "jesus_praying_gethsemane.jpg",
-        "scripture": "Mark 4:39 — He got up, rebuked the wind and said to the waves, 'Quiet! Be still!' Then the wind died down.",
-        "hashtags": ["#PeaceInTheStorm", "#JesusCalmsTheSea", "#FaithOverFear", "#AnchorOfHope", "#DailyPeace"],
+        "title": "⚓ Paz en Medio de la Tormenta",
+        "pillar": "peace_rest_daily",
+        "description": "Serenidad inquebrantable cuando circunstancias externas parecen fuera de control.",
+        "human_situation": "Surrounded by unexpected crises, conflict, or sudden instability.",
+        "central_idea": "The peace of Christ does not prevent storms from gathering; it prevents the storm from getting inside your heart.",
+        "hook_badge_text": "CALM IN THE STORM",
+        "recommended_image": "jesus_reaching_hand.jpg",
+        "scripture": BIBLICAL_CATALOGUE["peace_in_storm"],
+        "hashtags": ["#PeaceInTheStorm", "#AnchorOfHope", "#FaithOverFear", "#CalmSoul"],
         "hooks": [
-            "When circumstances around you feel like crashing waves that won't stop...",
-            "If unexpected crisis has shaken the ground beneath your feet...",
-            "Do not look at the height of the waves; look at the One in your boat...",
-            "Peace is not a calm sea; peace is a Savior who commands the winds."
+            "If external circumstances feel chaotic and swirling out of control today...",
+            "When sudden bad news tries to shatter your quiet peace...",
+            "Before fear convinces you that the ship is about to go down...",
+            "Take heart: the Master of wind and waves is in the boat with you."
         ],
-        "reflections": {
-            "intimate": "Lord Jesus, the storm is loud, but Your voice is sovereign. Speak 'Peace, be still' over my racing heart. Anchor my soul so that panic cannot wash away my trust in You.",
-            "hopeful": "Father, though the winds howl, our foundation is built upon the rock of Christ. We will not be moved. Bring order to the chaos and guide us safely through this trial.",
-            "reflective": "A boat does not sink because there is water around it; it only sinks if water gets inside. Keep the fear of the storm out of your heart by fixing your eyes on Christ.",
-            "narrative": "The disciples thought they were drowning while Jesus was sleeping in the stern. With three words, the tempest turned into glassy calm. He has the same power in your life."
+        "perspectives": {
+            "prayer": "Jesus, speak Your sovereign 'Peace, be still' over my anxious heart. When the wind howls outside, let Your calm reign inside. Anchor my hope on Your unchanging character.",
+            "scripture_reflection": "In Mark 4, the disciples panicked in the squall while Jesus slept. When you know who holds the winds, you can rest even while the boat rocks.",
+            "heart_comfort": "The depth of an anchor is proven in turbulent waters. Your faith is rooted in the One who created the sea; you will not be swept away.",
+            "story_lesson": "Old sailors used to say that a ship cannot sink until the water gets inside. Guard your heart; keep the peace of Christ within."
         },
         "closings": [
-            "May calm waters and clear skies meet you soon.",
-            "You will outlast this storm because Jesus holds your hand.",
-            "His peace is deeper than the deepest sea.",
-            "Stand firm; the winds must obey His command."
+            "May the peace of Christ steady your heart and mind tonight.",
+            "Rest safely; your Anchor holds firm through every wave.",
+            "Sleep in calm assurance; the storm will pass."
         ],
         "ctas": [
-            "Type Amen and claim stillness over your storm today.",
-            "Share this anchor of hope with someone facing a crisis.",
-            "Hold onto faith; this storm will pass.",
-            "May supernatural calm settle over your life right now."
-        ],
-        "pinned_comments": [
-            "If you are in the middle of a storm right now, leave a '⚓' below. We are anchoring with you in prayer.",
-            "Jesus is in your boat; you will not sink. Type 'PEACE BE STILL' in faith!",
-            "Lifting up everyone facing sudden family or financial storms today. God is faithful."
+            "Breathe out the tension and anchor your soul in Him.",
+            "Hold steady; God is sovereign over every storm.",
+            "May deep tranquility cover your home tonight."
         ]
     },
 
     "divine_grace": {
-        "title": "✝️ La Gracia Incondicional y el Amor de Jesús",
-        "description": "Recordar que el amor de Dios no depende de nuestras obras, sino de Su misericordia eterna.",
-        "target_time_slot": "morning",
-        "hook_badge_text": "UNCONDITIONAL GRACE",
+        "title": "✨ La Maravilla de la Gracia Incondicional",
+        "pillar": "gratitude_wisdom_growth",
+        "description": "El descanso profundo de saber que somos aceptados y amados por amor, no por méritos.",
+        "human_situation": "Feeling unspiritual, guilty, or feeling that God is disappointed with our imperfections.",
+        "central_idea": "Grace is unearned, unmerited favor; we are loved because of who God is, not because of what we accomplish.",
+        "hook_badge_text": "THE GIFT OF GRACE",
         "recommended_image": "holy_cross_calvary.jpg",
-        "scripture": "Ephesians 2:8 — For it is by grace you have been saved, through faith—and this is not from yourselves, it is the gift of God.",
-        "hashtags": ["#AmazingGrace", "#LovedByJesus", "#UnconditionalLove", "#ChristianFaith", "#GospelTruth"],
+        "scripture": BIBLICAL_CATALOGUE["divine_grace"],
+        "hashtags": ["#GraceUponGrace", "#AcceptedInChrist", "#UnconditionalLove", "#ChristianAssurance"],
         "hooks": [
-            "If shame has been telling you that you are too broken for God to love...",
-            "You do not have to perform or earn your way into God's mercy...",
-            "His love is not based on your best days, and it doesn't leave on your worst...",
-            "Grace means the debt is paid and the welcome is forever."
+            "If you have been feeling spiritually inadequate or hard on yourself lately...",
+            "Before you measure your standing with God by how well you performed today...",
+            "To anyone tired of religious performance and striving for approval...",
+            "Take a deep breath: God's love for you is not on probation."
         ],
-        "reflections": {
-            "intimate": "Jesus, thank You that Your cross covered all my shame and failure. Help me lay down the burden of trying to be perfect, and teach me to rest in the beauty of Your unmerited favor.",
-            "hopeful": "Father, Your grace is a fountain that never runs dry. Because of Christ, we can boldly approach Your throne of mercy with open hands and joyful hearts.",
-            "reflective": "Religion says: 'If you change, God will love you.' The Gospel says: 'God loves you, and His love will gently transform you.' Walk in that freedom today.",
-            "narrative": "The prodigal son rehearsed a speech asking to be treated like a hired servant, but before he could finish, his father ran, embraced him, and gave him the best robe. That is grace."
+        "perspectives": {
+            "prayer": "Father, thank You that Your love is based on Christ's finished work, not my daily perfection. Deliver me from self-condemnation, and let me rest in the assurance of Your adoption.",
+            "scripture_reflection": "Hebrews invites us to approach the throne of grace with confidence, not fear. We come not as strangers presenting resumes, but as children welcomed into the Father's house.",
+            "heart_comfort": "You do not have to clean up your life before you come to God; His kindness is what transforms us from the inside out.",
+            "story_lesson": "Grace is like the sunlight pouring through an open window: it does not demand the room be spotless before it illuminates every corner with warmth."
         },
         "closings": [
-            "Walk with freedom today; you are forgiven and deeply loved.",
-            "His grace is greater than your deepest regret.",
-            "Nothing can separate you from the love of God in Christ Jesus.",
-            "May His tender love be the melody of your heart today."
+            "May the boundless grace of Christ quiet every accusation.",
+            "Rest tonight, secure and celebrated in His unconditional love.",
+            "You are held in everlasting hands; sleep in peaceful assurance."
         ],
         "ctas": [
-            "Type Amen and celebrate the gift of His amazing grace today!",
-            "Share this message of hope with someone burdened by guilt.",
-            "Receive His forgiveness and forgive yourself today.",
-            "Walk boldly in the light of His unconditional love."
-        ],
-        "pinned_comments": [
-            "Drop an 'AMEN' if you are thankful for the grace and mercy of Jesus today! ✝️",
-            "You are loved, you are valued, and you are His. Leave a ❤️ in celebration of grace.",
-            "Praising God for His unfailing kindness toward us every single day."
+            "Receive His gift of grace and let self-judgment go.",
+            "May your soul rest completely in His unconditional love.",
+            "Sleep peacefully tonight; you are forever accepted in Christ."
         ]
     }
 }
 
-# Image pool mappings
-THEME_TO_SCENARIO_MAP: Dict[str, List[str]] = {
-    "lost_child": ["family_blessing", "jesus_comforting", "people_praying"],
-    "family_protection": ["family_blessing", "holy_cross", "jesus_comforting"],
-    "medical_fear": ["jesus_comforting", "people_praying", "holy_bible"],
-    "zero_balance": ["holy_bible", "family_blessing", "jesus_comforting"],
-    "night_anxiety": ["jesus_comforting", "people_praying", "holy_bible"],
-    "morning_favor": ["holy_bible", "family_blessing", "jesus_comforting"],
-    "marriage_healing": ["family_blessing", "jesus_comforting", "people_praying"],
-    "healing_depression": ["jesus_comforting", "people_praying", "holy_bible"],
-    "job_breakthrough": ["holy_bible", "family_blessing", "jesus_comforting"],
-    "lonely_widow": ["jesus_comforting", "people_praying", "holy_bible"],
-    "addiction_chains": ["holy_cross", "jesus_comforting", "people_praying"],
-    "elderly_parents": ["family_blessing", "jesus_comforting", "people_praying"],
-    "single_parent": ["family_blessing", "jesus_comforting", "people_praying"],
-    "sick_grandchild": ["jesus_comforting", "people_praying", "family_blessing"],
-    "court_legal": ["holy_cross", "holy_bible", "jesus_comforting"],
-    "restless_sleep": ["jesus_comforting", "people_praying", "holy_bible"],
-    "gratitude_harvest": ["holy_bible", "family_blessing", "jesus_comforting"],
-    "unspoken_prayer": ["people_praying", "jesus_comforting", "holy_bible"],
-    "spiritual_warfare": ["holy_cross", "jesus_comforting", "holy_bible"],
-    "business_blessing": ["holy_bible", "family_blessing", "holy_cross"],
-    "forgiving_past": ["jesus_comforting", "holy_cross", "people_praying"],
-    "grief_loss": ["jesus_comforting", "people_praying", "holy_bible"],
-    "guidance_direction": ["holy_bible", "jesus_comforting", "people_praying"],
-    "strength_weary": ["jesus_comforting", "people_praying", "holy_bible"],
-    "peace_in_storm": ["jesus_comforting", "holy_cross", "people_praying"],
-    "divine_grace": ["holy_cross", "jesus_comforting", "holy_bible"]
-}
 
-SCENARIO_POOLS: Dict[str, List[str]] = {
-    "jesus_comforting": [
-        "Jesus Christ with compassionate loving eyes, gentle smile, holy warm golden light",
-        "Jesus placing His hand gently upon a person's shoulder, divine golden aura, sacred emotional atmosphere",
-        "Jesus walking beside family members on a tranquil path, bathed in divine golden hour sunlight"
-    ],
-    "people_praying": [
-        "A devout Christian praying fervently with closed eyes and folded hands, soft candle light",
-        "Warm Christian family praying together around a rustic wooden table, peaceful evening glow",
-        "A mother holding a worn Bible, looking out the window in heartfelt faith and serenity"
-    ],
-    "holy_bible": [
-        "Open ancient holy Bible with golden rays of sunlight illuminating the sacred pages, 8k",
-        "Wooden table with an open Bible beside a warm coffee mug, peaceful morning devotion atmosphere",
-        "Close-up of holy scripture illuminated by gentle morning dawn light, majestic and reverent"
-    ],
-    "holy_cross": [
-        "Majestic wooden cross standing on a peaceful hill against a warm golden sunset sky, cinematic",
-        "Silhouette of the holy cross with divine volumetric rays piercing through soft clouds",
-        "Golden glowing cross surrounded by gentle ethereal mist and celestial dawn lighting"
-    ],
-    "family_blessing": [
-        "Warm family sanctuary in a peaceful home at twilight, soft glowing candlelight, tranquility",
-        "Loving family embracing with smiles, bathed in golden hour radiant sunshine, serene joy",
-        "Quiet porch with green rolling hills in the background, peaceful morning atmosphere"
-    ]
-}
+# ─── Prompts Visuales Limpios y Coherentes para las 3 Escenas ───────────────
 
-CAMERA_STYLES = [
-    "cinematic 35mm photography, dramatic volumetric chiaroscuro lighting, masterpiece 8k",
-    "hyper-realistic Unreal Engine 5 render, radiant golden hour sunburst, sharp focus",
-    "intimate emotional portrait, anamorphic lens, soft golden bokeh, divine atmosphere",
-    "epic wide-angle panoramic cinematic shot, volumetric God-rays, high contrast"
-]
-
-
-def _translate_topic(topic: str) -> str:
-    """Normalize and translate common Spanish/English topics into natural English phrasing."""
-    clean = topic.strip().lower()
-    for k, v in CUSTOM_TOPIC_TRANSLATIONS.items():
-        if k in clean:
-            return v
-    return topic.strip()
-
-
-def generate_image_prompt_for_script(
-    theme_key: Optional[str] = None,
-    script_text: str = "",
-    custom_topic: Optional[str] = None
-) -> str:
-    """Genera un prompt hiperrealista para IA de imagen acorde al tema y guion."""
-    t_key = theme_key if (theme_key and theme_key in THEME_TO_SCENARIO_MAP) else "lost_child"
-    candidate_pools = THEME_TO_SCENARIO_MAP.get(t_key, list(SCENARIO_POOLS.keys()))
-    chosen_cat = random.choice(candidate_pools)
-    base_scene = random.choice(SCENARIO_POOLS.get(chosen_cat, SCENARIO_POOLS["jesus_comforting"]))
-    style = random.choice(CAMERA_STYLES)
-
-    custom_cue = ""
-    if custom_topic and custom_topic.strip():
-        trans = _translate_topic(custom_topic)
-        custom_cue = f", spiritually touching theme of {trans}"
-
-    return f"{base_scene}{custom_cue}, {style}, dynamic framing, sacred golden light, hyper-detailed, masterpiece --ar 9:16"
-
-
-# =============================================================================
-# 3-SCENE DYNAMIC PROMPT CONFIGURATIONS (Meta 2026 3-Shot Narrative Arc)
-# Scene 1: Apertura & Gancho Emocional (0.0s - 3.2s)
-# Scene 2: Intercesión & Punto de Dolor / Oración en Fe (3.2s - 10.0s)
-# Scene 3: Victoria, Consuelo & Encuentro con Jesús (10.0s al final)
-# =============================================================================
-
-THEME_3SCENE_CONFIGS: Dict[str, Dict[str, List[str]]] = {
+THEME_3SCENE_CONFIGS = {
     "lost_child": {
         "s1": [
-            "Cinematic atmospheric opening: a worried parent sitting quietly near a window at dusk looking outside, soft warm interior lamp, deep emotion and longing",
-            "Cinematic opening: an empty doorway with warm light spilling onto a quiet path, a parent holding a family photo in prayerful reflection",
-            "Cinematic opening: a solitary figure standing on a peaceful evening porch, looking at the distant horizon with faithful hope"
+            "A concerned parent sitting quietly near a window at dusk looking outside, soft warm interior lighting, balanced 35mm composition",
+            "A person holding an open family photo album by warm lamplight, nostalgic reflective atmosphere, cinematic depth of field",
+            "An open front doorway illuminated by a gentle porch light overlooking a quiet suburban street at evening"
         ],
         "s2": [
-            "Emotional intercession: a mother or father kneeling in fervent heartfelt prayer with closed eyes, soft candle glow, deep intercession and love",
-            "Emotional intercession: open Holy Bible on a rustic table with gentle golden light illuminating verses of redemption and promise",
-            "Emotional intercession: hands gently clasped over a worn Bible, quiet tears of faith, ethereal warm golden rays surrounding the prayer"
+            "A devout Christian praying with folded hands over an open Holy Bible, warm amber candlelight, reverent spiritual atmosphere",
+            "A mother and father praying together with heads bowed and quiet faith, soft morning dawn breaking through curtains",
+            "Hands gently resting on an open Bible illuminated by soft golden rays, quiet intercession and hope"
         ],
         "s3": [
-            "Jesus Christ with tender outstretched hands welcoming a lost traveler home, celestial golden hour aura, divine compassion",
-            "Jesus Christ placing His sacred comforting hand upon a young person's shoulder, radiant divine peace and forgiveness",
-            "A joyful heartfelt embrace bathed in brilliant celestial light, Jesus watching over them with serene loving victory"
+            "A peaceful family walking together along a sunlit park trail, warm morning sunbeams, restoration and harmony",
+            "Jesus Christ extending open welcoming arms in a serene golden landscape, gentle compassionate expression, atmospheric light",
+            "A welcoming warm home doorway filled with radiant golden light, peaceful resolution and family grace"
         ]
     },
-    "family_protection": {
-        "s1": [
-            "Cinematic atmospheric opening: a warm cozy home at twilight with soft glowing windows, gentle peaceful sky, a sanctuary of safety",
-            "Cinematic opening: a loving family gathered together in a peaceful living room bathed in gentle warm evening light",
-            "Cinematic opening: silhouette of a home surrounded by serene mountain valleys and warm sunset hues, atmosphere of quiet peace"
-        ],
-        "s2": [
-            "Emotional intercession: a family holding hands in quiet devout prayer around a rustic wooden table, soft candlelight and reverent warmth",
-            "Emotional intercession: open Holy Bible resting on a wooden altar, sacred golden rays shining downward, symbol of protection and covenant",
-            "Emotional intercession: a father and mother praying together in faith over their resting home, divine golden atmosphere"
-        ],
-        "s3": [
-            "Jesus Christ standing protectively with raised hands blessing a peaceful home, celestial golden light radiating outward",
-            "Jesus Christ surrounded by holy golden glory, outstretched arms releasing divine shield and eternal peace over the family",
-            "Majestic silhouette of Jesus on a tranquil mountain overlooking the valley, serene golden dawn and victorious grace"
-        ]
-    },
-    "medical_fear": {
-        "s1": [
-            "Cinematic atmospheric opening: a weary person sitting quietly in emotional contemplation, soft window light piercing through shadow, poignant atmosphere",
-            "Cinematic opening: gentle hands resting on a bedside with quiet vulnerability, soft dawn light creeping through curtains",
-            "Cinematic opening: a person holding a small cross in a quiet room, finding quiet strength amidst vulnerability, dramatic chiaroscuro"
-        ],
-        "s2": [
-            "Emotional intercession: a faithful person in intense emotional prayer with closed eyes, single tear of surrender, glowing sacred candle light",
-            "Emotional intercession: open Bible on a bedside table with morning sunbeams touching the sacred text, atmosphere of divine comfort and hope",
-            "Emotional intercession: hands raised in quiet surrender and faith, surrounded by warm volumetric chiaroscuro God rays"
-        ],
-        "s3": [
-            "Jesus Christ placing His divine healing hand upon the head of a faithful soul, glowing golden warmth, supernatural peace and healing",
-            "Jesus Christ with compassionate eyes, radiant celestial light flowing from His sacred hands, bringing life and victory",
-            "Jesus standing in glorious divine sunlight, smiling with tender love and compassion, triumph over pain and fear"
-        ]
-    },
-    "zero_balance": {
-        "s1": [
-            "Cinematic atmospheric opening: a person sitting at a rustic wooden table in quiet thought, looking out an open window toward the morning horizon",
-            "Cinematic opening: hands resting on an empty table with an open Bible, soft morning dawn beginning to break through mist",
-            "Cinematic opening: a solitary honest worker taking a quiet breath of faith at dawn, beautiful serene landscape in background"
-        ],
-        "s2": [
-            "Emotional intercession: faithful prayer with open hands resting upward on an open Bible, bathed in golden sunlight, trust in divine provision",
-            "Emotional intercession: devout person praying in quiet humility, soft golden volumetric light pouring through a window, serene trust",
-            "Emotional intercession: open scriptures illuminated by radiant sunbeams, ancient promise of God's daily bread and faithfulness"
-        ],
-        "s3": [
-            "Jesus Christ opening a majestic golden doorway of light, beaming with supernatural abundance, peace, and open doors",
-            "Jesus Christ smiling with boundless grace, outstretched hands overflowing with divine blessing and radiant morning light",
-            "Jesus walking beside a faithful person on a path illuminated by brilliant golden sunlight, victory and favor"
-        ]
-    },
-    "night_anxiety": {
-        "s1": [
-            "Cinematic atmospheric opening: a quiet bedroom at midnight, starry night sky visible through an open window, soft warm bedside lamp",
-            "Cinematic opening: a person sitting up on the edge of the bed looking peacefully out the window into a starlit serene night",
-            "Cinematic opening: gentle silhouette in quiet stillness during the night, soft moonbeams resting on an open Bible"
-        ],
-        "s2": [
-            "Emotional intercession: a person taking a deep breath of relief, praying with closed eyes and relaxed shoulders, gentle warm golden glow",
-            "Emotional intercession: open Bible on a bedside table illuminated by soft soothing amber lamp light, tranquil sacred atmosphere",
-            "Emotional intercession: hands folded gently in prayer, dark shadows dissolving into warm golden ethereal light, sweet quiet surrender"
-        ],
-        "s3": [
-            "Jesus Christ standing beside the resting person, placing a gentle comforting hand of peace on their head, calming aura",
-            "Jesus Christ calming the restless winds with serene outstretched hands, celestial golden glow, deep tranquil peace",
-            "Jesus Christ with loving compassionate eyes, whispering peace into the quiet night, brilliant soft golden atmosphere"
-        ]
-    },
+
     "morning_favor": {
         "s1": [
-            "Cinematic atmospheric opening: glorious golden sunrise streaming through an open window, illuminating an open Holy Bible on a wooden table, warm steam",
-            "Cinematic opening: panoramic dawn over a peaceful green valley, vibrant golden hour sunburst, fresh morning devotion",
-            "Cinematic opening: a person opening window shutters to a breathtaking golden sunrise, taking in fresh morning air with joyful gratitude"
+            "Golden morning sunrise streaming through an open window onto a wooden table, steam rising gently from a cup, clean composition",
+            "Panoramic dawn over a peaceful misty valley, warm golden morning sunbeams, fresh clean atmosphere",
+            "A person opening window shutters to welcome the golden dawn, taking a deep breath of fresh air, serene 35mm photograph"
         ],
         "s2": [
-            "Emotional intercession: devout Christian smiling in morning devotion, hands lifted in joyful praise, radiant morning sunbeams pouring in",
-            "Emotional intercession: close-up of open Bible pages glowing under pristine morning sunlight, reverent golden atmosphere",
-            "Emotional intercession: heartfelt morning prayer of gratitude and expectation, golden light dancing in the room, pure peace"
+            "An open Holy Bible resting on a wooden desk bathed in pristine morning sunlight, quiet devotion and reflection",
+            "A person praying in quiet gratitude with morning light illuminating their face, gentle peaceful expression",
+            "A solitary figure walking peacefully along a garden path at sunrise, soft golden hour lighting, quiet communion with God"
         ],
         "s3": [
-            "Jesus Christ standing in radiant dawn sunlight with welcoming open arms, bestowing daily favor and victory",
-            "Jesus Christ walking along a bright sunlit pathway, inviting the believer forward with a tender smile of victory",
-            "Jesus surrounded by triumphant celestial morning glow, outstretched hands releasing divine blessing over the day"
+            "A bright open horizon under a clear morning sky, radiant sunbeams, sense of purpose and fresh beginning",
+            "Jesus Christ standing in warm morning sunlight with welcoming open hands, gentle serene expression, divine grace",
+            "A sunlit path stretching forward into green pastures, glorious morning light, peaceful victory"
         ]
     },
-    "marriage_healing": {
+
+    "night_anxiety": {
         "s1": [
-            "Cinematic atmospheric opening: two empty chairs at a quiet wooden table bathed in soft twilight, a delicate moment of quiet longing for reconciliation",
-            "Cinematic opening: a person looking out a window into the soft rain, reflecting on love and forgiveness with tender vulnerability",
-            "Cinematic opening: hands resting near wedding rings on a wooden table beside an open Bible, soft atmospheric light"
+            "A quiet bedroom at midnight, soft ambient bedside lamp, starry night sky visible through a window, serene 35mm composition",
+            "A person sitting on the edge of a bed looking thoughtfully out into the quiet night, soft moonlight, contemplative atmosphere",
+            "A silhouette in quiet stillness during the night, moonlight gently resting on a closed Bible on the nightstand"
         ],
         "s2": [
-            "Emotional intercession: two hands gently reaching out to touch in heartfelt forgiveness and prayer, surrounded by warm golden candlelight",
-            "Emotional intercession: husband and wife praying together with bowed heads and gentle embrace, soft sacred rays of healing light",
-            "Emotional intercession: open Bible showing verses of love and patience, bathed in warm ethereal glow, restoration and peace"
+            "A person breathing out tension with closed eyes and relaxed shoulders, illuminated by warm gentle lamplight, quiet prayer",
+            "An open Bible on a bedside table illuminated by soft soothing amber glow, atmosphere of sanctuary and peace",
+            "Hands folded gently in prayer as dark shadows dissolve into warm golden light, peaceful surrender"
         ],
         "s3": [
-            "Jesus Christ placing His sacred hands over the united hands of a couple, radiant celestial light of reconciliation",
-            "Jesus Christ blessing a home with warm golden aura, smiling upon restored love, peace and unbreakable covenant",
-            "Couple walking together on a peaceful sunlit path, Jesus walking beside them with loving guidance and joy"
-        ]
-    },
-    "healing_depression": {
-        "s1": [
-            "Cinematic atmospheric opening: a solitary person sitting in a dimly lit room as a single bright ray of golden sunlight breaks through the window",
-            "Cinematic opening: a weary figure looking up towards the morning sky, shadows gently dissolving into dawn light",
-            "Cinematic opening: a person holding an open Bible to their chest in the quiet dawn, finding quiet solace and breath"
-        ],
-        "s2": [
-            "Emotional intercession: a devout believer weeping tears of relief in heartfelt prayer, surrounded by sudden warm volumetric golden rays",
-            "Emotional intercession: hands lifted from heavy shadows into brilliant heavenly light, atmosphere of sacred deliverance and emotional release",
-            "Emotional intercession: open Bible on a wooden bench in a tranquil garden, golden sunbeams piercing through ancient olive trees"
-        ],
-        "s3": [
-            "Jesus Christ kneeling beside the weary person, gently lifting their chin with infinite tenderness and loving eyes",
-            "Jesus Christ wrapping warm, radiant celestial arms around the person, banishing every shadow with divine joy and light",
-            "Jesus standing with outstretched hands in a sea of peaceful golden wildflowers, victorious sunrise and renewed life"
-        ]
-    },
-    "peace_in_storm": {
-        "s1": [
-            "Cinematic atmospheric opening: dramatic dark stormy sky over turbulent waters, with a sudden majestic beam of golden heavenly light piercing through",
-            "Cinematic opening: a solitary silhouette standing calm and steadfast on a shoreline as waves crash and clouds part",
-            "Cinematic opening: a warm beacon of light shining from a peaceful coastal sanctuary amidst crashing ocean waves"
-        ],
-        "s2": [
-            "Emotional intercession: a faithful person praying with profound stillness and unshakable peace amidst swirling winds, surrounded by holy golden glow",
-            "Emotional intercession: open Bible held steady against the storm, illuminated with radiant celestial light, rock of refuge",
-            "Emotional intercession: hands folded calmly in prayer, eyes closed in profound serenity, volumetric God-rays cutting through dark clouds"
-        ],
-        "s3": [
-            "Jesus Christ commanding the raging waves to be still, majestic outstretched arms, storm parting into glorious golden calm",
-            "Jesus Christ walking on the turbulent waters with calm sovereign authority, extending His hand to pull you up to safety",
-            "Jesus Christ surrounded by brilliant serene celestial daylight, ocean completely tranquil and glassy, absolute victory"
-        ]
-    },
-    "strength_weary": {
-        "s1": [
-            "Cinematic atmospheric opening: a tired traveler pausing along a mountain trail at dusk, leaning gently on a walking staff, taking a deep breath",
-            "Cinematic opening: a hardworking person resting hands on a wooden workbench, soft golden sunset streaming across the room",
-            "Cinematic opening: a weary soul sitting quietly under a grand ancient oak tree, finding shade and quiet stillness"
-        ],
-        "s2": [
-            "Emotional intercession: a person lifting tired hands in prayer, receiving sudden renewed warmth and ethereal golden light from above",
-            "Emotional intercession: devout prayer in quiet humility, face illuminated with newfound peace and supernatural stamina, golden chiaroscuro",
-            "Emotional intercession: open scriptures illuminated by radiant sunbeams, promising that those who wait on the Lord will soar like eagles"
-        ],
-        "s3": [
-            "Jesus Christ extending His strong comforting hand to lift up the weary person, brilliant golden sunrise of strength",
-            "Jesus Christ placing His hand on the shoulder of the believer, infusing divine power and peace, radiant celestial aura",
-            "Jesus walking alongside the rejuvenated person, both looking toward a victorious bright horizon filled with hope"
+            "A person sleeping peacefully in bed, gentle moonlight, tranquil expressions, deep restorative rest",
+            "Jesus Christ standing in gentle celestial light with outstretched hands speaking peace, calming aura, serene night sky",
+            "A calm glassy lake reflecting starry night skies and gentle moonlight, absolute stillness and peace"
         ]
     }
 }
@@ -1350,50 +1076,36 @@ def generate_3scene_prompts_for_script(
     script_text: str = "",
     custom_topic: Optional[str] = None
 ) -> Dict[str, str]:
-    """Genera 3 prompts sincronizados, dinámicos y diferenciados para las 3 tomas del Reel."""
+    """
+    Genera 3 prompts de imagen coherentes, estructurados y libres de adjetivos vacíos.
+    Escena 1: Apertura contextual.
+    Escena 2: Mensaje y reflexión.
+    Escena 3: Cierre y resolución.
+    """
     t_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else "morning_favor"
     theme = VIRAL_THEMES.get(t_key, VIRAL_THEMES["morning_favor"])
-    
-    # Resolver tema personalizado si existe
-    custom_trans = _translate_topic(custom_topic) if (custom_topic and custom_topic.strip()) else ""
-    topic_cue = f", spiritually touching theme of {custom_trans}" if custom_trans else ""
 
-    # Estilos fotográficos cinemáticos variables para asegurar unicidad
-    style1 = random.choice([
-        "cinematic 35mm photography, soft morning dawn light, photorealistic 8k, masterpiece",
-        "intimate emotional atmosphere, atmospheric chiaroscuro lighting, anamorphic lens, 8k",
-        "fine art photography, volumetric warm God-rays, sacred realism, award-winning shot"
-    ])
-    style2 = random.choice([
-        "dramatic chiaroscuro lighting, volumetric golden rays, photorealistic 8k, emotional depth",
-        "sacred golden candlelight, soft bokeh background, hyper-detailed portrait of faith, 8k",
-        "hyper-realistic Unreal Engine 5 render, radiant atmospheric glow, high fidelity"
-    ])
-    style3 = random.choice([
-        "golden hour celestial aura, heavenly volumetric sunbeams, transcendent victory, masterpiece 8k",
-        "sacred celestial radiance, tender compassionate eyes, epic cinematic composition, 8k",
-        "majestic golden sunrise, warm divine atmosphere, hyper-detailed, masterpiece"
-    ])
+    custom_trans = _translate_topic(custom_topic) if (custom_topic and custom_topic.strip()) else ""
+    topic_cue = f", reflecting themes of {custom_trans}" if custom_trans else ""
 
     if t_key in THEME_3SCENE_CONFIGS:
         cfg = THEME_3SCENE_CONFIGS[t_key]
-        raw_p1 = random.choice(cfg["s1"])
-        raw_p2 = random.choice(cfg["s2"])
-        raw_p3 = random.choice(cfg["s3"])
+        raw1 = random.choice(cfg["s1"])
+        raw2 = random.choice(cfg["s2"])
+        raw3 = random.choice(cfg["s3"])
     else:
-        # Fallback temático derivado de los mapeos del tema
-        candidate_scenarios = THEME_TO_SCENARIO_MAP.get(t_key, ["holy_bible", "people_praying", "jesus_comforting"])
-        s1_pool = SCENARIO_POOLS.get(candidate_scenarios[0], SCENARIO_POOLS["holy_bible"])
-        s2_pool = SCENARIO_POOLS.get(candidate_scenarios[1] if len(candidate_scenarios) > 1 else "people_praying", SCENARIO_POOLS["people_praying"])
-        s3_pool = SCENARIO_POOLS.get("jesus_comforting", SCENARIO_POOLS["jesus_comforting"])
+        # Generación temática estructurada
+        raw1 = f"A person in quiet thoughtful contemplation{topic_cue}, soft natural window light, authentic 35mm composition"
+        raw2 = f"Hands praying reverently over an open Holy Bible, warm candlelight, peaceful spiritual atmosphere"
+        raw3 = f"A peaceful sunrise landscape with gentle golden rays, quiet hope and serene resolution"
 
-        raw_p1 = f"Cinematic atmospheric opening: {random.choice(s1_pool)}"
-        raw_p2 = f"Emotional intercession: {random.choice(s2_pool)}"
-        raw_p3 = f"Sacred divine victory: {random.choice(s3_pool)}"
+    clean_style1 = "35mm photography, natural morning light, balanced composition, authentic atmosphere"
+    clean_style2 = "natural window lighting, warm amber tones, quiet reflective mood, 50mm portrait composition"
+    clean_style3 = "golden morning sunlight, serene atmosphere, quiet depth of field, reverent composition"
 
-    p1 = f"{raw_p1}{topic_cue}, {style1} --ar 9:16"
-    p2 = f"{raw_p2}{topic_cue}, {style2} --ar 9:16"
-    p3 = f"{raw_p3}{topic_cue}, {style3} --ar 9:16"
+    p1 = f"{raw1}, {clean_style1} --ar 9:16"
+    p2 = f"{raw2}, {clean_style2} --ar 9:16"
+    p3 = f"{raw3}, {clean_style3} --ar 9:16"
 
     return {
         "prompt": p1,
@@ -1410,16 +1122,166 @@ def generate_seo_caption(
     cta: str,
     hashtags: List[str]
 ) -> str:
-    tags_str = " ".join(hashtags)
+    """Genera un copy limpio, honesto y editable para Facebook Reels sin sensacionalismo."""
     clean_title = re.sub(r'^[^\w]+', '', theme_title).strip()
+    tags_str = " ".join(hashtags[:5])
+    cta_clean = f"\n\n🕊️ {cta}" if cta else ""
     return (
-        f"✝️ {clean_title.upper()} ✝️\n\n"
+        f"✝️ {clean_title} ✝️\n\n"
         f"\"{prayer_text}\"\n\n"
-        f"📖 SCRIPTURE TODAY:\n\"{scripture}\"\n\n"
-        f"🕊️ {cta}\n\n"
+        f"📖 {scripture}{cta_clean}\n\n"
         f"{tags_str}"
     )
 
+
+# ─── Generador Interno por Plantillas con Control de Repeticiones ───────────
+
+def generate_internal_template_script(
+    theme_key: Optional[str] = None,
+    custom_topic: Optional[str] = None,
+    mode: str = "deep",
+    tone: Optional[str] = None,
+    seamless_loop: bool = False
+) -> Dict[str, Any]:
+    """Genera un guion interno con situaciones humanas concretas, evitando repeticiones recientes."""
+    history_mgr = get_history_manager()
+
+    # Si no se pasó theme_key, seleccionar uno rotando para no repetir los últimos 5
+    if not theme_key or theme_key not in VIRAL_THEMES:
+        recent_themes = history_mgr.get_recent_theme_keys(count=5)
+        available_keys = [k for k in VIRAL_THEMES.keys() if k not in recent_themes]
+        chosen_key = random.choice(available_keys) if available_keys else random.choice(list(VIRAL_THEMES.keys()))
+    else:
+        chosen_key = theme_key
+
+    theme = VIRAL_THEMES[chosen_key]
+    human_sit = theme.get("human_situation", "")
+    central_idea = theme.get("central_idea", "")
+
+    # 1. Gancho (Hook): Elegir uno que no haya sido utilizado recientemente
+    hook_candidates = theme.get("hooks", ["Before you close your eyes carrying that quiet worry tonight..."])
+    if custom_topic and custom_topic.strip():
+        translated = _translate_topic(custom_topic)
+        hook_candidates = [
+            f"If your heart carries a quiet burden for {translated} today...",
+            f"Tonight, as you pray for {translated}, know that God hears you.",
+            f"When you are trusting God through {translated}, take heart.",
+            f"Before worry regarding {translated} steals your peace tonight..."
+        ]
+
+    # Obtener el último gancho registrado para no repetirlo consecutivamente
+    recent_records = history_mgr.load_history()
+    last_hook = recent_records[-1].get("hook", "") if recent_records else ""
+
+    chosen_hook = None
+    for h in random.sample(hook_candidates, len(hook_candidates)):
+        is_sim, _ = history_mgr.is_similar_to_recent(h, threshold=0.70)
+        if not is_sim:
+            chosen_hook = h
+            break
+
+    # Si todos los candidatos están en el historial reciente, elegir uno diferente al último registrado
+    if not chosen_hook:
+        different_candidates = [h for h in hook_candidates if h.strip() != last_hook.strip()]
+        chosen_hook = random.choice(different_candidates) if different_candidates else random.choice(hook_candidates)
+
+    # 2. Perspectiva / Desarrollo (Body)
+    perspectives = theme.get("perspectives", {})
+    available_perspectives = list(perspectives.keys())
+    chosen_perspective_key = tone if (tone in available_perspectives) else random.choice(available_perspectives or ["prayer"])
+    base_body = perspectives.get(chosen_perspective_key, perspectives.get("prayer", "Lord, cover our home in Your gentle peace."))
+
+    # Adaptar cuerpo según tema personalizado
+    if custom_topic and custom_topic.strip():
+        topic_phrase = _translate_topic(custom_topic)
+        body = f"{base_body} Specifically, Lord, we bring {topic_phrase} into Your loving hands, trusting Your unfailing care."
+    else:
+        body = base_body
+
+    # 3. Cierre (Closing)
+    closings = theme.get("closings", ["May His peace guard your heart and mind tonight."])
+    closing = random.choice(closings)
+
+    # 4. CTA Opcional
+    ctas = theme.get("ctas", ["May your heart find quiet rest tonight in His hands."])
+    cta = random.choice(ctas)
+
+    if seamless_loop and cta:
+        loop_bridges = [
+            "And always remember that...",
+            "Before you close your eyes in sleep tonight, remember that...",
+            "Hold onto this promise tonight, and remember that...",
+            "As scripture quietly declares..."
+        ]
+        chosen_bridge = random.choice(loop_bridges)
+        cta = f"{cta.rstrip('.! ')} — {chosen_bridge}"
+
+    # Ajuste de duración según modo
+    if mode == "micro":
+        # Formato corto (~30 palabras)
+        sentences = [s.strip() for s in body.split(".") if s.strip()]
+        body_short = f"{sentences[0]}." if sentences else body
+        full_text = f"{chosen_hook} {body_short} {cta}".strip()
+        body_export = body_short
+    elif mode == "story":
+        # Formato más largo y reflexivo (~70 palabras)
+        full_text = f"{chosen_hook} {body} {closing} {cta}".strip()
+        body_export = f"{body} {closing}".strip()
+    else:  # deep (estándar 18-25s, ~50 palabras)
+        full_text = f"{chosen_hook} {body} {closing} {cta}".strip()
+        body_export = f"{body} {closing}".strip()
+
+    word_count = len(full_text.split())
+    # 2.15 palabras por segundo para locución natural y pausada
+    estimated_duration_sec = round(max(15.0, (word_count / 2.15) + 1.2), 1)
+
+    scripture = BIBLICAL_CATALOGUE.get(chosen_key, theme.get("scripture", "Philippians 4:6 — Present your requests to God with thanksgiving."))
+    hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianLiving"])
+    seo_caption = generate_seo_caption(theme["title"], full_text, scripture, cta, hashtags)
+    prompts_3s = generate_3scene_prompts_for_script(chosen_key, full_text, custom_topic)
+
+    # Registrar en historial para rotación
+    history_mgr.record_script(
+        theme_key=chosen_key,
+        hook=chosen_hook,
+        body=body_export,
+        cta=cta,
+        scene_prompts=[prompts_3s["scene_1_prompt"], prompts_3s["scene_2_prompt"], prompts_3s["scene_3_prompt"]]
+    )
+
+    return {
+        "theme_key": chosen_key,
+        "theme_title_es": theme["title"],
+        "thematic_pillar": theme.get("pillar", "spiritual_growth"),
+        "human_situation": human_sit,
+        "central_idea": central_idea,
+        "hook": chosen_hook,
+        "body": body_export,
+        "closing": closing,
+        "cta": cta,
+        "full_text": full_text,
+        "word_count": word_count,
+        "target_duration_sec": 22.0,
+        "estimated_duration_sec": estimated_duration_sec,
+        "mode": mode,
+        "seamless_loop": seamless_loop,
+        "tone": chosen_perspective_key,
+        "perspective": chosen_perspective_key,
+        "hook_badge_text": theme.get("hook_badge_text", "PRAYER OF FAITH"),
+        "micro_cta_text": cta,
+        "scripture": scripture,
+        "pinned_comment": f"May this prayer bring comfort: \"{closing}\" 🙏",
+        "seo_caption": seo_caption,
+        "hashtags": hashtags,
+        "scene_1_prompt": prompts_3s["scene_1_prompt"],
+        "scene_2_prompt": prompts_3s["scene_2_prompt"],
+        "scene_3_prompt": prompts_3s["scene_3_prompt"],
+        "image_prompt": prompts_3s["prompt"],
+        "provider_used": "template"
+    }
+
+
+# ─── Fachada Pública Principal ──────────────────────────────────────────────
 
 def generate_script(
     theme_key: Optional[str] = None,
@@ -1427,151 +1289,52 @@ def generate_script(
     mode: str = "deep",
     tone: Optional[str] = None,
     seamless_loop: bool = False
-) -> Dict[str, str]:
-    """
-    Genera un guion estructurado con variaciones reales según tema, modo y tema personalizado.
-    Estructura de 4 Partes:
-      1. Gancho (Hook): Situación o pregunta relatable.
-      2. Desarrollo (Body): Oración y reflexión espiritual profunda.
-      3. Cierre (Closing): Declaración de paz y verdad bíblica.
-      4. CTA: Invitación natural y respetuosa.
-    Modos:
-      - 'micro' (15-20s): 28-36 palabras
-      - 'deep' (25-35s): 48-62 palabras
-      - 'story' (40-50s): 75-95 palabras
-    """
-    chosen_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else random.choice(list(VIRAL_THEMES.keys()))
-    theme = VIRAL_THEMES[chosen_key]
-
-    valid_tones = ["intimate", "hopeful", "reflective", "narrative"]
-    chosen_tone = tone if (tone in valid_tones) else random.choice(valid_tones)
-
-    # 1. Gancho (Hook)
-    if custom_topic and custom_topic.strip():
-        translated_topic = _translate_topic(custom_topic)
-        hook_options = [
-            f"If your heart is carrying a quiet burden for {translated_topic} today...",
-            f"Tonight, as you pray for {translated_topic}, know that God hears you.",
-            f"When you are trusting God through {translated_topic}, take heart.",
-            f"Before you let worry over {translated_topic} overwhelm your mind tonight..."
-        ]
-        hook = random.choice(hook_options)
-    else:
-        hook = random.choice(theme.get("hooks", [
-            "Before you close your eyes carrying that quiet worry tonight...",
-            "If your heart feels weary and you are seeking God's peace today..."
-        ]))
-
-    # 2. Desarrollo (Body) según Tono
-    reflections = theme.get("reflections", {})
-    base_reflection = reflections.get(chosen_tone, reflections.get("hopeful", "Lord, cover our home in Your gentle peace."))
-
-    # Personalizar cuerpo si hay custom_topic
-    if custom_topic and custom_topic.strip():
-        topic_phrase = _translate_topic(custom_topic)
-        body_custom = f"Lord, we lift up {topic_phrase} into Your loving hands. Bring peace where there is fear, grant wisdom in every choice, and let Your steady grace sustain us through every step."
-        if mode == "micro":
-            body = f"Lord, we place {topic_phrase} in Your hands; let Your peace guard our home tonight."
-        elif mode == "story":
-            body = f"{base_reflection} We specifically bring {topic_phrase} before Your throne today. What seems too heavy for us to carry alone is held safely in Your loving presence."
-        else:  # deep
-            body = f"{base_reflection} Father, we place {topic_phrase} under Your wings of mercy, trusting Your unfailing care."
-    else:
-        if mode == "micro":
-            # Extraer 1-2 oraciones clave para duración breve (~30 palabras)
-            sentences = [s.strip() for s in base_reflection.split(".") if s.strip()]
-            body = f"{sentences[0]}." if sentences else base_reflection
-        elif mode == "story":
-            narrative_body = reflections.get("narrative", base_reflection)
-            reflective_body = reflections.get("reflective", "")
-            body = f"{narrative_body} {reflective_body}".strip()
-        else:  # deep
-            body = base_reflection
-
-    # 3. Cierre (Closing)
-    closing = random.choice(theme.get("closings", [
-        "May His peace guard your heart and mind tonight.",
-        "You are held securely in hands of endless grace."
-    ]))
-
-    # 4. CTA
-    cta = random.choice(theme.get("ctas", [
-        "Whisper Amen if you receive this peace today.",
-        "Rest in His promise tonight; tomorrow brings fresh mercy."
-    ]))
-    if seamless_loop:
-        loop_bridges = [
-            "And the reason God placed this message in your path tonight is because...",
-            "Hold onto this promise tonight, and always remember that...",
-            "Type Amen if you receive this, because as scripture declares...",
-            "Share this with someone you love, and never forget that...",
-            "Before you close your eyes in sleep tonight, remember that..."
-        ]
-        chosen_bridge = random.choice(loop_bridges)
-        cta_base = cta.rstrip(".! ")
-        cta = f"{cta_base} — {chosen_bridge}"
+) -> Dict[str, Any]:
+    """Punto de entrada principal. Delega en el proveedor activo (Ollama / Template / Auto)."""
+    from engine.script_provider import get_script_provider
+    provider = get_script_provider()
+    script_result = provider.generate(
+        theme_key=theme_key,
+        custom_topic=custom_topic,
+        mode=mode,
+        tone=tone,
+        seamless_loop=seamless_loop
+    )
+    return script_result.model_dump()
 
 
-    # Ensamblar texto completo según el modo
-    if mode == "micro":
-        full_text = f"{hook} {body} {cta}".strip()
-    elif mode == "story":
-        full_text = f"{hook} {body} {closing} {cta}".strip()
-    else:  # deep (default)
-        full_text = f"{hook} {body} {closing} {cta}".strip()
+def generate_image_prompt_for_script(theme_key: Optional[str], script_text: str = "") -> str:
+    """Retorna el prompt de la escena 1 para compatibilidad."""
+    prompts = generate_3scene_prompts_for_script(theme_key, script_text)
+    return prompts["prompt"]
 
-    # Cálculo preciso de duración estimada (~130 palabras por minuto / ~2.15 palabras por segundo)
-    word_count = len(full_text.split())
-    estimated_duration_sec = round(max(15.0, (word_count / 2.15) + 1.5), 1)
 
-    hook_badge = theme.get("hook_badge_text", "PRAYER OF FAITH")
-    scripture = theme.get("scripture", "Philippians 4:6 — In every situation, by prayer and petition, present your requests to God.")
-    hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianFamily"])
-    pinned = random.choice(theme.get("pinned_comments", [
-        "What is the first name of the person you are praying for today? Drop it below! 🙏"
-    ]))
-
-    seo_caption = generate_seo_caption(theme["title"], full_text, scripture, cta, hashtags)
-    prompts_3s = generate_3scene_prompts_for_script(chosen_key, full_text, custom_topic)
-
-    return {
-        "theme_key": chosen_key,
-        "theme_title_es": theme["title"],
-        "hook": hook,
-        "body": f"{body} {closing}".strip(),
-        "cta": cta,
-        "full_text": full_text,
-        "word_count": word_count,
-        "estimated_duration_sec": estimated_duration_sec,
-        "mode": mode,
-        "seamless_loop": seamless_loop,
-        "tone": chosen_tone,
-        "hook_badge_text": hook_badge,
-        "micro_cta_text": cta,
-        "scripture": scripture,
-        "pinned_comment": pinned,
-        "seo_caption": seo_caption,
-        "hashtags": hashtags,
-        "scene_1_prompt": prompts_3s["scene_1_prompt"],
-        "scene_2_prompt": prompts_3s["scene_2_prompt"],
-        "scene_3_prompt": prompts_3s["scene_3_prompt"],
-        "image_prompt": prompts_3s["prompt"]
-    }
+def get_themes_list() -> List[Dict]:
+    """Retorna los 26 temas disponibles con su pilar temático."""
+    return [
+        {
+            "key": k,
+            "title": v["title"],
+            "description": v["description"],
+            "pillar": v.get("pillar", "general")
+        }
+        for k, v in VIRAL_THEMES.items()
+    ]
 
 
 def get_card_template_for_theme(theme_key: str) -> Dict[str, str]:
-    """Genera plantilla devocional para tarjeta 4:5 de Feed en inglés con tipografía noble."""
+    """Plantilla para tarjetas devocionales 4:5 de Feed."""
     chosen_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else "lost_child"
     theme = VIRAL_THEMES[chosen_key]
 
     raw_title = theme.get("hook_badge_text", "PRAYER OF FAITH")
-    reflections = theme.get("reflections", {})
-    body = reflections.get("intimate", reflections.get("hopeful", "Lord, place a hedge of protection around my home."))
+    perspectives = theme.get("perspectives", {})
+    body = perspectives.get("prayer", perspectives.get("heart_comfort", "Lord, place a hedge of protection around my home."))
     closing = theme.get("closings", ["May His peace rest upon you."])[0]
     devotional_prayer = f"{body} {closing}".strip()
 
-    scripture = theme.get("scripture", "Philippians 4:19 — And my God will supply every need of yours.")
-    hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianFamily"])
+    scripture = BIBLICAL_CATALOGUE.get(chosen_key, theme.get("scripture", "Philippians 4:19 — And my God will supply every need of yours."))
+    hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianLiving"])
     rec_img = theme.get("recommended_image", "jesus_healing_miracle.jpg")
 
     feed_copy = f"""✝️ {raw_title} ✝️
@@ -1580,11 +1343,11 @@ def get_card_template_for_theme(theme_key: str) -> Dict[str, str]:
 
 📖 {scripture}
 
-🕊️ If you receive this prayer into your heart and home today, type "AMEN" and share it with someone who needs God's peace right now. 
+🕊️ Take a quiet breath and rest in God's peace today.
 
-{" ".join(hashtags)}"""
+{" ".join(hashtags[:4])}"""
 
-    ai_prompt = generate_image_prompt_for_script(chosen_key, devotional_prayer).replace("--ar 9:16", "--ar 4:5")
+    ai_prompt = generate_3scene_prompts_for_script(chosen_key, devotional_prayer)["scene_1_prompt"].replace("--ar 9:16", "--ar 4:5")
 
     return {
         "theme_key": chosen_key,
@@ -1595,12 +1358,62 @@ def get_card_template_for_theme(theme_key: str) -> Dict[str, str]:
         "recommended_image": rec_img,
         "image_prompt": ai_prompt,
         "feed_copy": feed_copy,
-        "pinned_comment": theme.get("pinned_comments", ["Drop your first name below so we can cover you in prayer! 🙏"])[0]
+        "pinned_comment": f"May this prayer bless your home: \"{closing}\" 🙏"
     }
 
 
-def get_themes_list() -> List[Dict]:
+def get_daily_batch_schedule() -> List[Dict]:
+    """
+    Planificador de lote diario rotativo:
+    Selecciona 3 temas rotando entre diferentes pilares temáticos para no repetir siempre los mismos 3.
+    """
+    history_mgr = get_history_manager()
+    recent = history_mgr.get_recent_theme_keys(count=6)
+
+    # Pilar Mañana: Paz o Gratitud
+    morning_candidates = [t for t in THEMATIC_PILLARS["peace_rest_daily"]["themes"] + THEMATIC_PILLARS["gratitude_wisdom_growth"]["themes"] if t not in recent]
+    morning_theme = random.choice(morning_candidates) if morning_candidates else "morning_favor"
+
+    # Pilar Mediodía: Fe y Pruebas o Duelo
+    midday_candidates = [t for t in THEMATIC_PILLARS["faith_hope_trials"]["themes"] + THEMATIC_PILLARS["grief_solitude_comfort"]["themes"] if t not in recent and t != morning_theme]
+    midday_theme = random.choice(midday_candidates) if midday_candidates else "strength_weary"
+
+    # Pilar Noche: Familia o Descanso
+    night_candidates = [t for t in THEMATIC_PILLARS["family_relationships"]["themes"] + THEMATIC_PILLARS["peace_rest_daily"]["themes"] if t not in recent and t not in [morning_theme, midday_theme]]
+    night_theme = random.choice(night_candidates) if night_candidates else "night_anxiety"
+
     return [
-        {"key": k, "title": v["title"], "description": v["description"]}
-        for k, v in VIRAL_THEMES.items()
+        {
+            "slot": "morning",
+            "time_label": "🌅 Mañana (7:00 AM - 8:30 AM EST)",
+            "purpose": "Apertura del Día, Sabiduría y Gratitud",
+            "theme_key": morning_theme,
+            "script": generate_script(morning_theme, mode="deep"),
+            "recommended_image": "jesus_holy_bible.jpg",
+            "recommended_image_2": "jesus_praying_gethsemane.jpg",
+            "recommended_image_3": "jesus_reaching_hand.jpg",
+            "recommended_music": "celestial_strings_hope"
+        },
+        {
+            "slot": "midday",
+            "time_label": "☀️ Mediodía (12:30 PM - 2:00 PM EST)",
+            "purpose": "Fortaleza en Medio de Pruebas y Trabajo",
+            "theme_key": midday_theme,
+            "script": generate_script(midday_theme, mode="deep"),
+            "recommended_image": "jesus_healing_miracle.jpg",
+            "recommended_image_2": "jesus_comforting_embrace.jpg",
+            "recommended_image_3": "holy_cross_calvary.jpg",
+            "recommended_music": "worship_piano_peace"
+        },
+        {
+            "slot": "night",
+            "time_label": "🌙 Noche (8:30 PM - 10:00 PM EST)",
+            "purpose": "Protección Familiar y Descanso Reparador",
+            "theme_key": night_theme,
+            "script": generate_script(night_theme, mode="deep"),
+            "recommended_image": "jesus_praying_gethsemane.jpg",
+            "recommended_image_2": "holy_cross_calvary.jpg",
+            "recommended_image_3": "jesus_comforting_embrace.jpg",
+            "recommended_music": "midnight_prayer_acoustic"
+        }
     ]

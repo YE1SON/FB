@@ -467,13 +467,14 @@ function bootstrapJesusStudio() {
     }
   }
 
-  // 2. Cargar Voces en Inglés
+  // 2. Cargar Voces en Inglés (Guy como voz predeterminada conversacional)
   async function loadVoices() {
     try {
       const res = await fetch("/api/voices");
       const voices = await res.json();
+      const defaultVoice = voices.some(v => v.key === "guy") ? "guy" : (voices[0]?.key || "christopher");
       voiceSelect.innerHTML = voices
-        .map(v => `<option value="${v.key}" ${v.key === "adam" || v.key === "christopher" ? "selected" : ""}>${v.name}</option>`)
+        .map(v => `<option value="${v.key}" ${v.key === defaultVoice ? "selected" : ""}>${v.name}</option>`)
         .join("");
     } catch (e) {
       console.error("Error al cargar voces:", e);
@@ -683,6 +684,10 @@ function bootstrapJesusStudio() {
 
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
+        const postCopyArea = document.getElementById("reelPostCopyText");
+        if (postCopyArea) {
+          postCopyArea.value = data.seo_caption;
+        }
       }
 
       if (data.pinned_comment) {
@@ -1784,7 +1789,7 @@ function bootstrapJesusStudio() {
           music_track: musicSelect ? musicSelect.value : "worship_piano_peace",
           music_volume: volumeInput ? parseFloat(volumeInput.value) / 100.0 : 0.20,
           aspect_ratio: aspectSelect ? aspectSelect.value : "9:16",
-          effect_type: effectSelect ? effectSelect.value : "cinematic_dust",
+          effect_type: effectSelect ? effectSelect.value : "none",
           theme_key: themeSelect ? themeSelect.value : "morning_favor",
           enable_hook_badge: !!(chkEnableHookBadge && chkEnableHookBadge.checked),
           hook_text: (chkEnableHookBadge && chkEnableHookBadge.checked && hookBadgeInput) ? hookBadgeInput.value.trim() : "",
@@ -1793,10 +1798,10 @@ function bootstrapJesusStudio() {
           hook_badge_size: hookBadgeSizeSelect ? hookBadgeSizeSelect.value : "normal",
           enable_micro_cta: !!(chkEnableMicroCta && chkEnableMicroCta.checked),
           micro_cta_text: (chkEnableMicroCta && chkEnableMicroCta.checked && microCtaInput) ? microCtaInput.value.trim() : "",
-          enable_sfx: chkEnableSfx ? chkEnableSfx.checked : true,
+          enable_sfx: chkEnableSfx ? chkEnableSfx.checked : false,
           seamless_loop: !!(chkSeamlessLoop && chkSeamlessLoop.checked),
           master_lufs: chkMasterLufs ? chkMasterLufs.checked : true,
-          generate_trending_audio: chkGenerateTrendingAudio ? chkGenerateTrendingAudio.checked : true
+          generate_trending_audio: chkGenerateTrendingAudio ? chkGenerateTrendingAudio.checked : false
         })
       });
 
@@ -1841,6 +1846,11 @@ function bootstrapJesusStudio() {
       videoActions.style.display = "block";
       showVideoView();
 
+      if (data.actual_duration_sec) {
+        renderStatusText.textContent = `✅ Reel Generado con Éxito (${data.actual_duration_sec}s)`;
+        renderStatusSub.textContent = `Duración objetivo: ${data.target_duration_sec || 0}s | Precisión: ${data.duration_diff_sec || 0}s`;
+      }
+
       loadRecentOutputs();
     } catch (e) {
       alert("Fallo al renderizar: " + e.message);
@@ -1850,21 +1860,28 @@ function bootstrapJesusStudio() {
     }
   }
 
-  // 11. Copiar Texto y Hashtags para Facebook (Optimizado para SEO de Meta 2026)
+  // 11. Copiar Texto y Hashtags para Facebook
   if (btnCopyCaption) {
     btnCopyCaption.addEventListener("click", () => {
-      const hook = scriptHook ? scriptHook.value.trim() : "";
-      const body = scriptBody ? scriptBody.value.trim() : "";
-      const cta = scriptCta ? scriptCta.value.trim() : "";
-      const pinned = currentPinnedComment || (scriptPinnedComment ? scriptPinnedComment.value.trim() : "");
-      const scriptureText = currentScripture ? `📖 SCRIPTURE TODAY:\n"${currentScripture}"\n\n` : "";
-
-      let caption = `⚡ ${hook}\n\n${body}\n\n${scriptureText}${cta}\n\n👇 COMMENT BELOW:\n${pinned ? `"${pinned}"` : "Leave your first name or write 'AMEN' to agree in faith tonight."}\n\n#DailyPrayer #ChristianReels #JesusLovesYou #FaithOverFear #MiracleWorker`;
+      const postCopyArea = document.getElementById("reelPostCopyText");
+      let caption = "";
+      if (postCopyArea && postCopyArea.value.trim()) {
+        caption = postCopyArea.value.trim();
+      } else if (currentSeoCaption) {
+        caption = currentSeoCaption;
+      } else {
+        const hook = scriptHook ? scriptHook.value.trim() : "";
+        const body = scriptBody ? scriptBody.value.trim() : "";
+        const cta = scriptCta ? scriptCta.value.trim() : "";
+        const pinned = currentPinnedComment || (scriptPinnedComment ? scriptPinnedComment.value.trim() : "");
+        const scriptureText = currentScripture ? `📖 Scripture:\n"${currentScripture}"\n\n` : "";
+        caption = `${hook}\n\n${body}\n\n${scriptureText}${cta}${pinned ? `\n\nReflection: ${pinned}` : ""}\n\n#DailyPrayer #Faith #ChristianReels #JesusChrist #GodIsGood`;
+      }
 
       navigator.clipboard.writeText(caption).then(() => {
-        btnCopyCaption.textContent = "✅ ¡Publicación Viral Completa Copiada!";
+        btnCopyCaption.textContent = "✅ ¡Publicación Copiada al Portapapeles!";
         setTimeout(() => {
-          btnCopyCaption.textContent = "📋 Copiar Publicación Completa para Facebook (Copy Viral SEO)";
+          btnCopyCaption.textContent = "📋 Copiar Publicación Completa para Facebook";
         }, 2500);
       }).catch(err => {
         alert("No se pudo copiar automáticamente: " + err);

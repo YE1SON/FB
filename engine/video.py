@@ -259,7 +259,7 @@ def render_reel(
     ass_path: str,
     output_mp4_path: str,
     aspect_ratio: str = "9:16",
-    effect_type: str = "living_gold",
+    effect_type: str = "none",
     camera_motion: str = "zoom_in",
     music_track: str = "worship_piano_peace",
     music_volume: float = 0.20,
@@ -267,19 +267,18 @@ def render_reel(
     image_path_2: Optional[str] = None,
     image_path_3: Optional[str] = None,
     transition_style: str = "fade",
-    enable_sfx: bool = True,
-    generate_trending_audio_version: bool = True,
+    enable_sfx: bool = False,
+    generate_trending_audio_version: bool = False,
     seamless_loop: bool = False,
     master_lufs: bool = True
-) -> Dict[str, str]:
+) -> Dict[str, object]:
     """
-    Renderiza el Reel con la suite completa de 6 Plugins Algorítmicos:
-    1. Anti-C2PA Sanitizer: Elimina metadatos de IA, inyecta perfiles de cámara móvil limpia.
-    2. Living Atmosphere: Partículas vivas con variación temporal de luz contra el castigo de slideshow.
-    3. Dual Export (Trending Audio Ready): Genera versión master + versión con voz limpia para audio viral de FB.
-    4. Audio Punctuation (SFX): Sub-bass whoosh inicial (0s), swell sagrado y campanilla celestial.
-    5. Seamless Loop: Cierre suave en el loop boundary sin cortes abruptos.
-    6. Masterización Broadcast EBU R128 (-14 LUFS Meta Standard) para volumen perfecto en móviles.
+    Renderiza el Reel cristiano en formato vertical 9:16 con FFmpeg:
+    - Composición narrativa de 3 escenas con encuadre dinámico y transiciones suaves (xfade).
+    - Incrustación de subtítulos ASS sincronizados en zona segura inferior.
+    - Opciones de etalonaje visual cinemático o renderizado limpio.
+    - Mezcla de música de fondo con ducking vocal y masterización EBU R128 (-14 LUFS).
+    - Metadatos neutros y verídicos de JesusReels Studio con soporte de streaming rápido (+faststart).
     """
     duration = get_audio_duration(audio_path)
     norm_ass = os.path.abspath(ass_path).replace("\\", "/").replace(":", "\\:")
@@ -396,7 +395,7 @@ def render_reel(
         "-fflags", "+bitexact",
         "-flags:v", "+bitexact",
         "-flags:a", "+bitexact",
-        "-metadata:g", "encoder=Apple QuickTime",
+        "-metadata:g", "encoder=JesusReels Studio",
         "-metadata:g", "comment=",
         "-metadata:g", "artist=",
         "-metadata:g", "title=",
@@ -470,7 +469,15 @@ def render_reel(
         # Si no había música, el propio output_mp4_path ya es "trending audio ready"
         trending_mp4_path = output_mp4_path
 
+    try:
+        actual_duration = get_audio_duration(output_mp4_path)
+    except Exception:
+        actual_duration = duration
+
     return {
         "master_video": output_mp4_path,
-        "trending_audio_video": trending_mp4_path
+        "trending_audio_video": trending_mp4_path,
+        "actual_duration_sec": round(actual_duration, 2),
+        "target_duration_sec": round(duration, 2),
+        "duration_diff_sec": round(abs(actual_duration - duration), 2)
     }

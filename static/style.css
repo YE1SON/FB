@@ -2067,3 +2067,35 @@ textarea.form-control {
     padding: 9px 12px !important;
   }
 }
+
+
+/* Quality-first helper notes added in v6.0 */
+.quality-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 10px 0 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-main);
+  border-left: 3px solid var(--accent-gold);
+  border-radius: var(--radius-md);
+  background: var(--bg-card-sub);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.quality-note strong {
+  color: var(--text-main);
+}
+
+.quality-note[role="status"] {
+  margin-top: 2px;
+}
+
+@media (max-width: 720px) {
+  .quality-note {
+    padding: 9px 10px;
+    font-size: 11px;
+  }
+}

@@ -48,6 +48,9 @@ class QualitySuiteTest(unittest.TestCase):
             dt = time.time() - t0
             generated.append((theme, res, dt))
 
+            # La descripción no debe repetir el CTA dos veces.
+            self.assertLessEqual(res["seo_caption"].count(res["cta"]), 1)
+
             # Validar esquema estricto
             self.assertIn("hook", res)
             self.assertIn("body", res)
@@ -151,7 +154,19 @@ class QualitySuiteTest(unittest.TestCase):
         self.assertIn("Style: MainSub,Montserrat,70", content)
         self.assertIn("MarginV", content)
         self.assertIn("Dialogue: 2,", content)
-        print("  -> Archivo ASS generado correctamente con estilo limpio y margen vertical seguro (440px).")
+
+        # Una frase muy corta al final no debe extenderse más allá del último cue.
+        edge_cues = [
+            CueItem(start_sec=0.0, end_sec=0.5, text="Thank"),
+            CueItem(start_sec=0.5, end_sec=1.0, text="you."),
+            CueItem(start_sec=4.8, end_sec=5.0, text="Amen.")
+        ]
+        edge_path = os.path.join(self.test_outputs_dir, "test_subtitle_end_boundary.ass")
+        generate_viral_ass(edge_cues, edge_path, style_key="clean", margin_v=440)
+        with open(edge_path, "r", encoding="utf-8") as f:
+            edge_content = f.read()
+        self.assertIn("Dialogue: 2,0:00:04.80,0:00:05.00,MainSub", edge_content)
+        print("  -> Estilo clean, margen seguro y límite de duración comprobados.")
 
     def test_06_end_to_end_video_render(self):
         """6. Renderizado completo de un video de prueba de extremo a extremo en vertical 9:16."""

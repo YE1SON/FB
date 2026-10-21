@@ -239,6 +239,11 @@ def generate_viral_ass(
     if not cues:
         cues = [CueItem(start_sec=0.0, end_sec=5.0, text="May the peace of Christ guard your home.")]
 
+    # The last timed cue is the available transcript boundary. Do not extend
+    # a final subtitle past it just to satisfy the usual 0.75s reading minimum.
+    positive_ends = [float(cue.end_sec) for cue in cues if float(cue.end_sec) > 0]
+    timeline_end_sec = max(positive_ends, default=5.0)
+
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["clean"])
     font = style_cfg["font"]
     primary = style_cfg["primary"]
@@ -345,16 +350,20 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         if not chunk:
             continue
 
-        chunk_start = chunk[0].start_sec
-        chunk_end = max(chunk[-1].end_sec, chunk_start + 0.75)
+        chunk_start = min(max(0.0, float(chunk[0].start_sec)), timeline_end_sec)
+        raw_chunk_end = max(float(chunk[-1].end_sec), chunk_start + 0.75)
+        chunk_end = min(raw_chunk_end, timeline_end_sec)
+        if chunk_end <= chunk_start:
+            continue
 
         # ─── MODO 1: KARAOKE (Palabra por palabra activa sincrónica) ───────────
         if style_key == "karaoke":
             for active_idx, active_cue in enumerate(chunk):
-                w_start = active_cue.start_sec
-                w_end = active_cue.end_sec
+                w_start = min(max(0.0, float(active_cue.start_sec)), timeline_end_sec)
+                raw_word_end = max(float(active_cue.end_sec), w_start + 0.20)
+                w_end = min(raw_word_end, timeline_end_sec)
                 if w_end <= w_start:
-                    w_end = w_start + 0.20
+                    continue
 
                 s_time = format_ass_time(w_start)
                 e_time = format_ass_time(w_end)
@@ -373,10 +382,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         # ─── MODO 2: POP (Salto cinético con destello de color, base estable sin jitter) ───────
         elif style_key == "pop":
             for active_idx, active_cue in enumerate(chunk):
-                w_start = active_cue.start_sec
-                w_end = active_cue.end_sec
+                w_start = min(max(0.0, float(active_cue.start_sec)), timeline_end_sec)
+                raw_word_end = max(float(active_cue.end_sec), w_start + 0.20)
+                w_end = min(raw_word_end, timeline_end_sec)
                 if w_end <= w_start:
-                    w_end = w_start + 0.20
+                    continue
 
                 s_time = format_ass_time(w_start)
                 e_time = format_ass_time(w_end)

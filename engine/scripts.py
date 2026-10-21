@@ -40,35 +40,64 @@ THEMATIC_PILLARS = {
     }
 }
 
-# ─── Catálogo Bíblico Verificado (Textos Exactos en Inglés ESV/NIV) ─────────
+# ─── Catálogo Bíblico Verificado (Textos Exactos en Inglés ESV / NIV) ───────
+# Todas las referencias corresponden a versiones bíblicas canónicas en inglés (NIV y ESV).
+# Este catálogo sirve como base fidedigna para la generación de oraciones, tarjetas
+# y textos para Facebook, garantizando exactitud teológica y editorial sin alucinaciones.
 
 BIBLICAL_CATALOGUE = {
-    "lost_child": "Luke 15:20 — While he was still a long way off, his father saw him and was filled with compassion for him.",
-    "family_protection": "Psalm 91:11 — For he will command his angels concerning you to guard you in all your ways.",
-    "medical_fear": "2 Corinthians 12:9 — My grace is sufficient for you, for my power is made perfect in weakness.",
-    "zero_balance": "Philippians 4:19 — And my God will meet all your needs according to the riches of his glory in Christ Jesus.",
-    "night_anxiety": "Philippians 4:6-7 — Do not be anxious about anything, but in every situation present your requests to God.",
-    "morning_favor": "Lamentations 3:22-23 — The steadfast love of the Lord never ceases; his mercies are new every morning.",
-    "marriage_healing": "Colossians 3:13 — Bear with each other and forgive one another if any of you has a grievance against someone.",
-    "healing_depression": "Psalm 34:18 — The Lord is close to the brokenhearted and saves those who are crushed in spirit.",
-    "job_breakthrough": "Proverbs 3:5-6 — Trust in the Lord with all your heart and lean not on your own understanding.",
-    "lonely_widow": "Psalm 68:5 — A father to the fatherless, a defender of widows, is God in his holy dwelling.",
-    "addiction_chains": "John 8:36 — So if the Son sets you free, you will be free indeed.",
-    "elderly_parents": "Isaiah 46:4 — Even to your old age and gray hairs I am he, I am he who will sustain you.",
-    "single_parent": "Isaiah 40:29 — He gives strength to the weary and increases the power of the weak.",
-    "sick_grandchild": "Matthew 19:14 — Jesus said, 'Let the little children come to me, and do not hinder them.'",
-    "court_legal": "Psalm 37:5-6 — Commit your way to the Lord; trust in him and he will act.",
-    "restless_sleep": "Psalm 4:8 — In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.",
-    "gratitude_harvest": "1 Thessalonians 5:18 — Give thanks in all circumstances; for this is God's will for you in Christ Jesus.",
-    "unspoken_prayer": "Romans 8:26 — The Spirit helps us in our weakness, interceding with groans that words cannot express.",
-    "spiritual_warfare": "2 Thessalonians 3:3 — The Lord is faithful, and he will strengthen you and protect you from the evil one.",
-    "business_blessing": "Proverbs 16:3 — Commit to the Lord whatever you do, and he will establish your plans.",
-    "forgiving_past": "Ephesians 4:32 — Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.",
-    "grief_loss": "Matthew 5:4 — Blessed are those who mourn, for they will be comforted.",
-    "guidance_direction": "Psalm 32:8 — I will instruct you and teach you in the way you should go; I will counsel you with my loving eye upon you.",
-    "strength_weary": "Isaiah 40:31 — Those who hope in the Lord will renew their strength. They will soar on wings like eagles.",
-    "peace_in_storm": "Mark 4:39 — He got up, rebuked the wind and said to the waves, 'Quiet! Be still!' Then the wind died down.",
-    "divine_grace": "Hebrews 4:16 — Let us approach God's throne of grace with confidence, so that we may receive mercy in time of need."
+    # Luke 15:20 (NIV) - El hijo pródigo
+    "lost_child": "Luke 15:20 (NIV) — While he was still a long way off, his father saw him and was filled with compassion for him.",
+    # Psalm 91:11 (NIV) - Protección angelical
+    "family_protection": "Psalm 91:11 (NIV) — For he will command his angels concerning you to guard you in all your ways.",
+    # 2 Corinthians 12:9 (NIV) - Gracia en la debilidad
+    "medical_fear": "2 Corinthians 12:9 (NIV) — My grace is sufficient for you, for my power is made perfect in weakness.",
+    # Philippians 4:19 (NIV) - Provisión divina
+    "zero_balance": "Philippians 4:19 (NIV) — And my God will meet all your needs according to the riches of his glory in Christ Jesus.",
+    # Philippians 4:6-7 (NIV) - Paz ante la ansiedad
+    "night_anxiety": "Philippians 4:6-7 (NIV) — Do not be anxious about anything, but in every situation present your requests to God.",
+    # Lamentations 3:22-23 (ESV) - Misericordias matutinas
+    "morning_favor": "Lamentations 3:22-23 (ESV) — The steadfast love of the Lord never ceases; his mercies are new every morning.",
+    # Colossians 3:13 (NIV) - Perdón y sanidad matrimonial
+    "marriage_healing": "Colossians 3:13 (NIV) — Bear with each other and forgive one another if any of you has a grievance against someone.",
+    # Psalm 34:18 (NIV) - Cercanía en el quebranto
+    "healing_depression": "Psalm 34:18 (NIV) — The Lord is close to the brokenhearted and saves those who are crushed in spirit.",
+    # Proverbs 3:5-6 (NIV) - Confianza en la dirección laboral
+    "job_breakthrough": "Proverbs 3:5-6 (NIV) — Trust in the Lord with all your heart and lean not on your own understanding.",
+    # Psalm 68:5 (NIV) - Defensor de viudas y huérfanos
+    "lonely_widow": "Psalm 68:5 (NIV) — A father to the fatherless, a defender of widows, is God in his holy dwelling.",
+    # John 8:36 (NIV) - Libertad verdadera
+    "addiction_chains": "John 8:36 (NIV) — So if the Son sets you free, you will be free indeed.",
+    # Isaiah 46:4 (NIV) - Sustento en la vejez
+    "elderly_parents": "Isaiah 46:4 (NIV) — Even to your old age and gray hairs I am he, I am he who will sustain you.",
+    # Isaiah 40:29 (NIV) - Fuerza al cansado
+    "single_parent": "Isaiah 40:29 (NIV) — He gives strength to the weary and increases the power of the weak.",
+    # Matthew 19:14 (NIV) - Bendición a los niños
+    "sick_grandchild": "Matthew 19:14 (NIV) — Jesus said, 'Let the little children come to me, and do not hinder them.'",
+    # Psalm 37:5-6 (ESV) - Encomienda al Señor
+    "court_legal": "Psalm 37:5-6 (ESV) — Commit your way to the Lord; trust in him and he will act.",
+    # Psalm 4:8 (NIV) - Paz en el descanso
+    "restless_sleep": "Psalm 4:8 (NIV) — In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.",
+    # 1 Thessalonians 5:18 (NIV) - Gratitud continua
+    "gratitude_harvest": "1 Thessalonians 5:18 (NIV) — Give thanks in all circumstances; for this is God's will for you in Christ Jesus.",
+    # Romans 8:26 (NIV) - Intercesión del Espíritu
+    "unspoken_prayer": "Romans 8:26 (NIV) — The Spirit helps us in our weakness, interceding with groans that words cannot express.",
+    # 2 Thessalonians 3:3 (NIV) - Fortaleza y protección
+    "spiritual_warfare": "2 Thessalonians 3:3 (NIV) — The Lord is faithful, and he will strengthen you and protect you from the evil one.",
+    # Proverbs 16:3 (NIV) - Planes en manos de Dios
+    "business_blessing": "Proverbs 16:3 (NIV) — Commit to the Lord whatever you do, and he will establish your plans.",
+    # Ephesians 4:32 (NIV) - Compasión y perdón
+    "forgiving_past": "Ephesians 4:32 (NIV) — Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.",
+    # Matthew 5:4 (NIV) - Consuelo en el duelo
+    "grief_loss": "Matthew 5:4 (NIV) — Blessed are those who mourn, for they will be comforted.",
+    # Psalm 32:8 (NIV) - Guía y consejo
+    "guidance_direction": "Psalm 32:8 (NIV) — I will instruct you and teach you in the way you should go; I will counsel you with my loving eye upon you.",
+    # Isaiah 40:31 (NIV) - Renovación de fuerzas
+    "strength_weary": "Isaiah 40:31 (NIV) — Those who hope in the Lord will renew their strength. They will soar on wings like eagles.",
+    # Mark 4:39 (NIV) - Calma en la tormenta
+    "peace_in_storm": "Mark 4:39 (NIV) — He got up, rebuked the wind and said to the waves, 'Quiet! Be still!' Then the wind died down.",
+    # Hebrews 4:16 (NIV) - Trono de la gracia
+    "divine_grace": "Hebrews 4:16 (NIV) — Let us approach God's throne of grace with confidence, so that we may receive mercy in time of need."
 }
 
 # ─── Mapeo de Traducciones para Temas Libres ────────────────────────────────

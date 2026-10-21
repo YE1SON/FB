@@ -82,6 +82,13 @@ SUBTITLE_STYLES: Dict[str, Dict] = {
     }
 }
 
+FAITH_KEYWORDS = {
+    "god", "jesus", "lord", "christ", "faith", "pray", "prayer", "praying",
+    "peace", "grace", "love", "hope", "amen", "glory", "holy", "spirit",
+    "bless", "blessed", "blessing", "father", "mercy", "strength", "heart",
+    "soul", "heavens", "heaven", "light", "cross"
+}
+
 # Presets de Insignia Superior (Hook Badge) — Modernos, tipo píldora / glassmorphic, sin tipografías anticuadas
 HOOK_BADGE_PRESETS: Dict[str, Dict] = {
     "clean_glass": {
@@ -158,11 +165,12 @@ HOOK_BADGE_PRESETS["royal_navy"] = HOOK_BADGE_PRESETS["clean_glass"]
 
 
 def format_ass_time(seconds: float) -> str:
-    """Convierte segundos flotantes al formato ASS H:MM:SS.cs"""
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    cs = int((seconds - int(seconds)) * 100)
+    """Convierte segundos flotantes al formato ASS H:MM:SS.cs con redondeo centesimal exacto."""
+    total_cs = max(0, int(round(float(seconds) * 100)))
+    h = total_cs // 360000
+    m = (total_cs % 360000) // 6000
+    s = (total_cs % 6000) // 100
+    cs = total_cs % 100
     return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
 
 
@@ -228,21 +236,24 @@ def generate_viral_ass(
     play_res_y: int = 1920,
     enable_hook_badge: bool = False,
     enable_micro_cta: bool = False,
-    all_caps: Optional[bool] = None
+    all_caps: Optional[bool] = None,
+    max_duration: Optional[float] = None
 ) -> str:
     """
     Genera un archivo .ass optimizado para Facebook Reels y videos verticales:
     - 4 estilos tipográficos: CLEAN (predeterminado), CINEMATIC, KARAOKE, POP.
     - Zonas seguras verticales respetadas (MarginV por defecto 440 en 1080x1920).
     - Agrupación semántica que garantiza un tiempo mínimo de lectura confortable (>=0.75s).
+    - Acotado estricto a la duración real del audio (max_duration) para evitar subtítulos fantasma.
     """
     if not cues:
         cues = [CueItem(start_sec=0.0, end_sec=5.0, text="May the peace of Christ guard your home.")]
 
-    # The last timed cue is the available transcript boundary. Do not extend
-    # a final subtitle past it just to satisfy the usual 0.75s reading minimum.
+    # Límite superior del audio / transcripción disponible
     positive_ends = [float(cue.end_sec) for cue in cues if float(cue.end_sec) > 0]
     timeline_end_sec = max(positive_ends, default=5.0)
+    if max_duration is not None and float(max_duration) > 0:
+        timeline_end_sec = min(timeline_end_sec, float(max_duration))
 
     style_cfg = SUBTITLE_STYLES.get(style_key, SUBTITLE_STYLES["clean"])
     font = style_cfg["font"]

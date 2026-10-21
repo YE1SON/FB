@@ -20,7 +20,7 @@ if BASE_DIR not in sys.path:
 from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, generate_3scene_prompts_for_script, get_card_template_for_theme, get_daily_batch_schedule, VIRAL_THEMES
 from engine.tts import synthesize_speech, get_available_voices, VOICES, LEGACY_VOICE_MAP, check_engine_availability
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
-from engine.video import render_reel, WORSHIP_TRACKS
+from engine.video import render_reel, WORSHIP_TRACKS, get_audio_duration
 from engine.image_cards import create_prayer_card_4_5
 from engine.broll import get_broll_status, get_broll_clip
 from engine.image_gen import generate_ai_scene_image, get_providers_status, save_keys, load_keys
@@ -40,11 +40,23 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="JesusReels Studio", version="4.0.0")
 
+env_origins = os.environ.get("ALLOWED_ORIGINS", "").strip()
+if env_origins:
+    allowed_origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:8050",
+        "http://127.0.0.1:8050",
+        "http://localhost:3000",
+        "https://132-145-202-1.sslip.io",
+        "http://132-145-202-1.sslip.io"
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -133,6 +145,8 @@ class RenderRequest(BaseModel):
     seamless_loop: Optional[bool] = False
     master_lufs: Optional[bool] = True
     generate_trending_audio: Optional[bool] = False
+    target_duration_sec: Optional[float] = None
+    duration_mode: Optional[str] = "deep"
 
 class ImageCardRequest(BaseModel):
     background_image_path: str
@@ -254,28 +268,51 @@ def list_images():
         for f in files
     ]
 
+MAX_UPLOAD_SIZE = 15 * 1024 * 1024  # 15 MB
+ALLOWED_UPLOAD_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+
 @app.delete("/api/images/{filename}")
 @app.delete("/studio/api/images/{filename}")
 def delete_image(filename: str):
-    filename = os.path.basename(filename)
-    filepath = os.path.join(ASSETS_DIR, filename)
+    safe_name = os.path.basename(filename.strip())
+    filepath = os.path.abspath(os.path.join(ASSETS_DIR, safe_name))
+    if not filepath.startswith(os.path.abspath(ASSETS_DIR)):
+        raise HTTPException(status_code=400, detail="Ruta de archivo no permitida.")
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Imagen no encontrada.")
-    if filename in IMAGE_METADATA:
-        raise HTTPException(status_code=400, detail="No se pueden eliminar las 6 imágenes plantilla predeterminadas.")
+    if safe_name in IMAGE_METADATA:
+        raise HTTPException(status_code=400, detail="No se pueden eliminar las imágenes plantilla predeterminadas.")
     try:
         os.remove(filepath)
-        return {"status": "success", "deleted": filename}
+        return {"status": "success", "deleted": safe_name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"No se pudo eliminar la imagen: {str(e)}")
 
 @app.post("/api/upload-image")
 @app.post("/studio/api/upload-image")
 async def upload_image(file: UploadFile = File(...)):
-    filename = f"custom_{uuid.uuid4().hex[:8]}_{file.filename}"
+    raw_name = os.path.basename(file.filename or "")
+    ext = os.path.splitext(raw_name)[1].lower()
+    if ext not in ALLOWED_UPLOAD_EXTS:
+        raise HTTPException(status_code=400, detail="Formato no admitido. Usa imágenes JPG, PNG o WebP.")
+
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=400, detail="El archivo excede el tamaño máximo permitido de 15 MB.")
+    if len(contents) < 100:
+        raise HTTPException(status_code=400, detail="Archivo vacío o corrupto.")
+
+    # Validar que sea un archivo de imagen real decodificable
+    try:
+        img = Image.open(io.BytesIO(contents))
+        img.verify()
+    except Exception:
+        raise HTTPException(status_code=400, detail="El archivo proporcionado no es una imagen válida.")
+
+    filename = f"custom_{uuid.uuid4().hex[:8]}{ext}"
     filepath = os.path.join(ASSETS_DIR, filename)
     with open(filepath, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        f.write(contents)
     return {"filename": filename, "url": f"/assets/images/{filename}", "label": "Tu Imagen Subida", "deletable": True}
 
 # ─── Image Generation Engine (Z-Image Turbo, FLUX.1 Schnell, AI Horde) ───────
@@ -377,10 +414,23 @@ async def api_render_video(req: RenderRequest):
     output_video = os.path.join(OUTPUTS_DIR, f"reel_{session_id}.mp4")
 
     try:
+        # Calculate target duration based on request or mode
+        if req.target_duration_sec and float(req.target_duration_sec) > 0:
+            target_dur = round(float(req.target_duration_sec), 2)
+        elif req.duration_mode == "micro":
+            target_dur = 14.0
+        else:
+            target_dur = 28.0
+
+        # Calculate estimated speaking duration (words / 125 wpm * 60)
+        word_count = len(full_text.split())
+        estimated_dur = round((word_count / 125.0) * 60.0, 1)
+
         # 1. Synthesize TTS audio
         voice_key = LEGACY_VOICE_MAP.get(req.voice_key, req.voice_key)
         voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
         cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
+        audio_dur = round(get_audio_duration(audio_file), 2)
 
         # 2. Generate ASS subtitles & Embedded Particles
         margin_v = 400 if req.subtitle_size == "large" else 440
@@ -409,7 +459,8 @@ async def api_render_video(req: RenderRequest):
             play_res_y=play_h,
             enable_hook_badge=bool(req.enable_hook_badge),
             enable_micro_cta=bool(req.enable_micro_cta),
-            all_caps=bool(req.all_caps)
+            all_caps=bool(req.all_caps),
+            max_duration=audio_dur
         )
 
         # 3. Render video (3-Scene Dynamic Pipeline)
@@ -434,14 +485,16 @@ async def api_render_video(req: RenderRequest):
 
         if not image_file_2:
             if req.image_name_2 and req.image_name_2 not in ["none", ""]:
-                cand2 = os.path.join(ASSETS_DIR, os.path.basename(req.image_name_2))
-                if os.path.exists(cand2):
+                safe2 = os.path.basename(req.image_name_2.strip())
+                cand2 = os.path.abspath(os.path.join(ASSETS_DIR, safe2))
+                if cand2.startswith(os.path.abspath(ASSETS_DIR)) and os.path.exists(cand2):
                     image_file_2 = cand2
 
         if not image_file_3:
             if req.image_name_3 and req.image_name_3 not in ["none", ""]:
-                cand3 = os.path.join(ASSETS_DIR, os.path.basename(req.image_name_3))
-                if os.path.exists(cand3):
+                safe3 = os.path.basename(req.image_name_3.strip())
+                cand3 = os.path.abspath(os.path.join(ASSETS_DIR, safe3))
+                if cand3.startswith(os.path.abspath(ASSETS_DIR)) and os.path.exists(cand3):
                     image_file_3 = cand3
 
         render_result = render_reel(
@@ -457,7 +510,8 @@ async def api_render_video(req: RenderRequest):
             enable_sfx=bool(req.enable_sfx) if req.enable_sfx is not None else True,
             seamless_loop=bool(req.seamless_loop) if req.seamless_loop is not None else False,
             master_lufs=bool(req.master_lufs) if req.master_lufs is not None else True,
-            generate_trending_audio_version=bool(req.generate_trending_audio) if req.generate_trending_audio is not None else True
+            generate_trending_audio_version=bool(req.generate_trending_audio) if req.generate_trending_audio is not None else True,
+            target_duration=target_dur
         )
 
     except HTTPException:
@@ -477,8 +531,10 @@ async def api_render_video(req: RenderRequest):
         "filename": f"reel_{session_id}.mp4",
         "trending_audio_video_url": trending_url,
         "trending_filename": trending_filename,
+        "target_duration_sec": target_dur,
+        "estimated_duration_sec": estimated_dur,
+        "audio_duration_sec": audio_dur,
         "actual_duration_sec": render_result.get("actual_duration_sec"),
-        "target_duration_sec": render_result.get("target_duration_sec"),
         "duration_diff_sec": render_result.get("duration_diff_sec")
     }
 
@@ -486,11 +542,11 @@ async def api_render_video(req: RenderRequest):
 def _resolve_image(image_name: str) -> str:
     # Protección estricta contra path traversal
     safe_name = os.path.basename(image_name.strip()) if image_name else ""
-    image_file = os.path.join(ASSETS_DIR, safe_name)
-    if not safe_name or not os.path.exists(image_file):
+    image_file = os.path.abspath(os.path.join(ASSETS_DIR, safe_name))
+    if not safe_name or not image_file.startswith(os.path.abspath(ASSETS_DIR)) or not os.path.exists(image_file):
         avail = [f for f in os.listdir(ASSETS_DIR) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
         if avail:
-            image_file = os.path.join(ASSETS_DIR, avail[0])
+            image_file = os.path.abspath(os.path.join(ASSETS_DIR, avail[0]))
         else:
             raise HTTPException(status_code=400, detail="No hay imágenes disponibles en el repositorio.")
     return image_file

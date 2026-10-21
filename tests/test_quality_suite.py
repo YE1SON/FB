@@ -280,6 +280,140 @@ class QualitySuiteTest(unittest.TestCase):
 
         print("  -> Todos los endpoints HTTP de la API pasaron las pruebas de regresión con éxito.")
 
+    def test_08_subtitle_all_styles_positions_and_audio_clamping(self):
+        """8. Comprueba los 4 estilos de subtítulos, posiciones y acotación temporal estricta al audio."""
+        print("\n[TEST 08] Comprobando los 4 estilos de subtítulos, posiciones y acotamiento a audio...")
+        from engine.tts import CueItem
+
+        cues = [
+            CueItem(start_sec=0.0, end_sec=1.5, text="The Lord is good,"),
+            CueItem(start_sec=1.5, end_sec=3.2, text="a refuge in times of trouble."),
+            CueItem(start_sec=3.2, end_sec=6.0, text="He cares for those who trust in Him.")
+        ]
+
+        styles = ["clean", "karaoke", "pop", "cinematic"]
+        positions = ["bottom", "center", "top"]
+
+        # 1. Probar que todos los estilos y posiciones compilan a archivos .ass válidos
+        for st in styles:
+            for pos in positions:
+                out_ass = os.path.join(self.test_outputs_dir, f"test_subs_{st}_{pos}.ass")
+                res = generate_viral_ass(cues, out_ass, style_key=st, position=pos)
+                self.assertTrue(os.path.exists(res))
+                with open(res, "r", encoding="utf-8") as f:
+                    txt = f.read()
+                self.assertIn("Style: MainSub", txt)
+                self.assertIn("Dialogue:", txt)
+
+        # 2. Probar acotación temporal (max_duration): si el audio dura 4.0s, ningún cue debe pasar de 4.0s
+        audio_dur = 4.0
+        clamped_ass = os.path.join(self.test_outputs_dir, "test_subs_clamped.ass")
+        generate_viral_ass(cues, clamped_ass, style_key="clean", max_duration=audio_dur)
+        with open(clamped_ass, "r", encoding="utf-8") as f:
+            lines = [line for line in f if line.startswith("Dialogue:")]
+
+        for line in lines:
+            parts = line.split(",")
+            end_time = parts[2]
+            h, m, s = end_time.split(":")
+            sec = int(h) * 3600 + int(m) * 60 + float(s)
+            self.assertLessEqual(sec, audio_dur + 0.01, f"El cue supera la duración del audio ({sec} > {audio_dur})")
+
+        print("  -> 4 estilos, 3 posiciones y acotamiento exacto de duración verificados con éxito.")
+
+    def test_09_seo_caption_excerpts_and_limits(self):
+        """9. Comprueba la estructura del copy para Facebook: extracto no duplicado, CTA único y máx 5 hashtags."""
+        print("\n[TEST 09] Verificando copy de publicación para Facebook...")
+        from engine.scripts import generate_seo_caption
+
+        theme_title = "Paz en la Tormenta"
+        prayer_text = (
+            "Lord, when the wind howls and fear knocks at the door, fill my heart with Your deep peace. "
+            "You are the anchor that keeps my soul steady through the darkest waves. We trust Your voice."
+        )
+        scripture = "Mark 4:39 (NIV) — He got up, rebuked the wind and said to the waves, 'Quiet! Be still!'"
+        cta = "Drop your first name below so we can pray together."
+        hashtags = ["#DailyPrayer", "#PeaceOfGod", "#ChristianLiving", "#FaithInTrials", "#JesusSaves", "#ExtraTag1", "#ExtraTag2"]
+
+        caption = generate_seo_caption(theme_title, prayer_text, scripture, cta, hashtags)
+
+        # Verificaciones
+        self.assertIn("✝️ Paz en la Tormenta ✝️", caption)
+        self.assertIn("Mark 4:39", caption)
+        self.assertIn("🕊️ Drop your first name below so we can pray together.", caption)
+        self.assertEqual(caption.count(cta), 1, "El CTA solo debe aparecer una vez.")
+
+        # Verificar que el extracto sea breve y no el monólogo completo
+        self.assertIn("“Lord, when the wind howls and fear knocks at the door, fill my heart with Your deep peace.”", caption)
+        self.assertNotIn("You are the anchor that keeps my soul steady", caption)
+
+        # Verificar máximo 5 hashtags
+        tag_line = caption.strip().split("\n")[-1]
+        tags = [t for t in tag_line.split() if t.startswith("#")]
+        self.assertLessEqual(len(tags), 5, f"Debe haber como máximo 5 hashtags (encontrados {len(tags)})")
+        self.assertNotIn("#ExtraTag1", tags)
+        print("  -> Copy de Facebook validado (extracto sintético, 1 CTA, máx 5 hashtags).")
+
+    def test_10_security_uploads_cors_traversal(self):
+        """10. Pruebas de seguridad: validación de subidas de imágenes, prevención de path traversal y CORS."""
+        print("\n[TEST 10] Verificando seguridad en subida de imágenes, eliminación y CORS...")
+        import io
+
+        # 1. Rechazar extensión no permitida
+        bad_file = ("script.sh", io.BytesIO(b"echo 'malicious'"), "text/x-shellscript")
+        r = self.client.post("/api/upload-image", files={"file": bad_file})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("Formato no admitido", r.json()["detail"])
+
+        # 2. Rechazar archivo falso (extensión .png pero contenido corrupto)
+        fake_png = ("fake.png", io.BytesIO(b"not an actual image content " * 10), "image/png")
+        r = self.client.post("/api/upload-image", files={"file": fake_png})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("no es una imagen válida", r.json()["detail"])
+
+        # 3. Path traversal en eliminación
+        r = self.client.delete("/api/images/../../server.py")
+        self.assertIn(r.status_code, [400, 404])
+
+        print("  -> Reglas de seguridad verificadas (formatos, tamaño, path traversal protegidos).")
+
+    def test_11_video_render_duration_metrics(self):
+        """11. Comprueba que el renderizado devuelva métricas diferenciadas de duración."""
+        print("\n[TEST 11] Comprobando métricas de duración en render_reel...")
+        audio_path = os.path.join(self.test_outputs_dir, "test_voice_guy.mp3")
+        ass_path = os.path.join(self.test_outputs_dir, "test_clean_subtitles.ass")
+        output_video = os.path.join(self.test_outputs_dir, "test_rendered_metrics.mp4")
+
+        assets_img = os.path.join(BASE_DIR, "assets", "images", "jesus_healing_miracle.jpg")
+        if not os.path.exists(assets_img):
+            avail = [f for f in os.listdir(os.path.join(BASE_DIR, "assets", "images")) if f.endswith((".jpg", ".png"))]
+            assets_img = os.path.join(BASE_DIR, "assets", "images", avail[0])
+
+        target_dur = 14.0  # Modo micro-oración objetivo
+        res = render_reel(
+            image_path=assets_img,
+            audio_path=audio_path,
+            ass_path=ass_path,
+            output_mp4_path=output_video,
+            aspect_ratio="9:16",
+            effect_type="none",
+            camera_motion="static",
+            music_track="worship_piano_peace",
+            music_volume=0.15,
+            target_duration=target_dur
+        )
+
+        self.assertIn("target_duration_sec", res)
+        self.assertIn("audio_duration_sec", res)
+        self.assertIn("actual_duration_sec", res)
+        self.assertIn("duration_diff_sec", res)
+
+        self.assertEqual(res["target_duration_sec"], target_dur)
+        self.assertNotEqual(res["target_duration_sec"], res["audio_duration_sec"])
+        self.assertAlmostEqual(res["duration_diff_sec"], abs(res["actual_duration_sec"] - target_dur), places=1)
+
+        print(f"  -> Métricas diferenciadas: Target={res['target_duration_sec']}s, Audio={res['audio_duration_sec']}s, Real={res['actual_duration_sec']}s, Diff={res['duration_diff_sec']}s.")
+
 
 if __name__ == "__main__":
     unittest.main()

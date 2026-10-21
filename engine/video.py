@@ -270,7 +270,8 @@ def render_reel(
     enable_sfx: bool = False,
     generate_trending_audio_version: bool = False,
     seamless_loop: bool = False,
-    master_lufs: bool = True
+    master_lufs: bool = True,
+    target_duration: Optional[float] = None
 ) -> Dict[str, object]:
     """
     Renderiza el Reel cristiano en formato vertical 9:16 con FFmpeg:
@@ -474,10 +475,15 @@ def render_reel(
     except Exception:
         actual_duration = duration
 
+    target_dur = round(float(target_duration), 2) if target_duration else round(duration, 2)
+    actual_dur = round(actual_duration, 2)
+    audio_dur = round(duration, 2)
+
     return {
         "master_video": output_mp4_path,
         "trending_audio_video": trending_mp4_path,
-        "actual_duration_sec": round(actual_duration, 2),
-        "target_duration_sec": round(duration, 2),
-        "duration_diff_sec": round(abs(actual_duration - duration), 2)
+        "target_duration_sec": target_dur,
+        "audio_duration_sec": audio_dur,
+        "actual_duration_sec": actual_dur,
+        "duration_diff_sec": round(abs(actual_dur - target_dur), 2)
     }

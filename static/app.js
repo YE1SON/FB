@@ -745,11 +745,37 @@ function bootstrapJesusStudio() {
         currentScripture = data.scripture;
       }
 
+      // Mostrar indicador honesto del motor utilizado para el guion
+      const scriptProviderBadge = document.getElementById("scriptProviderStatus");
+      if (scriptProviderBadge) {
+        scriptProviderBadge.style.display = "block";
+        const prov = (data.provider_used || "").toLowerCase();
+        if (prov.includes("ollama") && !prov.includes("fallback")) {
+          scriptProviderBadge.style.background = "rgba(16, 185, 129, 0.12)";
+          scriptProviderBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
+          scriptProviderBadge.style.color = "#059669";
+          scriptProviderBadge.innerHTML = `🧠 <strong>Motor:</strong> IA Local activa (${escapeHtml(data.provider_used)}).`;
+        } else if (prov.includes("fallback")) {
+          scriptProviderBadge.style.background = "rgba(245, 158, 11, 0.12)";
+          scriptProviderBadge.style.borderColor = "rgba(245, 158, 11, 0.35)";
+          scriptProviderBadge.style.color = "#d97706";
+          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Plantilla temática con rotación contextual (Ollama no disponible o sin conexión).`;
+        } else {
+          scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.10)";
+          scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.30)";
+          scriptProviderBadge.style.color = "#2563eb";
+          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Plantilla temática estructurada con catálogo bíblico verificado.`;
+        }
+      }
+
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
         const postCopyArea = document.getElementById("reelPostCopyText");
         if (postCopyArea) {
-          postCopyArea.value = data.seo_caption;
+          // No sobrescribir si el usuario ya modificó manualmente el copy
+          if (postCopyArea.dataset.userEdited !== "true") {
+            postCopyArea.value = data.seo_caption;
+          }
         }
       }
 
@@ -1335,7 +1361,7 @@ function bootstrapJesusStudio() {
   // 9. Actualizar Vista Previa de Subtítulos al Cambiar Estilo
   function updateSubtitlePreview() {
     if (!liveSubPreview) return;
-    const style = subtitleStyleSelect ? subtitleStyleSelect.value : "karaoke";
+    const style = subtitleStyleSelect ? subtitleStyleSelect.value : "clean";
     const isLarge = subtitleSizeSelect && subtitleSizeSelect.value === "large";
     const chkAllCaps = document.getElementById("chkSubtitlesAllCaps");
     const isAllCaps = chkAllCaps ? chkAllCaps.checked : (style === "pop");
@@ -1819,7 +1845,7 @@ function bootstrapJesusStudio() {
           renderStatusSub.textContent = "Generando locución con entonación natural...";
         } else if (elapsed === 10) {
           renderStatusText.textContent = "📝 Diseñando subtítulos dinámicos...";
-          renderStatusSub.textContent = "Estilizando tipografía de alta retención viral...";
+          renderStatusSub.textContent = "Estilizando tipografía y sincronizando subtítulos...";
         } else if (elapsed === 18) {
           renderStatusText.textContent = "🎬 Componiendo movimiento de cámara y encuadre...";
           renderStatusSub.textContent = "Aplicando cinemática suave en 1080x1920 HD...";
@@ -1927,6 +1953,13 @@ function bootstrapJesusStudio() {
   }
 
   // 11. Copiar Texto y Hashtags para Facebook
+  const reelPostCopyArea = document.getElementById("reelPostCopyText");
+  if (reelPostCopyArea) {
+    reelPostCopyArea.addEventListener("input", () => {
+      reelPostCopyArea.dataset.userEdited = "true";
+    });
+  }
+
   if (btnCopyCaption) {
     btnCopyCaption.addEventListener("click", () => {
       const postCopyArea = document.getElementById("reelPostCopyText");
@@ -2177,7 +2210,13 @@ function bootstrapJesusStudio() {
   }
 
   if (cardThemeSelect) {
-    cardThemeSelect.addEventListener("change", () => syncCardTemplate(cardThemeSelect.value));
+    cardThemeSelect.addEventListener("change", () => {
+      if (themeSelect && themeSelect.value !== cardThemeSelect.value) {
+        themeSelect.value = cardThemeSelect.value;
+        updateProjectTitle();
+      }
+      syncCardTemplate(cardThemeSelect.value);
+    });
   }
   if (btnSyncCardTheme) {
     btnSyncCardTheme.addEventListener("click", () => syncCardTemplate(cardThemeSelect.value));
@@ -2382,7 +2421,7 @@ function bootstrapJesusStudio() {
           showStageView();
           updateSceneTabsUI();
           loadImages();
-          alert(`¡Reel de ${selectedSlot.time_label} cargado con 3 escenas en el estudio! Revisa los campos y pulsa "Generar Reel Viral".`);
+          alert(`¡Reel de ${selectedSlot.time_label} cargado con 3 escenas en el estudio! Revisa los campos y pulsa "Renderizar Reel".`);
         });
       });
 
@@ -2451,6 +2490,10 @@ function bootstrapJesusStudio() {
   btnPreviewAudio.addEventListener("click", triggerAudioPreview);
   btnRenderVideo.addEventListener("click", triggerRenderVideo);
   themeSelect.addEventListener("change", () => {
+    if (cardThemeSelect && cardThemeSelect.value !== themeSelect.value) {
+      cardThemeSelect.value = themeSelect.value;
+      syncCardTemplate(cardThemeSelect.value);
+    }
     updateProjectTitle();
     triggerGenerateScript();
   });
@@ -2767,7 +2810,7 @@ function bootstrapJesusStudio() {
   const btnHeaderHelp = document.getElementById("btnHeaderHelp");
   if (btnHeaderHelp) {
     btnHeaderHelp.addEventListener("click", () => {
-      alert("✨ Consejos para Reels Virales en Meta 2026:\n\n1. Gancho (0-3s): Capta la atención de inmediato con preguntas o declaraciones de fe directas.\n2. Inflexión (3-10s): Presenta la promesa de Dios o solución bíblica.\n3. Victoria y CTA (10s al final): Pide nombres de oración en comentarios para disparar el algoritmo de conversación.\n4. Calidad Fotorrealista: Usa Z-Image Turbo o FLUX.1 Schnell con iluminación celestial dorada.");
+      alert("✨ Buenas prácticas para Reels de fe:\n\n1. Gancho (0-3s): Presenta la situación o necesidad de manera clara y sobria.\n2. Inflexión (3-10s): Comparte la reflexión y la promesa bíblica reconfortante.\n3. Cierre y CTA: Invita con sinceridad a compartir intenciones de oración en los comentarios.\n4. Calidad visual: Asegura una iluminación cálida, composición equilibrada y subtítulos legibles.");
     });
   }
 

@@ -58,7 +58,7 @@
       }
     })();
   </script>
-  <!-- Puter.js para generación de imágenes por IA en el navegador (100% Gratuito) -->
+  <!-- Puter.js para generación de imágenes por IA en el navegador (Sin costo adicional) -->
   <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
@@ -201,7 +201,7 @@
       <!-- ─── COLUMNA 2: PANEL CENTRAL DINÁMICO (ETAPA ACTIVA) ────────── -->
       <section class="center-stage-panel" id="centerStagePanel">
 
-        <!-- ETAPA 1: GUION Y TEMA VIRAL (Activa por defecto) -->
+        <!-- ETAPA 1: GUION Y TEMA (Activa por defecto) -->
         <div class="stage-content-card active" id="stagePanel1">
           <div class="stage-header-row">
             <div class="stage-header-left">
@@ -262,6 +262,10 @@
 
           <div class="quality-note" id="scriptDurationEstimate" role="status" aria-live="polite">
             Estimación de locución: escribe o genera un guion para calcular una duración aproximada. La duración del MP4 puede variar.
+          </div>
+
+          <div class="provider-status-badge mb-12" id="scriptProviderStatus" style="display: none; font-size: 12px; padding: 7px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.10); border: 1px solid rgba(59, 130, 246, 0.30); color: #2563eb;" role="status">
+            📋 <strong>Motor:</strong> Plantilla temática estructurada con catálogo bíblico verificado.
           </div>
 
           <!-- Opción de cierre en bucle (Seamless Loop) -->
@@ -333,7 +337,7 @@
                   <select id="hookBadgeStyleSelect" class="form-control form-control-sm">
                     <option value="gold_luxury" selected>👑 Oro Sagrado & Resplandor</option>
                     <option value="clean_glass">💎 Cristal Glassmorphism Pro</option>
-                    <option value="viral_indigo">⚡ Neón Púrpura Viral</option>
+                    <option value="viral_indigo">⚡ Neón Púrpura</option>
                     <option value="sacred_fire">🔥 Fuego Sagrado & Devoción</option>
                     <option value="editorial_white">📰 Editorial Blanco Minimalista</option>
                   </select>
@@ -842,7 +846,7 @@
               <span class="stage-badge-big">📥</span>
               <div>
                 <h2>Exportar Video y Publicación en Facebook</h2>
-                <p>Renderizado con FFmpeg en 1080x1920 MP4 y recursos virales listos para copiar</p>
+                <p>Renderizado con FFmpeg en 1080x1920 MP4 y recursos de publicación listos para copiar</p>
               </div>
             </div>
           </div>
@@ -1000,7 +1004,7 @@
 
           <!-- Botón de Render Rápido en Panel Derecho -->
           <button type="button" id="btnRightRender" class="btn btn-warning-gradient btn-block btn-large mt-10">
-            🎬 RENDERIZAR REEL VIRAL (MP4)
+            🎬 RENDERIZAR REEL (MP4)
           </button>
 
         </div>
@@ -1167,8 +1171,8 @@
               📌 Copiar Comentario Fijado de la Tarjeta
             </button>
             <div class="subpanel-card mt-10">
-              <div class="text-xs font-bold text-gold mb-4">📝 Copy Viral de Publicación para el Feed:</div>
-              <textarea id="cardFeedCopyText" rows="4" class="form-control text-xs" placeholder="El copy viral para pegar en Facebook aparecerá aquí..."></textarea>
+              <div class="text-xs font-bold text-gold mb-4">📝 Texto de Publicación para el Feed:</div>
+              <textarea id="cardFeedCopyText" rows="4" class="form-control text-xs" placeholder="El texto de la publicación para Facebook aparecerá aquí..."></textarea>
             </div>
           </div>
         </div>
@@ -1196,6 +1200,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=6.0"></script>
+  <script src="/static/app.js?v=6.1"></script>
 </body>
 </html>

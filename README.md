@@ -1,7 +1,7 @@
 # JesusReels Studio ✝️ v4.0.0
-### Creador de Vídeos y Reels Cristianos de Alta Retención para Facebook (Audiencia de EE. UU.)
+### Creador de Vídeos y Reels Cristianos de Alta Calidad para Facebook (Audiencia de EE. UU.)
 
-Una aplicación completa, ligera y **100% gratuita** (sin costes de API, sin suscripciones y sin límites) diseñada específicamente para crear Reels y vídeos verticales (1080x1920) de alto impacto visual y emocional para una página de Facebook con público en Estados Unidos.
+Una aplicación completa, ligera y de código abierto (sin costes obligatorios de API ni límites artificiales) diseñada específicamente para crear Reels y vídeos verticales (1080x1920) con narrativa cuidada, calidad visual y respeto editorial para una audiencia de habla inglesa.
 
 ---
 
@@ -46,12 +46,12 @@ Los 26 temas están organizados en cinco pilares para facilitar la selección y 
 
 | Componente | Motor | Características |
 | :--- | :--- | :--- |
-| **Generador de Guiones** | Motor interno (`engine/scripts.py`) | Categorizado por los temas más virales en EE. UU. con ganchos, oraciones, CTAs y comentarios fijados. |
-| **Voz en Inglés (TTS)** | **Edge-TTS** (Microsoft Neural Voices) | **100% gratis, sin API Key.** Voces solemnes y humanas como `en-US-ChristopherNeural` (Voz de Jesús) y `en-US-GuyNeural`. |
-| **Generador de Imágenes IA** | Motor Directo FLUX (`1080x1920`) | Generación instantánea en formato vertical 9:16 sin coste ni límites, con iluminación cinematográfica y detalles hiperrealistas. |
-| **Galería de Imágenes** | Galería Bundled (`assets/images/`) | Retratos cinematográficos verticales 9:16 con mirada compasiva. Permite subir imágenes propias. |
-| **Subtítulos Dinámicos** | Motor ASS (`engine/subtitles.py`) | Tipografía **Impact**, bloques dinámicos, resalte en oro brillante (`#FFD700`) y zona segura de Facebook. |
-| **Renderizado de Video** | **FFmpeg Multi-core** (`engine/video.py`) | Composición a 30 FPS, efectos visuales de partículas doradas/luz divina, música de adoración y renderizado en segundos. |
+| **Generador de Guiones** | Motor interno (`engine/scripts.py`) | Categorizado en 5 pilares temáticos con ganchos, oraciones, CTAs y referencias bíblicas verificadas. |
+| **Voz en Inglés (TTS)** | **Edge-TTS** (Microsoft Neural Voices) | Voces solemnes y de dicción clara como `en-US-ChristopherNeural` (Voz de Jesús) y `en-US-GuyNeural`. |
+| **Generador de Imágenes IA** | Motor Directo FLUX (`1080x1920`) | Generación en formato vertical 9:16 con iluminación cinematográfica y composición equilibrada. |
+| **Galería de Imágenes** | Galería Bundled (`assets/images/`) | Retratos cinematográficos verticales 9:16 con mirada compasiva. Permite subir imágenes propias con validación estricta de formato y tamaño. |
+| **Subtítulos Dinámicos** | Motor ASS (`engine/subtitles.py`) | Tipografía configurable (**Clean**, **Karaoke**, **Pop**, **Cinematic**), acotados a la duración exacta del audio y respetando la zona segura de Facebook. |
+| **Renderizado de Video** | **FFmpeg Multi-core** (`engine/video.py`) | Composición a 30 FPS en 1080x1920 MP4, efectos visuales sutiles, mezcla de audio masterizada y exportación de métricas reales de duración. |
 
 ---
 
@@ -59,18 +59,18 @@ Los 26 temas están organizados en cinco pilares para facilitar la selección y 
 
 * **`server.py`**: Servidor FastAPI local/VPS que gestiona la API y sirve la interfaz web.
 * **`engine/`**:
-  * `scripts.py`: Banco y generador de guiones virales y comentarios fijados en inglés.
+  * `scripts.py`: Catálogo de 26 temas estructurados en 5 pilares, citas bíblicas documentadas y generador de guiones.
   * `tts.py`: Síntesis de voz y extracción de marcas temporales con Edge-TTS.
-  * `subtitles.py`: Generador de subtítulos `.ass` con resaltado estilo CapCut/Hormozi.
-  * `video.py`: Procesamiento de vídeo con FFmpeg, animación y efectos.
+  * `subtitles.py`: Generador de subtítulos `.ass` con estilos Clean, Karaoke, Pop y Cinematic.
+  * `video.py`: Procesamiento de vídeo con FFmpeg, animación multicapa y mezcla de audio.
 * **`static/`**:
   * `index.html`: Panel de control intuitivo con simulador de móvil vertical en 9:16.
-  * `style.css`: Estilo visual oscuro y profesional.
-  * `app.js`: Lógica interactiva (creación de imágenes IA, preescucha, selección de temas, renderizado).
-* **`assets/images/`**: Galería de retratos de Jesús en alta definición vertical.
+  * `style.css`: Estilo visual oscuro y profesional adaptado a escritorio y móviles.
+  * `app.js`: Lógica interactiva (creación de imágenes IA, preescucha, selección de temas sincronizada, renderizado).
+* **`assets/images/`**: Galería de imágenes de alta definición vertical.
 * **`assets/audio/`**: Pistas instrumentales de adoración (piano, cuerdas, acústico).
-* **`outputs/`**: Carpeta donde se guardan automáticamente los vídeos generados (`.mp4`) listos para descargar y subir a Facebook.
+* **`outputs/`**: Carpeta donde se guardan automáticamente los vídeos generados (`.mp4`) listos para descargar y publicar.
 
 ---
 
-¡Listo para producir contenido viral de bendición con un solo clic!
+¡Listo para producir contenido edificante, sincero y técnicamente cuidado para tu comunidad!

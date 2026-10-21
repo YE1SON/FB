@@ -24,9 +24,10 @@ def main():
         music_track="worship_piano_peace",
         music_volume=0.20
     )
-    print(f"SUCCESS! Rendered video: {out}")
+    out_file = out["master_video"] if isinstance(out, dict) else out
+    print(f"SUCCESS! Rendered video: {out_file}")
 
-    cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,duration", "-of", "json", out]
+    cmd = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,duration", "-of", "json", out_file]
     p = subprocess.run(cmd, capture_output=True, text=True, check=True)
     info = json.loads(p.stdout)["streams"][0]
     print(f"Verified Dimensions: {info['width']}x{info['height']}, Duration: {info['duration']}s")

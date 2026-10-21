@@ -707,7 +707,7 @@ function bootstrapJesusStudio() {
   // 4. Generar Guion y Sincronizar Prompt de Imagen Automáticamente
   async function triggerGenerateScript() {
     btnGenerateScript.disabled = true;
-    btnGenerateScript.textContent = "⏳ Generando Guion en Inglés...";
+    btnGenerateScript.textContent = "⏳ Generando guion...";
     try {
       const durationMode = scriptDurationMode ? scriptDurationMode.value : "deep";
       const res = await fetch("/api/generate-script", {
@@ -786,7 +786,7 @@ function bootstrapJesusStudio() {
       alert("Error al generar guion: " + e.message);
     } finally {
       btnGenerateScript.disabled = false;
-      btnGenerateScript.textContent = "✨ Generar Guion con IA";
+      btnGenerateScript.textContent = "✨ Generar guion";
     }
   }
 

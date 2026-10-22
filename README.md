@@ -5,6 +5,15 @@ Una aplicación completa, ligera y de código abierto (sin costes obligatorios d
 
 ---
 
+## Estudio editorial y seguimiento de publicaciones
+
+El flujo editorial organiza el catálogo existente en dos series, permite comparar
+tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Muestra
+dos voces principales y conserva el resto en opciones avanzadas. Incluye revisión
+de texto, una maqueta de los primeros tres segundos y un diario manual de resultados.
+
+Consulta [estructura, límites, pruebas y activación](docs/EDITORIAL_WORKFLOW.md).
+
 ## 🚀 Despliegue y Ejecución
 
 ### 1. En Servidor en la Nube (Oracle Cloud Always Free VPS)
@@ -74,3 +83,4 @@ Los 26 temas están organizados en cinco pilares para facilitar la selección y 
 ---
 
 ¡Listo para producir contenido edificante, sincero y técnicamente cuidado para tu comunidad!
+

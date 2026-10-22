@@ -30,3 +30,5 @@ assets/voices/*.onnx
 broll_cache/
 outputs/*.wav
 ai_keys.json
+data/editorial_results.json
+

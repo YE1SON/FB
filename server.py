@@ -7,8 +7,8 @@ import random
 import urllib.request
 import urllib.parse
 from PIL import Image
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import Optional, List, Literal
+from pydantic import BaseModel, Field, HttpUrl
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -76,11 +76,57 @@ IMAGE_METADATA = {
     "jesus_holy_bible.jpg": "📖 Jesús con la Santa Biblia Iluminada"
 }
 
+class EditorialBrief(BaseModel):
+    series_key: Literal["everyday", "quiet"] = "everyday"
+    audience: str = Field(default="US adults", max_length=180)
+    situation: str = Field(default="", max_length=500)
+    central_idea: str = Field(default="", max_length=500)
+    format: Literal["prayer", "reflection", "story"] = "prayer"
+    target_duration_sec: float = Field(default=22, ge=12, le=60)
+    include_cta: bool = False
+
 class ScriptRequest(BaseModel):
     theme_key: Optional[str] = None
     custom_topic: Optional[str] = None
     mode: str = "deep"
     seamless_loop: Optional[bool] = False
+    brief: Optional[EditorialBrief] = None
+
+class EditorialReviewRequest(BaseModel):
+    hook: str = Field(default="", max_length=1000)
+    body: str = Field(default="", max_length=10000)
+    cta: str = Field(default="", max_length=1000)
+    caption: str = Field(default="", max_length=10000)
+    target: float = Field(default=22, ge=12, le=60)
+
+class CreativeSnapshot(BaseModel):
+    theme_key: str = Field(max_length=80)
+    series_key: str = Field(default="", max_length=80)
+    format: str = Field(default="", max_length=80)
+    hook: str = Field(max_length=1000)
+    body: str = Field(default="", max_length=10000)
+    cta: str = Field(default="", max_length=1000)
+    caption: str = Field(default="", max_length=10000)
+    voice: str = Field(default="", max_length=80)
+    provider: str = Field(default="", max_length=160)
+    opening_variant: int = Field(default=0, ge=0, le=2)
+
+class ObservedMetrics(BaseModel):
+    duration_sec: Optional[float] = Field(default=None, gt=0)
+    views: Optional[int] = Field(default=None, ge=0)
+    average_watch_sec: Optional[float] = Field(default=None, ge=0)
+    average_watched_pct: Optional[float] = Field(default=None, ge=0)
+    followers: Optional[int] = Field(default=None, ge=0)
+    shares: Optional[int] = Field(default=None, ge=0)
+    us_viewer_pct: Optional[float] = Field(default=None, ge=0, le=100)
+    main_dropoff_sec: Optional[float] = Field(default=None, ge=0)
+
+class ObservationRequest(BaseModel):
+    record_id: Optional[str] = Field(default=None, max_length=40)
+    creative: CreativeSnapshot
+    checkpoint: Literal["48h", "7d", "other"] = "48h"
+    post_url: Optional[HttpUrl] = None
+    metrics: ObservedMetrics
 
 class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
@@ -115,7 +161,7 @@ class AudioPreviewRequest(BaseModel):
 class RenderRequest(BaseModel):
     hook: str
     body: str
-    cta: str
+    cta: str = ""
     theme_key: Optional[str] = "morning_favor"
     voice_key: str = "guy"
     rate: str = "-6%"
@@ -193,7 +239,38 @@ def list_themes():
 @app.post("/api/generate-script")
 @app.post("/studio/api/generate-script")
 def api_generate_script(req: ScriptRequest):
-    return generate_script(req.theme_key, req.custom_topic, mode=req.mode, seamless_loop=bool(req.seamless_loop))
+    return generate_script(req.theme_key, req.custom_topic, mode=req.mode, seamless_loop=bool(req.seamless_loop),
+                           brief=req.brief.model_dump() if req.brief else None)
+
+@app.get("/api/editorial-config")
+@app.get("/studio/api/editorial-config")
+def editorial_config():
+    from engine.editorial import SERIES
+    return {"series": SERIES, "primary_voices": ["guy", "christopher"]}
+
+@app.post("/api/editorial-review")
+@app.post("/studio/api/editorial-review")
+def editorial_review(req: EditorialReviewRequest):
+    from engine.editorial import review_script
+    return review_script(**req.model_dump())
+
+@app.get("/api/editorial-results")
+@app.get("/studio/api/editorial-results")
+def editorial_results():
+    from engine.results import list_results
+    return list_results()
+
+@app.post("/api/editorial-results")
+@app.post("/studio/api/editorial-results")
+def record_editorial_results(req: ObservationRequest):
+    from engine.results import save_observation
+    payload = req.model_dump(mode="json")
+    if not req.record_id and not req.creative.hook.strip():
+        raise HTTPException(status_code=422, detail="Genera o escribe una apertura antes de registrar la publicación.")
+    try:
+        return save_observation(payload)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")
@@ -627,3 +704,4 @@ if __name__ == "__main__":
     print(f"  JESUS REELS STUDIO v4.0 — http://{host}:{port}")
     print("=======================================================\n")
     uvicorn.run("server:app", host=host, port=port, reload=False)
+

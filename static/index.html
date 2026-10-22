@@ -207,12 +207,12 @@
             <div class="stage-header-left">
               <span class="stage-badge-big">1</span>
               <div>
-                <h2>Guion y tema</h2>
+                <h2>Idea, audiencia y guion</h2>
                 <p>Construye un mensaje claro, con una necesidad concreta, una reflexión bíblica y un cierre natural.</p>
               </div>
             </div>
             <div class="stage-header-right">
-              <span class="badge badge-categories">26 temas · 5 pilares</span>
+              <span class="badge badge-categories">2 series · catálogo de 26 temas</span>
               <button type="button" id="btnGenerateScript" class="btn btn-primary-gradient">
                 ✨ Generar guion
               </button>
@@ -244,6 +244,23 @@
             </div>
           </div>
 
+          <fieldset class="editorial-brief subpanel-card mt-12">
+            <legend>Define esta publicación</legend>
+            <div class="form-row">
+              <div class="form-group col-7"><label for="editorialSeries">Serie editorial</label>
+                <select id="editorialSeries" class="form-control"><option value="everyday">Faith for Everyday Life</option><option value="quiet">A Quiet Moment with God</option></select>
+              </div>
+              <div class="form-group col-5"><label for="editorialFormat">Tipo de mensaje</label>
+                <select id="editorialFormat" class="form-control"><option value="prayer">Oración concreta</option><option value="reflection">Reflexión bíblica</option><option value="story">Relato ilustrativo (imaginado)</option></select>
+              </div>
+            </div>
+            <div class="form-group"><label for="editorialAudience">Destinatario (en inglés)</label><input id="editorialAudience" class="form-control" maxlength="180" value="Adults in the United States seeking everyday Christian encouragement"></div>
+            <div class="form-group"><label for="editorialSituation">Situación concreta (en inglés, opcional)</label><input id="editorialSituation" class="form-control" maxlength="500" placeholder="Waiting for a call from your grown child."><small>Si lo dejas vacío, el tema aporta una situación inicial. Revisa y adapta el borrador a tu comunidad.</small></div>
+            <div class="form-group"><label for="editorialIdea">Una idea para desarrollar (en inglés, opcional)</label><input id="editorialIdea" class="form-control" maxlength="500" placeholder="Listening can be an expression of love."></div>
+            <label class="chk-label"><input id="editorialAllThemes" type="checkbox"> Mostrar los 26 temas del catálogo completo</label>
+            <label class="chk-label"><input id="editorialIncludeCta" type="checkbox"> Añadir una despedida breve (opcional)</label>
+          </fieldset>
+
           <div class="form-row mt-12">
             <div class="form-group col-7">
               <label for="themeSelect">Selecciona un tema</label>
@@ -252,13 +269,24 @@
               </select>
             </div>
             <div class="form-group col-5">
-              <label for="scriptDurationMode">Formato y retención</label>
+              <label for="scriptDurationMode">Longitud del borrador</label>
               <select id="scriptDurationMode" class="form-control">
-                <option value="deep" selected>🕊️ Oración profunda · objetivo 25–32 s</option>
+                <option value="deep" selected>🕊️ Breve · objetivo 18–25 s</option>
                 <option value="micro">⚡ Micro-oración · objetivo 12–16 s</option>
+                <option value="story">📖 Extendido · objetivo 35–45 s</option>
               </select>
             </div>
           </div>
+
+          <label for="editorialTarget">Objetivo de duración (segundos)</label>
+          <input id="editorialTarget" class="form-control" type="number" min="12" max="60" value="22">
+          <section class="subpanel-card mt-12" aria-labelledby="openingChoicesTitle">
+            <h3 id="openingChoicesTitle">Compara las aperturas</h3>
+            <p>Tres propuestas editoriales para probar. Ninguna garantiza más alcance.</p>
+            <div id="editorialHooks" class="editorial-hooks"></div>
+            <div class="editorial-actions mt-10"><button type="button" id="btnOpeningPreview" class="btn btn-outline">▶ Revisar primeros 3 segundos</button><button type="button" id="btnEditorialReview" class="btn btn-outline">Revisar el texto actual</button></div>
+            <div id="editorialReview" role="status" aria-live="polite"></div>
+          </section>
 
           <div class="quality-note" id="scriptDurationEstimate" role="status" aria-live="polite">
             Estimación de locución: escribe o genera un guion para calcular una duración aproximada. La duración del MP4 puede variar.
@@ -273,17 +301,17 @@
             <label class="chk-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;">
               <input type="checkbox" id="chkSeamlessLoop" style="margin-top: 3px;">
               <div>
-                <strong style="color: var(--primary); font-size: 13px;">🔄 Intentar un cierre en bucle</strong>
+                <strong style="color: var(--primary); font-size: 13px;">🔄 Bucle de montaje (avanzado)</strong>
                 <div class="text-muted text-xs" style="line-height: 1.35; margin-top: 2px;">
-                  Busca un cierre que pueda enlazar con el inicio. El resultado depende de la redacción y debe comprobarse en el MP4 final.
+                  Ajusta el montaje y el audio. El guion conserva frases completas; revisa la unión en el MP4 final.
                 </div>
               </div>
             </label>
           </div>
 
           <div class="form-group">
-            <label for="customTopic">Tema o dolor específico (opcional)</label>
-            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Sanidad de un hijo, superar ataques de pánico, deudas bancarias...">
+            <label for="customTopic">Contexto adicional para el motor (en inglés, opcional)</label>
+            <input type="text" id="customTopic" class="form-control" placeholder="Family tension after a difficult conversation...">
           </div>
 
           <!-- Cuadrícula 2x2 de Cajas de Guion -->
@@ -301,11 +329,11 @@
             <!-- Caja 2: Mensaje al Corazón -->
             <div class="script-box body-box">
               <div class="box-head">
-                <span class="box-title">❤️ Mensaje al Corazón / Promesa de Jesús</span>
+                <span class="box-title">❤️ Reflexión u oración</span>
                 <span class="char-count" id="bodyCharCount">0/500</span>
               </div>
               <small class="box-desc">Conecta emocional y espiritualmente</small>
-              <textarea id="scriptBody" rows="3" class="form-control" placeholder="Jesus says: I see your silent tears..."></textarea>
+              <textarea id="scriptBody" rows="3" class="form-control" placeholder="Lord, help us listen with patience today."></textarea>
             </div>
 
             <!-- Caja 3: Llamada a la Acción -->
@@ -315,7 +343,7 @@
                 <span class="char-count" id="ctaCharCount">0/500</span>
               </div>
               <small class="box-desc">Invita a guardar o compartir solo cuando sea útil para la persona</small>
-              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Save this prayer for tonight, and drop your first name below so we can pray..."></textarea>
+              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Opcional: el mensaje puede terminar sin pedir una interacción."></textarea>
             </div>
 
             <!-- Caja 4: Gancho Visual de Impacto (Superior) -->
@@ -439,6 +467,7 @@
               <select id="voiceSelect" class="form-control">
                 <!-- Inyectado dinámicamente -->
               </select>
+              <label class="chk-label mt-8"><input type="checkbox" id="editorialAllVoices"> Más voces (opciones avanzadas)</label>
             </div>
             <div class="form-group col-4">
               <label for="rateSelect">Velocidad y Tono</label>
@@ -453,7 +482,7 @@
           </div>
 
           <div class="quality-note" role="note">
-            <span aria-hidden="true">🎙️</span><span><strong>Prueba recomendada:</strong> empieza con Guy y compara la misma oración con Brian y Christopher. Se conservan todas las voces y velocidades; la opción seleccionada no garantiza que sea la mejor para cada guion.</span>
+            <span aria-hidden="true">🎙️</span><span><strong>Prueba inicial:</strong> Guy (conversacional) y Christopher (reflexiva). Compara el mismo texto. El catálogo completo sigue disponible en opciones avanzadas.</span>
           </div>
 
           <div class="form-row mt-10">
@@ -884,6 +913,29 @@
             </button>
           </div>
 
+          <details class="subpanel-card mt-20" id="editorialResultsPanel">
+            <summary>Resultados de publicaciones · seguimiento manual</summary>
+            <p>Registra observaciones a las 48 horas y a los 7 días. Deja vacíos los datos que Facebook no muestre; cero significa un cero observado.</p>
+            <form id="editorialResultsForm">
+              <div class="form-group"><label for="editorialRecord">Publicación</label><select id="editorialRecord" class="form-control"><option value="">Registrar el guion actual como una publicación nueva</option></select></div>
+              <div class="form-row"><div class="form-group col-7"><label for="editorialPostUrl">Enlace de la publicación (opcional)</label><input type="url" id="editorialPostUrl" class="form-control" placeholder="https://www.facebook.com/reel/..."></div><div class="form-group col-5"><label for="editorialCheckpoint">Momento de observación</label><select id="editorialCheckpoint" class="form-control"><option value="48h">48 horas</option><option value="7d">7 días</option><option value="other">Otro momento</option></select></div></div>
+              <div class="editorial-metrics-grid">
+                <label>Duración del Reel (s)<input class="form-control" type="number" step="any" min="0.01" id="metricDuration"></label>
+                <label>Visualizaciones<input class="form-control" type="number" min="0" id="metricViews"></label>
+                <label>Tiempo medio visto (s)<input class="form-control" type="number" step="any" min="0" id="metricWatch"></label>
+                <label>Porcentaje medio visto<input class="form-control" type="number" step="any" min="0" id="metricPercent"></label>
+                <label>Seguidores atribuidos<input class="form-control" type="number" min="0" id="metricFollowers"></label>
+                <label>Compartidos<input class="form-control" type="number" min="0" id="metricShares"></label>
+                <label>Espectadores de EE. UU. (%)<input class="form-control" type="number" step="any" min="0" max="100" id="metricUs"></label>
+                <label>Punto de mayor abandono (s)<input class="form-control" type="number" step="any" min="0" id="metricDropoff"></label>
+              </div>
+              <button type="submit" class="btn btn-outline mt-12">Guardar observación</button>
+              <button type="button" id="btnRefreshEditorialResults" class="btn btn-outline mt-12">Actualizar registro</button>
+            </form>
+            <p id="editorialResultsStatus" role="status" aria-live="polite"></p>
+            <div class="editorial-table-wrap"><table class="editorial-results-table"><thead><tr><th>Apertura</th><th>Control</th><th>Vistas</th><th>Media (s)</th><th>Visto (%)</th><th>EE. UU. (%)</th><th>Seguidores</th></tr></thead><tbody id="editorialResultsRows"></tbody></table></div>
+          </details>
+
           <!-- Biblioteca de Videos Recientes -->
           <div class="subpanel-card mt-20">
             <h3>🎬 Biblioteca de Videos Recientes</h3>
@@ -1200,6 +1252,15 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=6.1"></script>
+  <dialog id="editorialOpeningDialog" class="editorial-opening-dialog" aria-labelledby="openingPreviewTitle">
+    <h2 id="openingPreviewTitle">Primeros tres segundos</h2>
+    <p>Maqueta con imagen inicial y locución; no incluye el montaje final ni predice retención.</p>
+    <div class="editorial-opening-frame"><img id="editorialOpeningImage" alt="Primera escena seleccionada"><p id="editorialOpeningText"></p></div>
+    <audio id="editorialOpeningAudio" controls></audio><p id="editorialOpeningStatus" role="status"></p>
+    <button type="button" id="btnCloseOpeningPreview" class="btn btn-outline">Cerrar</button>
+  </dialog>
+  <script src="/static/editorial.js?v=1"></script>
+  <script src="/static/app.js?v=7"></script>
 </body>
 </html>
+

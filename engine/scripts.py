@@ -1111,6 +1111,10 @@ def generate_3scene_prompts_for_script(
     Escena 2: Mensaje y reflexión.
     Escena 3: Cierre y resolución.
     """
+    from engine.editorial import scene_prompts
+    narrative_prompts = scene_prompts(theme_key, script_text, custom_topic or "")
+    if narrative_prompts:
+        return narrative_prompts
     t_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else "morning_favor"
     theme = VIRAL_THEMES.get(t_key, VIRAL_THEMES["morning_favor"])
 
@@ -1152,7 +1156,11 @@ def generate_seo_caption(
     hashtags: List[str]
 ) -> str:
     """Crea un copy breve: un solo extracto, referencia bíblica y CTA sin duplicar la locución."""
-    clean_title = re.sub(r'^[^\w]+', '', theme_title).strip()
+    from engine.editorial import english_title, clean_narration
+    title_key = next((key for key, theme in VIRAL_THEMES.items() if theme["title"] == theme_title), None)
+    clean_title = english_title(title_key) if title_key else re.sub(r'^[^\w]+', '', theme_title).strip()
+    prayer_text = clean_narration(prayer_text)
+    cta = clean_narration(cta)
     clean_cta = re.sub(r"\s+", " ", cta or "").strip()
 
     # El llamador proporciona la locución completa. Retira el CTA final antes de
@@ -1251,15 +1259,7 @@ def generate_internal_template_script(
     ctas = theme.get("ctas", ["May your heart find quiet rest tonight in His hands."])
     cta = random.choice(ctas)
 
-    if seamless_loop and cta:
-        loop_bridges = [
-            "And always remember that...",
-            "Before you close your eyes in sleep tonight, remember that...",
-            "Hold onto this promise tonight, and remember that...",
-            "As scripture quietly declares..."
-        ]
-        chosen_bridge = random.choice(loop_bridges)
-        cta = f"{cta.rstrip('.! ')} — {chosen_bridge}"
+    # Looping is a render choice, never permission to append an unfinished sentence.
 
     # Ajuste de duración según modo
     if mode == "micro":
@@ -1269,7 +1269,8 @@ def generate_internal_template_script(
         full_text = f"{chosen_hook} {body_short} {cta}".strip()
         body_export = body_short
     elif mode == "story":
-        # Formato más largo y reflexivo (~70 palabras)
+        # A distinct imagined illustration, not the same structure as deep.
+        body = "Imagine this everyday situation: " + human_sit.rstrip(".") + ". " + perspectives.get("heart_comfort", base_body)
         full_text = f"{chosen_hook} {body} {closing} {cta}".strip()
         body_export = f"{body} {closing}".strip()
     else:  # deep (estándar 18-25s, ~50 palabras)
@@ -1333,19 +1334,32 @@ def generate_script(
     custom_topic: Optional[str] = None,
     mode: str = "deep",
     tone: Optional[str] = None,
-    seamless_loop: bool = False
+    seamless_loop: bool = False,
+    brief: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """Punto de entrada principal. Delega en el proveedor activo (Ollama / Template / Auto)."""
     from engine.script_provider import get_script_provider
+    from engine.editorial import FORMATS
     provider = get_script_provider()
     script_result = provider.generate(
         theme_key=theme_key,
-        custom_topic=custom_topic,
+        custom_topic=(brief.get("situation") or custom_topic) if brief else custom_topic,
         mode=mode,
-        tone=tone,
-        seamless_loop=seamless_loop
+        tone=FORMATS.get(brief.get("format")) if brief else tone,
+        seamless_loop=False,
+        audience=brief.get("audience", "Adult US audience") if brief else "Adult US audience"
     )
-    return script_result.model_dump()
+    result = script_result.model_dump()
+    from engine.editorial import apply_brief, clean_narration, english_title
+    result["body"] = clean_narration(result["body"])
+    result["cta"] = clean_narration(result["cta"])
+    result["full_text"] = " ".join(filter(None, [result["hook"], result["body"], result["cta"]]))
+    result["word_count"] = len(result["full_text"].split())
+    result["english_title"] = english_title(result["theme_key"])
+    result["seo_caption"] = generate_seo_caption(result["english_title"], result["full_text"], result["scripture"], result["cta"], result["hashtags"])
+    if brief:
+        result = apply_brief(result, brief, VIRAL_THEMES[result["theme_key"]])
+    return result
 
 
 def generate_image_prompt_for_script(theme_key: Optional[str], script_text: str = "") -> str:
@@ -1462,3 +1476,4 @@ def get_daily_batch_schedule() -> List[Dict]:
             "recommended_music": "midnight_prayer_acoustic"
         }
     ]
+

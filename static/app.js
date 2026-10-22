@@ -492,12 +492,13 @@ function bootstrapJesusStudio() {
   // 1. Cargar los 26 temas agrupados visualmente en sus cinco pilares.
   async function loadThemes() {
     try {
-      const res = await fetch("/api/themes");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const themes = await res.json();
+      const [res, configResponse] = await Promise.all([fetch("/api/themes"), fetch("/api/editorial-config")]);
+      if (!res.ok || !configResponse.ok) throw new Error("No se pudo cargar la configuración editorial.");
+      const [themes, config] = await Promise.all([res.json(), configResponse.json()]);
       const optionsHtml = buildGroupedThemeOptions(themes);
       if (themeSelect) themeSelect.innerHTML = optionsHtml;
       if (cardThemeSelect) cardThemeSelect.innerHTML = optionsHtml;
+      window.EditorialStudio?.configureThemes(themes, config.series);
       updateProjectTitle();
       updateScriptDurationEstimate();
     } catch (e) {
@@ -517,9 +518,7 @@ function bootstrapJesusStudio() {
           ? `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, "0")} s`
           : `~${seconds} s`)
       : "sin estimación todavía";
-    const target = scriptDurationMode?.value === "micro"
-      ? "objetivo del modo: 12–16 s"
-      : "objetivo del modo: 25–32 s";
+    const target = `objetivo seleccionado: ${window.EditorialStudio?.getTarget() || 22} s`;
     scriptDurationEstimate.textContent =
       `Estimación orientativa de locución: ${words} palabras · ${duration}. ${target}. Cálculo aproximado a 125 palabras/min; el narrador, las pausas y el render pueden cambiar la duración real.`;
   }
@@ -528,6 +527,7 @@ function bootstrapJesusStudio() {
     if (field) field.addEventListener("input", updateScriptDurationEstimate);
   });
   if (scriptDurationMode) scriptDurationMode.addEventListener("change", updateScriptDurationEstimate);
+  document.getElementById("editorialTarget")?.addEventListener("input", updateScriptDurationEstimate);
 
   // 2. Cargar Voces en Inglés (Guy como voz predeterminada conversacional)
   async function loadVoices() {
@@ -538,6 +538,7 @@ function bootstrapJesusStudio() {
       voiceSelect.innerHTML = voices
         .map(v => `<option value="${v.key}" ${v.key === defaultVoice ? "selected" : ""}>${v.name}</option>`)
         .join("");
+      window.EditorialStudio?.configureVoices(voices);
     } catch (e) {
       console.error("Error al cargar voces:", e);
     }
@@ -717,10 +718,12 @@ function bootstrapJesusStudio() {
           theme_key: themeSelect.value,
           custom_topic: customTopic.value,
           mode: durationMode,
-          seamless_loop: !!(chkSeamlessLoop && chkSeamlessLoop.checked)
+          seamless_loop: false,
+          brief: window.EditorialStudio?.getBrief()
         })
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `HTTP ${res.status}`);
       scriptHook.value = data.hook;
       scriptBody.value = data.body;
       scriptCta.value = data.cta;
@@ -735,11 +738,9 @@ function bootstrapJesusStudio() {
         }
       }
 
-      if (data.micro_cta_text) {
-        currentMicroCtaText = data.micro_cta_text;
-        if (microCtaInput) microCtaInput.value = data.micro_cta_text;
-        if (stageMicroCtaBadge) stageMicroCtaBadge.textContent = data.micro_cta_text;
-      }
+      currentMicroCtaText = data.micro_cta_text || "";
+      if (microCtaInput) microCtaInput.value = currentMicroCtaText;
+      if (stageMicroCtaBadge) stageMicroCtaBadge.textContent = currentMicroCtaText;
 
       if (data.scripture) {
         currentScripture = data.scripture;
@@ -772,10 +773,8 @@ function bootstrapJesusStudio() {
         currentSeoCaption = data.seo_caption;
         const postCopyArea = document.getElementById("reelPostCopyText");
         if (postCopyArea) {
-          // No sobrescribir si el usuario ya modificó manualmente el copy
-          if (postCopyArea.dataset.userEdited !== "true") {
-            postCopyArea.value = data.seo_caption;
-          }
+          postCopyArea.value = data.seo_caption;
+          postCopyArea.dataset.userEdited = "false";
         }
       }
 
@@ -808,6 +807,7 @@ function bootstrapJesusStudio() {
       }
       updateCharCounters();
       updateProjectTitle();
+      window.EditorialStudio?.setScript(data);
     } catch (e) {
       alert("Error al generar guion: " + e.message);
     } finally {
@@ -1810,8 +1810,8 @@ function bootstrapJesusStudio() {
     const body = scriptBody.value.trim();
     const cta = scriptCta.value.trim();
 
-    if (!hook || !body || !cta) {
-      alert("Por favor asegúrate de que el Gancho, Mensaje y Llamado a la Acción no estén vacíos.");
+    if (!hook || !body) {
+      alert("Escribe una apertura y un mensaje. La despedida o llamada a la acción es opcional.");
       return;
     }
 
@@ -1865,6 +1865,8 @@ function bootstrapJesusStudio() {
           hook: hook,
           body: body,
           cta: cta,
+          target_duration_sec: window.EditorialStudio?.getTarget() || 22,
+          duration_mode: scriptDurationMode?.value || "deep",
           voice_key: voiceSelect.value,
           rate: rateSelect.value,
           video_mode: videoModeSelect ? videoModeSelect.value : "images",
@@ -2899,3 +2901,4 @@ function bootstrapJesusStudio() {
 }
 
 bootstrapJesusStudio();
+

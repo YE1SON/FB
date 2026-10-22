@@ -36,7 +36,10 @@ function bootstrapJesusStudio() {
 
   const subtitleStyleSelect = document.getElementById("subtitleStyleSelect");
   const subtitleSizeSelect = document.getElementById("subtitleSizeSelect");
+  const subtitlePositionSelect = document.getElementById("subtitlePositionSelect");
+  const subtitleAnimationSelect = document.getElementById("subtitleAnimationSelect");
   const liveSubPreview = document.getElementById("liveSubPreview");
+  const stageOverlay = document.getElementById("stageOverlay");
 
   const btnRenderVideo = document.getElementById("btnRenderVideo");
   const stagePlaceholder = document.getElementById("stagePlaceholder");
@@ -1391,8 +1394,6 @@ function bootstrapJesusStudio() {
   const chkSubtitlesAllCaps = document.getElementById("chkSubtitlesAllCaps");
   if (chkSubtitlesAllCaps) chkSubtitlesAllCaps.addEventListener("change", updateSubtitlePreview);
   updateSubtitlePreview();
-  updateSubtitlePosition();
-  updateSubtitleAnimation();
 
   // ─── Canvas Particle & Visual Effects Engine ────────────────────────────────
   const fxCanvas = document.getElementById("fxCanvas");
@@ -1689,10 +1690,6 @@ function bootstrapJesusStudio() {
   }
 
   // ─── Live Previews: Subtitle Position & Animation ─────────────────────────
-  const subtitlePositionSelect = document.getElementById("subtitlePositionSelect");
-  const subtitleAnimationSelect = document.getElementById("subtitleAnimationSelect");
-  const stageOverlay = document.getElementById("stageOverlay");
-
   function updateSubtitlePosition() {
     const pos = subtitlePositionSelect ? subtitlePositionSelect.value : "bottom";
     if (stageOverlay) {

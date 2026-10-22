@@ -1043,59 +1043,34 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
 
 # ─── Prompts Visuales Limpios y Coherentes para las 3 Escenas ───────────────
 
+ANTI_TEXT_NEGATIVE = "photorealistic, 8k portrait, warm golden lighting, cinematic composition, masterpiece, no text, no watermark, no words, no letters, no typography, no subtitles, no captions --ar 9:16"
+
+JESUS_PORTRAITS_SCENE1 = [
+    "Cinematic 8k close-up portrait of Jesus Christ in the foreground, compassionate tender eyes looking forward, gentle comforting presence, soft celestial golden morning backlight illuminating flowing hair and robes, serene sacred atmosphere, shallow depth of field, photorealistic 35mm photography",
+    "Cinematic 8k intimate portrait of Jesus Christ in the immediate foreground, serene peaceful expression, eyes filled with mercy and divine love, warm golden rays of heavenly light shining on his face, cinematic lighting, 50mm lens, majestic and sacred",
+    "Cinematic 8k close-up shot of Jesus Christ, gentle loving smile, warm radiant halo of soft golden light, compassionate gaze toward the viewer, holy and reverent atmosphere, hyperrealistic details, elegant vertical composition",
+    "Cinematic 8k portrait of Jesus Christ the Good Shepherd in the foreground, warm divine glow, tender and faithful eyes full of hope and reassurance, soft ambient sunlight, dramatic shallow focus, sacred fine art"
+]
+
+SACRED_DEVOTION_SCENE2 = [
+    "A devout person praying reverently with hands folded over an open Holy Bible, warm amber candlelight, soft heavenly rays streaming from above, peaceful spiritual sanctuary, shallow depth of field, 50mm portrait",
+    "An open Holy Bible resting on a rustic wooden table bathed in pristine golden sunlight, glowing Scripture pages, gentle dust motes dancing in sunbeams, quiet devotion and reflection",
+    "Hands gently folded in quiet heartfelt prayer holding a small wooden cross, soft warm ambient lighting, reverent sacred atmosphere, cinematic shallow focus",
+    "A peaceful believer in quiet contemplation at sunrise, soft natural morning window light, tranquil atmosphere of prayer, faith and surrender"
+]
+
+JESUS_VICTORY_SCENE3 = [
+    "Cinematic 8k shot of Jesus Christ standing with welcoming open arms of grace and mercy, radiant golden sunrise breaking in the background, victorious peaceful dawn, heavenly sunbeams, majestic sacred atmosphere",
+    "Cinematic 8k composition of Jesus Christ raising his hand in gentle divine blessing and protection, surrounded by warm golden celestial light and serene clouds, holy and reassuring victory",
+    "Cinematic 8k view of Jesus Christ walking forward with open hands extending peace and hope, brilliant radiant heavenly light, serene dawn landscape, victorious spiritual resolution",
+    "A glorious peaceful heavenly sunrise with golden sunbeams breaking through misty clouds over a calm sea, warm divine glow, absolute serenity and spiritual victory"
+]
+
 THEME_3SCENE_CONFIGS = {
     "lost_child": {
-        "s1": [
-            "A concerned parent sitting quietly near a window at dusk looking outside, soft warm interior lighting, balanced 35mm composition",
-            "A person holding an open family photo album by warm lamplight, nostalgic reflective atmosphere, cinematic depth of field",
-            "An open front doorway illuminated by a gentle porch light overlooking a quiet suburban street at evening"
-        ],
-        "s2": [
-            "A devout Christian praying with folded hands over an open Holy Bible, warm amber candlelight, reverent spiritual atmosphere",
-            "A mother and father praying together with heads bowed and quiet faith, soft morning dawn breaking through curtains",
-            "Hands gently resting on an open Bible illuminated by soft golden rays, quiet intercession and hope"
-        ],
-        "s3": [
-            "A peaceful family walking together along a sunlit park trail, warm morning sunbeams, restoration and harmony",
-            "Jesus Christ extending open welcoming arms in a serene golden landscape, gentle compassionate expression, atmospheric light",
-            "A welcoming warm home doorway filled with radiant golden light, peaceful resolution and family grace"
-        ]
-    },
-
-    "morning_favor": {
-        "s1": [
-            "Golden morning sunrise streaming through an open window onto a wooden table, steam rising gently from a cup, clean composition",
-            "Panoramic dawn over a peaceful misty valley, warm golden morning sunbeams, fresh clean atmosphere",
-            "A person opening window shutters to welcome the golden dawn, taking a deep breath of fresh air, serene 35mm photograph"
-        ],
-        "s2": [
-            "An open Holy Bible resting on a wooden desk bathed in pristine morning sunlight, quiet devotion and reflection",
-            "A person praying in quiet gratitude with morning light illuminating their face, gentle peaceful expression",
-            "A solitary figure walking peacefully along a garden path at sunrise, soft golden hour lighting, quiet communion with God"
-        ],
-        "s3": [
-            "A bright open horizon under a clear morning sky, radiant sunbeams, sense of purpose and fresh beginning",
-            "Jesus Christ standing in warm morning sunlight with welcoming open hands, gentle serene expression, divine grace",
-            "A sunlit path stretching forward into green pastures, glorious morning light, peaceful victory"
-        ]
-    },
-
-    "night_anxiety": {
-        "s1": [
-            "A quiet bedroom at midnight, soft ambient bedside lamp, starry night sky visible through a window, serene 35mm composition",
-            "A person sitting on the edge of a bed looking thoughtfully out into the quiet night, soft moonlight, contemplative atmosphere",
-            "A silhouette in quiet stillness during the night, moonlight gently resting on a closed Bible on the nightstand"
-        ],
-        "s2": [
-            "A person breathing out tension with closed eyes and relaxed shoulders, illuminated by warm gentle lamplight, quiet prayer",
-            "An open Bible on a bedside table illuminated by soft soothing amber glow, atmosphere of sanctuary and peace",
-            "Hands folded gently in prayer as dark shadows dissolve into warm golden light, peaceful surrender"
-        ],
-        "s3": [
-            "A person sleeping peacefully in bed, gentle moonlight, tranquil expressions, deep restorative rest",
-            "Jesus Christ standing in gentle celestial light with outstretched hands speaking peace, calming aura, serene night sky",
-            "A calm glassy lake reflecting starry night skies and gentle moonlight, absolute stillness and peace"
-        ]
+        "s1": JESUS_PORTRAITS_SCENE1,
+        "s2": SACRED_DEVOTION_SCENE2,
+        "s3": JESUS_VICTORY_SCENE3
     }
 }
 
@@ -1106,39 +1081,19 @@ def generate_3scene_prompts_for_script(
     custom_topic: Optional[str] = None
 ) -> Dict[str, str]:
     """
-    Genera 3 prompts de imagen coherentes, estructurados y libres de adjetivos vacíos.
-    Escena 1: Apertura contextual.
-    Escena 2: Mensaje y reflexión.
-    Escena 3: Cierre y resolución.
+    Genera 3 prompts de imagen cinematográficos de alta fidelidad:
+    - Escena 1 (Apertura): SIEMPRE retrato en primer plano de Jesucristo con mirada compasiva y luz celestial.
+    - Escena 2 (Intercesión): Escena devocional de fe, oración reverente con la Santa Biblia o persona en comunión divina.
+    - Escena 3 (Cierre / Victoria): Jesucristo bendiciendo con brazos abiertos o radiante amanecer celestial de victoria y paz.
+    Garantiza estricta ausencia de texto, subtítulos o marcas de agua en la imagen generada.
     """
-    from engine.editorial import scene_prompts
-    narrative_prompts = scene_prompts(theme_key, script_text, custom_topic or "")
-    if narrative_prompts:
-        return narrative_prompts
-    t_key = theme_key if (theme_key and theme_key in VIRAL_THEMES) else "morning_favor"
-    theme = VIRAL_THEMES.get(t_key, VIRAL_THEMES["morning_favor"])
+    raw1 = random.choice(JESUS_PORTRAITS_SCENE1)
+    raw2 = random.choice(SACRED_DEVOTION_SCENE2)
+    raw3 = random.choice(JESUS_VICTORY_SCENE3)
 
-    custom_trans = _translate_topic(custom_topic) if (custom_topic and custom_topic.strip()) else ""
-    topic_cue = f", reflecting themes of {custom_trans}" if custom_trans else ""
-
-    if t_key in THEME_3SCENE_CONFIGS:
-        cfg = THEME_3SCENE_CONFIGS[t_key]
-        raw1 = random.choice(cfg["s1"])
-        raw2 = random.choice(cfg["s2"])
-        raw3 = random.choice(cfg["s3"])
-    else:
-        # Generación temática estructurada
-        raw1 = f"A person in quiet thoughtful contemplation{topic_cue}, soft natural window light, authentic 35mm composition"
-        raw2 = f"Hands praying reverently over an open Holy Bible, warm candlelight, peaceful spiritual atmosphere"
-        raw3 = f"A peaceful sunrise landscape with gentle golden rays, quiet hope and serene resolution"
-
-    clean_style1 = "35mm photography, natural morning light, balanced composition, authentic atmosphere"
-    clean_style2 = "natural window lighting, warm amber tones, quiet reflective mood, 50mm portrait composition"
-    clean_style3 = "golden morning sunlight, serene atmosphere, quiet depth of field, reverent composition"
-
-    p1 = f"{raw1}, {clean_style1} --ar 9:16"
-    p2 = f"{raw2}, {clean_style2} --ar 9:16"
-    p3 = f"{raw3}, {clean_style3} --ar 9:16"
+    p1 = f"{raw1}, {ANTI_TEXT_NEGATIVE}"
+    p2 = f"{raw2}, {ANTI_TEXT_NEGATIVE}"
+    p3 = f"{raw3}, {ANTI_TEXT_NEGATIVE}"
 
     return {
         "prompt": p1,
@@ -1255,17 +1210,27 @@ def generate_internal_template_script(
     closings = theme.get("closings", ["May His peace guard your heart and mind tonight."])
     closing = random.choice(closings)
 
-    # 4. CTA Opcional
-    ctas = theme.get("ctas", ["May your heart find quiet rest tonight in His hands."])
-    cta = random.choice(ctas)
+    # 4. CTA Dinámico y Reintegrado
+    theme_ctas = theme.get("ctas", [])
+    universal_ctas = [
+        "Leave your first name below so we can keep you in our prayers tonight.",
+        "Drop your first name or a loved one's name in the comments for prayer.",
+        "Save this prayer for whenever your heart needs God's peace today.",
+        "Share this with someone who needs God's gentle comfort right now.",
+        "Type Amen if you receive this blessing in your heart tonight."
+    ]
+    all_ctas = (theme_ctas + universal_ctas) if theme_ctas else universal_ctas
+    cta = random.choice(all_ctas)
 
     # Looping is a render choice, never permission to append an unfinished sentence.
 
     # Ajuste de duración según modo
     if mode == "micro":
-        # Formato corto (~30 palabras)
+        # Formato micro-oración conciso (~25-35 palabras)
         sentences = [s.strip() for s in body.split(".") if s.strip()]
         body_short = f"{sentences[0]}." if sentences else body
+        if len(body_short.split()) > 20:
+            body_short = " ".join(body_short.split()[:18]).rstrip(",;:- ") + "."
         full_text = f"{chosen_hook} {body_short} {cta}".strip()
         body_export = body_short
     elif mode == "story":
@@ -1279,7 +1244,7 @@ def generate_internal_template_script(
 
     word_count = len(full_text.split())
     # 2.15 palabras por segundo para locución natural y pausada
-    estimated_duration_sec = round(max(15.0, (word_count / 2.15) + 1.2), 1)
+    estimated_duration_sec = round(min(34.0, max(15.0, (word_count / 2.15) + 1.2)), 1)
 
     scripture = BIBLICAL_CATALOGUE.get(chosen_key, theme.get("scripture", "Philippians 4:6 — Present your requests to God with thanksgiving."))
     hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianLiving"])
@@ -1339,26 +1304,26 @@ def generate_script(
 ) -> Dict[str, Any]:
     """Punto de entrada principal. Delega en el proveedor activo (Ollama / Template / Auto)."""
     from engine.script_provider import get_script_provider
-    from engine.editorial import FORMATS
+    from engine.editorial import FORMATS, english_title, clean_narration
     provider = get_script_provider()
     script_result = provider.generate(
         theme_key=theme_key,
         custom_topic=(brief.get("situation") or custom_topic) if brief else custom_topic,
         mode=mode,
-        tone=FORMATS.get(brief.get("format")) if brief else tone,
+        tone=FORMATS.get(brief.get("format")) if (brief and brief.get("format")) else tone,
         seamless_loop=False,
         audience=brief.get("audience", "Adult US audience") if brief else "Adult US audience"
     )
     result = script_result.model_dump()
-    from engine.editorial import apply_brief, clean_narration, english_title
     result["body"] = clean_narration(result["body"])
     result["cta"] = clean_narration(result["cta"])
+    if not result["cta"]:
+        result["cta"] = "Leave your first name below so we can keep you in our prayers tonight."
     result["full_text"] = " ".join(filter(None, [result["hook"], result["body"], result["cta"]]))
     result["word_count"] = len(result["full_text"].split())
+    result["estimated_duration_sec"] = round(min(34.0, max(15.0, (result["word_count"] / 2.15) + 1.2)), 1)
     result["english_title"] = english_title(result["theme_key"])
     result["seo_caption"] = generate_seo_caption(result["english_title"], result["full_text"], result["scripture"], result["cta"], result["hashtags"])
-    if brief:
-        result = apply_brief(result, brief, VIRAL_THEMES[result["theme_key"]])
     return result
 
 

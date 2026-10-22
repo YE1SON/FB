@@ -176,7 +176,7 @@ function bootstrapJesusStudio() {
           ? selectedImageName3
           : `/assets/images/${selectedImageName3}`;
       } else {
-        img3.src = "/assets/images/jesus_walking_storm.jpg";
+        img3.src = "/assets/images/jesus_comforting_embrace.jpg";
       }
     }
 
@@ -501,7 +501,7 @@ function bootstrapJesusStudio() {
       const optionsHtml = buildGroupedThemeOptions(themes);
       if (themeSelect) themeSelect.innerHTML = optionsHtml;
       if (cardThemeSelect) cardThemeSelect.innerHTML = optionsHtml;
-      window.EditorialStudio?.configureThemes(themes, config.series);
+      // EditorialStudio removed
       updateProjectTitle();
       updateScriptDurationEstimate();
     } catch (e) {
@@ -521,7 +521,7 @@ function bootstrapJesusStudio() {
           ? `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, "0")} s`
           : `~${seconds} s`)
       : "sin estimación todavía";
-    const target = `objetivo seleccionado: ${window.EditorialStudio?.getTarget() || 22} s`;
+    const target = `objetivo: ~22 s`;
     scriptDurationEstimate.textContent =
       `Estimación orientativa de locución: ${words} palabras · ${duration}. ${target}. Cálculo aproximado a 125 palabras/min; el narrador, las pausas y el render pueden cambiar la duración real.`;
   }
@@ -541,7 +541,7 @@ function bootstrapJesusStudio() {
       voiceSelect.innerHTML = voices
         .map(v => `<option value="${v.key}" ${v.key === defaultVoice ? "selected" : ""}>${v.name}</option>`)
         .join("");
-      window.EditorialStudio?.configureVoices(voices);
+      // EditorialStudio configureVoices removed
     } catch (e) {
       console.error("Error al cargar voces:", e);
     }
@@ -719,17 +719,16 @@ function bootstrapJesusStudio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme_key: themeSelect.value,
-          custom_topic: customTopic.value,
+          custom_topic: customTopic ? customTopic.value : "",
           mode: durationMode,
-          seamless_loop: false,
-          brief: window.EditorialStudio?.getBrief()
+          seamless_loop: false
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `HTTP ${res.status}`);
-      scriptHook.value = data.hook;
-      scriptBody.value = data.body;
-      scriptCta.value = data.cta;
+      scriptHook.value = data.hook || "";
+      scriptBody.value = data.body || "";
+      scriptCta.value = data.cta || "";
       updateScriptDurationEstimate();
 
       const badge = data.hook_badge_text || data.hook_text;
@@ -810,7 +809,7 @@ function bootstrapJesusStudio() {
       }
       updateCharCounters();
       updateProjectTitle();
-      window.EditorialStudio?.setScript(data);
+      // EditorialStudio setScript removed
     } catch (e) {
       alert("Error al generar guion: " + e.message);
     } finally {
@@ -1862,7 +1861,7 @@ function bootstrapJesusStudio() {
           hook: hook,
           body: body,
           cta: cta,
-          target_duration_sec: window.EditorialStudio?.getTarget() || 22,
+          target_duration_sec: 22.0,
           duration_mode: scriptDurationMode?.value || "deep",
           voice_key: voiceSelect.value,
           rate: rateSelect.value,
@@ -2899,3 +2898,95 @@ function bootstrapJesusStudio() {
 
 bootstrapJesusStudio();
 
+
+
+  // ─── Google Vids Style Timeline: Transiciones y Sincronización ───
+  const TRANSITION_PRESETS = [
+    { label: "Disolver", value: "dissolve", icon: "⤨" },
+    { label: "Fundido", value: "fade", icon: "⚡" },
+    { label: "Zoom", value: "zoom", icon: "🔍" }
+  ];
+  let currentTransIdx1 = 0;
+  let currentTransIdx2 = 0;
+
+  const transBadge1 = document.getElementById("transBadge1");
+  const transLabel1 = document.getElementById("transLabel1");
+  if (transBadge1) {
+    transBadge1.addEventListener("click", () => {
+      currentTransIdx1 = (currentTransIdx1 + 1) % TRANSITION_PRESETS.length;
+      const t = TRANSITION_PRESETS[currentTransIdx1];
+      if (transLabel1) transLabel1.textContent = t.label;
+      const icon = transBadge1.querySelector(".trans-icon");
+      if (icon) icon.textContent = t.icon;
+      if (transitionStyleSelect) transitionStyleSelect.value = t.value;
+    });
+  }
+
+  const transBadge2 = document.getElementById("transBadge2");
+  const transLabel2 = document.getElementById("transLabel2");
+  if (transBadge2) {
+    transBadge2.addEventListener("click", () => {
+      currentTransIdx2 = (currentTransIdx2 + 1) % TRANSITION_PRESETS.length;
+      const t = TRANSITION_PRESETS[currentTransIdx2];
+      if (transLabel2) transLabel2.textContent = t.label;
+      const icon = transBadge2.querySelector(".trans-icon");
+      if (icon) icon.textContent = t.icon;
+    });
+  }
+
+  // Sincronizar reproducción de audio con el mockup y el timeline
+  if (audioPreviewPlayer) {
+    audioPreviewPlayer.addEventListener("timeupdate", () => {
+      const cur = audioPreviewPlayer.currentTime || 0;
+      const dur = audioPreviewPlayer.duration || 22.0;
+      const liveCtrlTime = document.getElementById("liveCtrlTime");
+      if (liveCtrlTime) {
+        const fmt = s => {
+          const m = Math.floor(s / 60);
+          const sec = Math.floor(s % 60);
+          return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+        };
+        liveCtrlTime.textContent = `${fmt(cur)} / ${fmt(dur)}`;
+      }
+
+      // Conmutar escena automáticamente durante la escucha
+      let targetScene = 1;
+      if (cur >= 3.2 && cur < dur * 0.62) {
+        targetScene = 2;
+      } else if (cur >= dur * 0.62) {
+        targetScene = 3;
+      }
+
+      if (targetScene !== currentSceneTab) {
+        currentSceneTab = targetScene;
+        updateSceneTabsUI();
+        if (targetScene === 1 && selectedImageName) {
+          stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+        } else if (targetScene === 2 && selectedImageName2) {
+          stageSelectedImage.src = `/assets/images/${selectedImageName2}`;
+        } else if (targetScene === 3 && selectedImageName3) {
+          stageSelectedImage.src = `/assets/images/${selectedImageName3}`;
+        }
+      }
+    });
+
+    audioPreviewPlayer.addEventListener("play", () => {
+      const btn = document.getElementById("btnLivePlayPause");
+      if (btn) btn.textContent = "⏸";
+    });
+
+    audioPreviewPlayer.addEventListener("pause", () => {
+      const btn = document.getElementById("btnLivePlayPause");
+      if (btn) btn.textContent = "▶";
+    });
+
+    audioPreviewPlayer.addEventListener("ended", () => {
+      const btn = document.getElementById("btnLivePlayPause");
+      if (btn) btn.textContent = "▶";
+      currentSceneTab = 1;
+      updateSceneTabsUI();
+      if (selectedImageName) {
+        stageSelectedImage.src = `/assets/images/${selectedImageName}`;
+      }
+    });
+  }

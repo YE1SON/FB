@@ -244,201 +244,85 @@
             </div>
           </div>
 
-          <fieldset class="editorial-brief subpanel-card mt-12">
-            <legend>Define esta publicación</legend>
-            <div class="form-row">
-              <div class="form-group col-7"><label for="editorialSeries">Serie editorial</label>
-                <select id="editorialSeries" class="form-control"><option value="everyday">Faith for Everyday Life</option><option value="quiet">A Quiet Moment with God</option></select>
-              </div>
-              <div class="form-group col-5"><label for="editorialFormat">Tipo de mensaje</label>
-                <select id="editorialFormat" class="form-control"><option value="prayer">Oración concreta</option><option value="reflection">Reflexión bíblica</option><option value="story">Relato ilustrativo (imaginado)</option></select>
-              </div>
-            </div>
-            <div class="form-group"><label for="editorialAudience">Destinatario (en inglés)</label><input id="editorialAudience" class="form-control" maxlength="180" value="Adults in the United States seeking everyday Christian encouragement"></div>
-            <div class="form-group"><label for="editorialSituation">Situación concreta (en inglés, opcional)</label><input id="editorialSituation" class="form-control" maxlength="500" placeholder="Waiting for a call from your grown child."><small>Si lo dejas vacío, el tema aporta una situación inicial. Revisa y adapta el borrador a tu comunidad.</small></div>
-            <div class="form-group"><label for="editorialIdea">Una idea para desarrollar (en inglés, opcional)</label><input id="editorialIdea" class="form-control" maxlength="500" placeholder="Listening can be an expression of love."></div>
-            <label class="chk-label"><input id="editorialAllThemes" type="checkbox"> Mostrar los 26 temas del catálogo completo</label>
-            <label class="chk-label"><input id="editorialIncludeCta" type="checkbox"> Añadir una despedida breve (opcional)</label>
-          </fieldset>
-
+          <!-- Selector de Tema y Duración -->
           <div class="form-row mt-12">
             <div class="form-group col-7">
-              <label for="themeSelect">Selecciona un tema</label>
+              <label for="themeSelect">Selecciona un tema (26 Temas en 5 Pilares)</label>
               <select id="themeSelect" class="form-control">
-                <!-- Inyectado dinámicamente -->
+                <!-- Inyectado dinámicamente con los 26 temas en 5 pilares -->
               </select>
             </div>
             <div class="form-group col-5">
-              <label for="scriptDurationMode">Longitud del borrador</label>
+              <label for="scriptDurationMode">Longitud del guion</label>
               <select id="scriptDurationMode" class="form-control">
-                <option value="deep" selected>🕊️ Breve · objetivo 18–25 s</option>
-                <option value="micro">⚡ Micro-oración · objetivo 12–16 s</option>
-                <option value="story">📖 Extendido · objetivo 35–45 s</option>
+                <option value="deep" selected>🕊️ Estándar (18–25 s)</option>
+                <option value="micro">⚡ Corto (12–16 s)</option>
+                <option value="story">📖 Extendido (30–45 s)</option>
               </select>
             </div>
           </div>
 
-          <label for="editorialTarget">Objetivo de duración (segundos)</label>
-          <input id="editorialTarget" class="form-control" type="number" min="12" max="60" value="22">
-          <section class="subpanel-card mt-12" aria-labelledby="openingChoicesTitle">
-            <h3 id="openingChoicesTitle">Compara las aperturas</h3>
-            <p>Tres propuestas editoriales para probar. Ninguna garantiza más alcance.</p>
-            <div id="editorialHooks" class="editorial-hooks"></div>
-            <div class="editorial-actions mt-10"><button type="button" id="btnOpeningPreview" class="btn btn-outline">▶ Revisar primeros 3 segundos</button><button type="button" id="btnEditorialReview" class="btn btn-outline">Revisar el texto actual</button></div>
-            <div id="editorialReview" role="status" aria-live="polite"></div>
-          </section>
+          <div class="form-group mt-8">
+            <label for="customTopic">Petición o enfoque específico (opcional, en inglés o español)</label>
+            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Por mi hijo que no me habla, descanso para esta noche...">
+          </div>
 
-          <div class="quality-note" id="scriptDurationEstimate" role="status" aria-live="polite">
-            Estimación de locución: escribe o genera un guion para calcular una duración aproximada. La duración del MP4 puede variar.
+          <!-- Botón de Generación de Guion -->
+          <div class="form-row mt-10">
+            <div class="col-12">
+              <button type="button" id="btnGenerateScript" class="btn btn-primary-gradient btn-block btn-large">
+                ✨ GENERAR GUION (GANCHO + ORACIÓN + CTA)
+              </button>
+            </div>
+          </div>
+
+          <div class="quality-note mt-8" id="scriptDurationEstimate" role="status" aria-live="polite">
+            Estimación de locución: genera un guion para calcular la duración estimada.
           </div>
 
           <div class="provider-status-badge mb-12" id="scriptProviderStatus" style="display: none; font-size: 12px; padding: 7px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.10); border: 1px solid rgba(59, 130, 246, 0.30); color: #2563eb;" role="status">
             📋 <strong>Motor:</strong> Plantilla temática estructurada con catálogo bíblico verificado.
           </div>
 
-          <!-- Opción de cierre en bucle (Seamless Loop) -->
-          <div class="seamless-loop-card mb-12" style="background: rgba(var(--primary-rgb), 0.08); border: 1px solid rgba(var(--primary-rgb), 0.25); border-radius: 8px; padding: 10px 14px;">
-            <label class="chk-label" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;">
-              <input type="checkbox" id="chkSeamlessLoop" style="margin-top: 3px;">
-              <div>
-                <strong style="color: var(--primary); font-size: 13px;">🔄 Bucle de montaje (avanzado)</strong>
-                <div class="text-muted text-xs" style="line-height: 1.35; margin-top: 2px;">
-                  Ajusta el montaje y el audio. El guion conserva frases completas; revisa la unión en el MP4 final.
-                </div>
-              </div>
-            </label>
-          </div>
-
-          <div class="form-group">
-            <label for="customTopic">Contexto adicional para el motor (en inglés, opcional)</label>
-            <input type="text" id="customTopic" class="form-control" placeholder="Family tension after a difficult conversation...">
-          </div>
-
-          <!-- Cuadrícula 2x2 de Cajas de Guion -->
-          <div class="script-grid-2x2">
+          <!-- Cuadrícula Limpia de 3 Cajas del Guion: Gancho, Mensaje, Llamada a la Acción -->
+          <div class="script-grid-3 mt-12">
             <!-- Caja 1: Gancho -->
             <div class="script-box hook-box">
               <div class="box-head">
-                <span class="box-title">🎣 Gancho / Scroll-Stopper (0–3s)</span>
+                <span class="box-title">🎣 1. Gancho / Scroll-Stopper (0–3s)</span>
                 <span class="char-count" id="hookCharCount">0/500</span>
               </div>
-              <small class="box-desc">Una frase inicial breve, concreta y fácil de entender</small>
-              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Bring your worries to God tonight..."></textarea>
+              <small class="box-desc">Frase de apertura que capta la atención de inmediato</small>
+              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Before you close your eyes tonight..."></textarea>
             </div>
 
-            <!-- Caja 2: Mensaje al Corazón -->
+            <!-- Caja 2: Reflexión u Oración -->
             <div class="script-box body-box">
               <div class="box-head">
-                <span class="box-title">❤️ Reflexión u oración</span>
+                <span class="box-title">❤️ 2. Reflexión u Oración al Corazón</span>
                 <span class="char-count" id="bodyCharCount">0/500</span>
               </div>
-              <small class="box-desc">Conecta emocional y espiritualmente</small>
-              <textarea id="scriptBody" rows="3" class="form-control" placeholder="Lord, help us listen with patience today."></textarea>
+              <small class="box-desc">Mensaje profundo de fe, consuelo y esperanza</small>
+              <textarea id="scriptBody" rows="4" class="form-control" placeholder="Lord, bring Your gentle peace into our hearts tonight..."></textarea>
             </div>
 
-            <!-- Caja 3: Llamada a la Acción -->
+            <!-- Caja 3: Llamada a la Acción (CTA Reintegrado) -->
             <div class="script-box cta-box">
               <div class="box-head">
-                <span class="box-title">💬 Llamada a la Acción</span>
+                <span class="box-title">💬 3. Llamada a la Acción (CTA)</span>
                 <span class="char-count" id="ctaCharCount">0/500</span>
               </div>
-              <small class="box-desc">Invita a guardar o compartir solo cuando sea útil para la persona</small>
-              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Opcional: el mensaje puede terminar sin pedir una interacción."></textarea>
-            </div>
-
-            <!-- Caja 4: Gancho Visual de Impacto (Superior) -->
-            <div class="script-box badge-box">
-              <div class="box-head">
-                <span class="box-title">⚡ Gancho Visual de Impacto (0.0s – 3.5s)</span>
-                <span class="char-count" id="badgeCharCount">0/500</span>
-              </div>
-              <small class="box-desc">Scroll-stopper superior: Tipografía y estilo personalizable</small>
-              <div class="input-with-action">
-                <input type="text" id="hookBadgeInput" class="form-control" placeholder="PRAYER FOR YOUR CHILDREN">
-                <button type="button" id="btnRerollHookBadge" class="btn btn-sm btn-outline btn-reroll-badge" title="Generar otra frase de gancho">🎲 Otra Frase</button>
-              </div>
-              
-              <div class="badge-custom-row mt-8">
-                <!-- Estilo Visual -->
-                <div class="badge-col">
-                  <label class="text-xs text-muted" for="hookBadgeStyleSelect">Estilo</label>
-                  <select id="hookBadgeStyleSelect" class="form-control form-control-sm">
-                    <option value="gold_luxury" selected>👑 Oro Sagrado & Resplandor</option>
-                    <option value="clean_glass">💎 Cristal Glassmorphism Pro</option>
-                    <option value="viral_indigo">⚡ Neón Púrpura</option>
-                    <option value="sacred_fire">🔥 Fuego Sagrado & Devoción</option>
-                    <option value="editorial_white">📰 Editorial Blanco Minimalista</option>
-                  </select>
-                </div>
-                <!-- Tipografía -->
-                <div class="badge-col">
-                  <label class="text-xs text-muted" for="hookBadgeFontSelect">Fuente</label>
-                  <select id="hookBadgeFontSelect" class="form-control form-control-sm">
-                    <option value="Montserrat" selected>Montserrat (Moderna / Fuerte)</option>
-                    <option value="Cinzel">Cinzel (Sagrada / Clásica)</option>
-                    <option value="Plus Jakarta Sans">Plus Jakarta (Limpia / Tech)</option>
-                    <option value="Impact">Impact (Máximo Impacto)</option>
-                  </select>
-                </div>
-                <!-- Tamaño -->
-                <div class="badge-col">
-                  <label class="text-xs text-muted" for="hookBadgeSizeSelect">Tamaño</label>
-                  <select id="hookBadgeSizeSelect" class="form-control form-control-sm">
-                    <option value="small">Pequeño</option>
-                    <option value="normal" selected>Normal</option>
-                    <option value="large">Grande</option>
-                    <option value="xlarge">Extra Grande</option>
-                  </select>
-                </div>
-                <!-- Activar Checkbox -->
-                <div class="badge-col badge-col-chk">
-                  <label class="chk-label mt-14">
-                    <input type="checkbox" id="chkEnableHookBadge" checked>
-                    <span>Activar</span>
-                  </label>
-                </div>
-              </div>
+              <small class="box-desc">Invitación sincera a comentar o guardar la oración</small>
+              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Leave your first name below so we can keep you in our prayers tonight."></textarea>
             </div>
           </div>
 
-          <!-- Opciones Avanzadas del Guion (Colapsable / Acordeón) -->
-          <details class="collapsible-box mt-14" open>
-            <summary class="collapsible-summary">
-              <span>⚙️ Opciones Avanzadas del Guion, Comentario Fijado y Sincronización</span>
-            </summary>
-            <div class="collapsible-body">
-              <!-- Píldora Micro-CTA -->
-              <div class="micro-cta-row">
-                <div class="flex-between">
-                  <label class="chk-label">
-                    <input type="checkbox" id="chkEnableMicroCta">
-                    <strong>💬 Píldora de Invitación a Comentar (Segundo 3.4 a 7.8)</strong>
-                  </label>
-                  <small class="text-muted">Aviso flotante arriba para pedir nombres</small>
-                </div>
-                <input type="text" id="microCtaInput" class="form-control mt-4" placeholder="💬 Leave their first name below">
-              </div>
-
-              <!-- Comentario Fijado -->
-              <div class="pinned-comment-wrap mt-10">
-                <div class="flex-between">
-                  <label class="form-label-sm">📌 Comentario Fijado Personalizado</label>
-                  <div class="flex-gap-4">
-                    <button type="button" id="btnRerollMagneticComment" class="btn btn-sm btn-outline">🎲 Otra Pregunta</button>
-                    <button type="button" id="btnCopyPinnedComment" class="btn btn-sm btn-gold-outline">📋 Copiar Comentario</button>
-                  </div>
-                </div>
-                <textarea id="scriptPinnedComment" rows="2" class="form-control mt-4" placeholder="El comentario fijado aparecerá aquí..."></textarea>
-              </div>
-
-              <!-- Botón de Sincronización -->
-              <div class="sync-prompts-bar mt-10">
-                <button type="button" id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block" style="font-weight: 700;">
-                  🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion
-                </button>
-              </div>
-            </div>
-          </details>
+          <!-- Botón de Sincronización con Escenas -->
+          <div class="sync-prompts-bar mt-12">
+            <button type="button" id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block" style="font-weight: 700;">
+              🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion
+            </button>
+          </div>
 
           <!-- Pie de Acciones de la Etapa 1 -->
           <div class="stage-footer-actions mt-16">
@@ -467,7 +351,7 @@
               <select id="voiceSelect" class="form-control">
                 <!-- Inyectado dinámicamente -->
               </select>
-              <label class="chk-label mt-8"><input type="checkbox" id="editorialAllVoices"> Más voces (opciones avanzadas)</label>
+              
             </div>
             <div class="form-group col-4">
               <label for="rateSelect">Velocidad y Tono</label>
@@ -502,36 +386,6 @@
             🔊 Escuchar Previa del Audio
           </button>
           <audio id="audioPreviewPlayer" controls style="display:none; width: 100%; margin-top: 10px;"></audio>
-
-          <!-- Suite de Plugins de Audio Meta 2026 -->
-          <div class="subpanel-card mt-14" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px;">
-            <div style="font-weight: 700; font-size: 13px; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-              <span>⚙️ Opciones de mezcla de audio</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
-                <input type="checkbox" id="chkEnableSfx" style="margin-top: 3px;">
-                <div>
-                  <strong style="font-size: 13px;">✨ Efectos de sonido opcionales</strong>
-                  <div class="text-muted text-xs" style="line-height: 1.3;">Añade detalles sonoros si están disponibles. Escucha el resultado con auriculares y desactívalos si distraen de la oración.</div>
-                </div>
-              </label>
-              <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
-                <input type="checkbox" id="chkMasterLufs" checked style="margin-top: 3px;">
-                <div>
-                  <strong style="font-size: 13px;">🔊 Procesamiento de volumen y claridad</strong>
-                  <div class="text-muted text-xs" style="line-height: 1.3;">Busca una voz clara y una música de fondo que no compita con las palabras. Verifica el nivel escuchando el archivo exportado.</div>
-                </div>
-              </label>
-              <label class="chk-label" style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin: 0;">
-                <input type="checkbox" id="chkGenerateTrendingAudio" checked style="margin-top: 3px;">
-                <div>
-                  <strong style="font-size: 13px;">🎵 Versión sin música de fondo</strong>
-                  <div class="text-muted text-xs" style="line-height: 1.3;">Permite añadir música desde la biblioteca de Facebook después de subir el video. Revisa que la voz conserve suficiente volumen.</div>
-                </div>
-              </label>
-            </div>
-          </div>
 
           <!-- Pie de Acciones de la Etapa 2 -->
           <div class="stage-footer-actions mt-20">
@@ -913,28 +767,7 @@
             </button>
           </div>
 
-          <details class="subpanel-card mt-20" id="editorialResultsPanel">
-            <summary>Resultados de publicaciones · seguimiento manual</summary>
-            <p>Registra observaciones a las 48 horas y a los 7 días. Deja vacíos los datos que Facebook no muestre; cero significa un cero observado.</p>
-            <form id="editorialResultsForm">
-              <div class="form-group"><label for="editorialRecord">Publicación</label><select id="editorialRecord" class="form-control"><option value="">Registrar el guion actual como una publicación nueva</option></select></div>
-              <div class="form-row"><div class="form-group col-7"><label for="editorialPostUrl">Enlace de la publicación (opcional)</label><input type="url" id="editorialPostUrl" class="form-control" placeholder="https://www.facebook.com/reel/..."></div><div class="form-group col-5"><label for="editorialCheckpoint">Momento de observación</label><select id="editorialCheckpoint" class="form-control"><option value="48h">48 horas</option><option value="7d">7 días</option><option value="other">Otro momento</option></select></div></div>
-              <div class="editorial-metrics-grid">
-                <label>Duración del Reel (s)<input class="form-control" type="number" step="any" min="0.01" id="metricDuration"></label>
-                <label>Visualizaciones<input class="form-control" type="number" min="0" id="metricViews"></label>
-                <label>Tiempo medio visto (s)<input class="form-control" type="number" step="any" min="0" id="metricWatch"></label>
-                <label>Porcentaje medio visto<input class="form-control" type="number" step="any" min="0" id="metricPercent"></label>
-                <label>Seguidores atribuidos<input class="form-control" type="number" min="0" id="metricFollowers"></label>
-                <label>Compartidos<input class="form-control" type="number" min="0" id="metricShares"></label>
-                <label>Espectadores de EE. UU. (%)<input class="form-control" type="number" step="any" min="0" max="100" id="metricUs"></label>
-                <label>Punto de mayor abandono (s)<input class="form-control" type="number" step="any" min="0" id="metricDropoff"></label>
-              </div>
-              <button type="submit" class="btn btn-outline mt-12">Guardar observación</button>
-              <button type="button" id="btnRefreshEditorialResults" class="btn btn-outline mt-12">Actualizar registro</button>
-            </form>
-            <p id="editorialResultsStatus" role="status" aria-live="polite"></p>
-            <div class="editorial-table-wrap"><table class="editorial-results-table"><thead><tr><th>Apertura</th><th>Control</th><th>Vistas</th><th>Media (s)</th><th>Visto (%)</th><th>EE. UU. (%)</th><th>Seguidores</th></tr></thead><tbody id="editorialResultsRows"></tbody></table></div>
-          </details>
+          
 
           <!-- Biblioteca de Videos Recientes -->
           <div class="subpanel-card mt-20">
@@ -988,10 +821,7 @@
                 <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
                 <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
 
-                <!-- Recuadro de Alerta Superior (Hook Badge) — 0s a 3.5s -->
-                <div id="stageHookBadge" class="stage-hook-badge hook-style-gold_luxury" style="display: block;">
-                  PRAYER FOR YOUR CHILDREN
-                </div>
+                
 
                 <!-- Píldora de Micro-CTA Superior — 4.5s a 9.5s (Desfasada, nunca simultánea) -->
                 <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: none;">
@@ -1028,29 +858,61 @@
             </div>
           </div>
 
-          <!-- Barra de Escenas del Reel (3 Tomas en Miniatura — Como en la Referencia) -->
-          <div class="reel-scenes-shelf mt-10">
-            <div class="shelf-label">Escenas del Reel (3)</div>
-            <div class="shelf-thumbnails-grid">
-              <div class="scene-thumb-card active" id="previewThumbScene1">
-                <img src="/assets/images/jesus_healing_miracle.jpg" alt="Escena 1" id="shelfImgScene1">
-                <span class="shelf-badge">1</span>
-                <span class="shelf-name">1. Apertura (0.0–3.2s)</span>
+          <!-- Barra de Escenas Estilo Google Vids (Línea de Tiempo Horizontal con Transiciones) -->
+          <div class="reel-timeline-shelf mt-10">
+            <div class="timeline-header flex-between mb-6">
+              <span class="shelf-label">🎬 Escenas del Reel (Timeline Google Vids)</span>
+              <span class="text-xs text-muted" id="timelineActiveLabel">Escena 1 activa (0.0s – 3.2s)</span>
+            </div>
+            
+            <div class="timeline-horizontal-track">
+              <!-- Escena 1 -->
+              <div class="timeline-scene-card active" id="previewThumbScene1" data-scene="1">
+                <div class="scene-card-thumb">
+                  <img src="/assets/images/jesus_healing_miracle.jpg" alt="Escena 1" id="shelfImgScene1">
+                  <span class="scene-index-badge">1</span>
+                </div>
+                <div class="scene-card-meta">
+                  <strong class="scene-card-title">1. Apertura</strong>
+                  <span class="scene-card-duration">0.0–3.2s</span>
+                </div>
               </div>
-              <div class="scene-thumb-card" id="previewThumbScene2">
-                <img src="/assets/images/jesus_reaching_hand.jpg" alt="Escena 2" id="shelfImgScene2">
-                <span class="shelf-badge">2</span>
-                <span class="shelf-name">2. Intercesión (3.2–10s)</span>
+
+              <!-- Transición 1 -> 2 -->
+              <div class="timeline-transition-badge" id="transBadge1" title="Transición Escena 1 ➔ 2">
+                <span class="trans-icon">⤨</span>
+                <span class="trans-label" id="transLabel1">Disolver</span>
               </div>
-              <div class="scene-thumb-card" id="previewThumbScene3">
-                <img src="/assets/images/jesus_walking_storm.jpg" alt="Escena 3" id="shelfImgScene3">
-                <span class="shelf-badge">3</span>
-                <span class="shelf-name">3. Victoria (10s–Final)</span>
+
+              <!-- Escena 2 -->
+              <div class="timeline-scene-card" id="previewThumbScene2" data-scene="2">
+                <div class="scene-card-thumb">
+                  <img src="/assets/images/jesus_reaching_hand.jpg" alt="Escena 2" id="shelfImgScene2">
+                  <span class="scene-index-badge">2</span>
+                </div>
+                <div class="scene-card-meta">
+                  <strong class="scene-card-title">2. Intercesión</strong>
+                  <span class="scene-card-duration">3.2–10s</span>
+                </div>
               </div>
-              <label class="scene-thumb-add" for="imageUpload" title="Subir o agregar escena">
-                <span>+</span>
-                <small>Agregar</small>
-              </label>
+
+              <!-- Transición 2 -> 3 -->
+              <div class="timeline-transition-badge" id="transBadge2" title="Transición Escena 2 ➔ 3">
+                <span class="trans-icon">⤨</span>
+                <span class="trans-label" id="transLabel2">Disolver</span>
+              </div>
+
+              <!-- Escena 3 -->
+              <div class="timeline-scene-card" id="previewThumbScene3" data-scene="3">
+                <div class="scene-card-thumb">
+                  <img src="/assets/images/jesus_comforting_embrace.jpg" alt="Escena 3" id="shelfImgScene3">
+                  <span class="scene-index-badge">3</span>
+                </div>
+                <div class="scene-card-meta">
+                  <strong class="scene-card-title">3. Victoria</strong>
+                  <span class="scene-card-duration">10s–Fin</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1252,15 +1114,8 @@
     </div>
   </div>
 
-  <dialog id="editorialOpeningDialog" class="editorial-opening-dialog" aria-labelledby="openingPreviewTitle">
-    <h2 id="openingPreviewTitle">Primeros tres segundos</h2>
-    <p>Maqueta con imagen inicial y locución; no incluye el montaje final ni predice retención.</p>
-    <div class="editorial-opening-frame"><img id="editorialOpeningImage" alt="Primera escena seleccionada"><p id="editorialOpeningText"></p></div>
-    <audio id="editorialOpeningAudio" controls></audio><p id="editorialOpeningStatus" role="status"></p>
-    <button type="button" id="btnCloseOpeningPreview" class="btn btn-outline">Cerrar</button>
-  </dialog>
-  <script src="/static/editorial.js?v=2"></script>
-  <script src="/static/app.js?v=7.1"></script>
+  
+  <script src="/static/app.js?v=8.0"></script>
 </body>
 </html>
 

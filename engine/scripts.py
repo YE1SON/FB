@@ -1043,13 +1043,13 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
 
 # ─── Prompts Visuales Limpios y Coherentes para las 3 Escenas ───────────────
 
-ANTI_TEXT_NEGATIVE = "photorealistic, 8k portrait, warm golden lighting, cinematic composition, masterpiece, no text, no watermark, no words, no letters, no typography, no subtitles, no captions --ar 9:16"
+ANTI_TEXT_NEGATIVE = "photorealistic portrait, warm golden lighting, cinematic composition, no text, no watermark, no words, no letters, no typography, no subtitles, no captions --ar 9:16"
 
 JESUS_PORTRAITS_SCENE1 = [
-    "Cinematic 8k close-up portrait of Jesus Christ in the foreground, compassionate tender eyes looking forward, gentle comforting presence, soft celestial golden morning backlight illuminating flowing hair and robes, serene sacred atmosphere, shallow depth of field, photorealistic 35mm photography",
-    "Cinematic 8k intimate portrait of Jesus Christ in the immediate foreground, serene peaceful expression, eyes filled with mercy and divine love, warm golden rays of heavenly light shining on his face, cinematic lighting, 50mm lens, majestic and sacred",
-    "Cinematic 8k close-up shot of Jesus Christ, gentle loving smile, warm radiant halo of soft golden light, compassionate gaze toward the viewer, holy and reverent atmosphere, hyperrealistic details, elegant vertical composition",
-    "Cinematic 8k portrait of Jesus Christ the Good Shepherd in the foreground, warm divine glow, tender and faithful eyes full of hope and reassurance, soft ambient sunlight, dramatic shallow focus, sacred fine art"
+    "Cinematic close-up portrait of Jesus Christ in the foreground, compassionate tender eyes looking forward, gentle comforting presence, soft celestial golden morning backlight illuminating flowing hair and robes, serene sacred atmosphere, shallow depth of field, photorealistic 35mm photography",
+    "Cinematic intimate portrait of Jesus Christ in the immediate foreground, serene peaceful expression, eyes filled with mercy and divine love, warm golden rays of heavenly light shining on his face, cinematic lighting, 50mm lens, majestic and sacred",
+    "Cinematic close-up shot of Jesus Christ, gentle loving smile, warm radiant halo of soft golden light, compassionate gaze toward the viewer, holy and reverent atmosphere, hyperrealistic details, elegant vertical composition",
+    "Cinematic portrait of Jesus Christ the Good Shepherd in the foreground, warm divine glow, tender and faithful eyes full of hope and reassurance, soft ambient sunlight, dramatic shallow focus, sacred fine art"
 ]
 
 SACRED_DEVOTION_SCENE2 = [
@@ -1060,9 +1060,9 @@ SACRED_DEVOTION_SCENE2 = [
 ]
 
 JESUS_VICTORY_SCENE3 = [
-    "Cinematic 8k shot of Jesus Christ standing with welcoming open arms of grace and mercy, radiant golden sunrise breaking in the background, victorious peaceful dawn, heavenly sunbeams, majestic sacred atmosphere",
-    "Cinematic 8k composition of Jesus Christ raising his hand in gentle divine blessing and protection, surrounded by warm golden celestial light and serene clouds, holy and reassuring victory",
-    "Cinematic 8k view of Jesus Christ walking forward with open hands extending peace and hope, brilliant radiant heavenly light, serene dawn landscape, victorious spiritual resolution",
+    "Cinematic shot of Jesus Christ standing with welcoming open arms of grace and mercy, radiant golden sunrise breaking in the background, victorious peaceful dawn, heavenly sunbeams, majestic sacred atmosphere",
+    "Cinematic composition of Jesus Christ raising his hand in gentle divine blessing and protection, surrounded by warm golden celestial light and serene clouds, holy and reassuring victory",
+    "Cinematic view of Jesus Christ walking forward with open hands extending peace and hope, brilliant radiant heavenly light, serene dawn landscape, victorious spiritual resolution",
     "A glorious peaceful heavenly sunrise with golden sunbeams breaking through misty clouds over a calm sea, warm divine glow, absolute serenity and spiritual victory"
 ]
 

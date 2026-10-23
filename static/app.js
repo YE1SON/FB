@@ -181,6 +181,18 @@ function bootstrapJesusStudio() {
     }
 
     if (t1) t1.classList.toggle("active", currentSceneTab === 1);
+    const s1Thumb = document.getElementById("scene1ThumbImg");
+    const s2Thumb = document.getElementById("scene2ThumbImg");
+    const s3Thumb = document.getElementById("scene3ThumbImg");
+    if (s1Thumb && img1) s1Thumb.src = img1.src;
+    if (s2Thumb && img2) s2Thumb.src = img2.src;
+    if (s3Thumb && img3) s3Thumb.src = img3.src;
+    const sc1 = document.getElementById("sceneCard1");
+    const sc2 = document.getElementById("sceneCard2");
+    const sc3 = document.getElementById("sceneCard3");
+    if (sc1) sc1.classList.toggle("active", currentSceneTab === 1);
+    if (sc2) sc2.classList.toggle("active", currentSceneTab === 2);
+    if (sc3) sc3.classList.toggle("active", currentSceneTab === 3);
     if (t2) t2.classList.toggle("active", currentSceneTab === 2);
     if (t3) t3.classList.toggle("active", currentSceneTab === 3);
   }
@@ -1988,8 +2000,44 @@ function bootstrapJesusStudio() {
 
   // ─── MODO DE PRODUCCIÓN (REELS 9:16 VS TARJETAS FEED 4:5) ─────────────
   function switchProductionMode(mode) {
+    const centerReels = document.getElementById("centerStagePanel");
+    const centerCards = document.getElementById("workspaceCards");
+    const previewReels = document.getElementById("previewSection");
+    const previewCards = document.getElementById("cardPreviewSection");
+    const sReels = document.getElementById("btnSidebarReels");
+    const sCards = document.getElementById("btnSidebarPrayerCards");
     if (mode === "cards") {
       if (tabModeReels) tabModeReels.classList.remove("active");
+      if (tabModeFeedCards) tabModeFeedCards.classList.add("active");
+      if (sReels) sReels.classList.remove("active");
+      if (sCards) sCards.classList.add("active");
+      if (centerReels) centerReels.style.display = "none";
+      if (centerCards) centerCards.style.display = "flex";
+      if (previewReels) previewReels.style.display = "none";
+      if (previewCards) previewCards.style.display = "flex";
+      if (!cardStudioInitialized) {
+        syncCardTemplate(cardThemeSelect ? cardThemeSelect.value : "morning_favor");
+        cardStudioInitialized = true;
+      }
+    } else {
+      if (tabModeFeedCards) tabModeFeedCards.classList.remove("active");
+      if (tabModeReels) tabModeReels.classList.add("active");
+      if (sCards) sCards.classList.remove("active");
+      if (sReels) sReels.classList.add("active");
+      if (centerCards) centerCards.style.display = "none";
+      if (centerReels) centerReels.style.display = "flex";
+      if (previewCards) previewCards.style.display = "none";
+      if (previewReels) previewReels.style.display = "flex";
+    }
+    return;
+  }
+  function legacySwitchProductionMode(mode) {
+    if (mode === "cards") {
+      if (tabModeReels) tabModeReels.classList.remove("active");
+      const sReels = document.getElementById("btnSidebarReels");
+      const sCards = document.getElementById("btnSidebarPrayerCards");
+      if (sReels) sReels.classList.remove("active");
+      if (sCards) sCards.classList.add("active");
       if (tabModeFeedCards) tabModeFeedCards.classList.add("active");
       if (workspaceReels) workspaceReels.style.display = "none";
       if (workspaceCards) workspaceCards.style.display = "";
@@ -2000,6 +2048,10 @@ function bootstrapJesusStudio() {
     } else {
       if (tabModeFeedCards) tabModeFeedCards.classList.remove("active");
       if (tabModeReels) tabModeReels.classList.add("active");
+      const sReels = document.getElementById("btnSidebarReels");
+      const sCards = document.getElementById("btnSidebarPrayerCards");
+      if (sCards) sCards.classList.remove("active");
+      if (sReels) sReels.classList.add("active");
       if (workspaceCards) workspaceCards.style.display = "none";
       if (workspaceReels) workspaceReels.style.display = "";
     }
@@ -2521,7 +2573,66 @@ function bootstrapJesusStudio() {
 
   let currentActiveStage = 1;
 
+  const stepButtons = [
+    document.getElementById("stepBtn1"),
+    document.getElementById("stepBtn2"),
+    document.getElementById("stepBtn3"),
+    document.getElementById("stepBtn4")
+  ];
+
+  function switchStep(stepNum) {
+    if (stepNum < 1 || stepNum > 4) return;
+    currentActiveStage = stepNum;
+
+    // Actualizar stepper en navbar
+    stepButtons.forEach((btn, idx) => {
+      if (btn) {
+        btn.classList.toggle("active", idx + 1 === stepNum);
+      }
+    });
+
+    // Actualizar paneles (1: Mensaje, 2: Producción, 3: Personalizar, 4: Exportar)
+    const panels = [
+      document.getElementById("stagePanel1"),
+      document.getElementById("stagePanel2"),
+      document.getElementById("stagePanel3"),
+      document.getElementById("stagePanel4")
+    ];
+
+    panels.forEach((panel, idx) => {
+      if (panel) {
+        if (idx + 1 === stepNum) {
+          panel.style.display = "flex";
+          panel.classList.add("active");
+        } else {
+          panel.style.display = "none";
+          panel.classList.remove("active");
+        }
+      }
+    });
+
+    const centerPanel = document.getElementById("centerStagePanel");
+    if (centerPanel) {
+      centerPanel.scrollTop = 0;
+    }
+  }
+
+  stepButtons.forEach((btn, idx) => {
+    if (btn) {
+      btn.addEventListener("click", () => switchStep(idx + 1));
+    }
+  });
+
   function switchStage(stageNum) {
+    if (stageNum === 1) switchStep(1);
+    else if (stageNum === 2 || stageNum === 3) switchStep(2);
+    else if (stageNum === 4 || stageNum === 5) switchStep(3);
+    else if (stageNum === 6) switchStep(4);
+    else switchStep(stageNum);
+    return;
+  }
+
+  function legacySwitchStage(stageNum) {
     if (stageNum < 1 || stageNum > 6) return;
     currentActiveStage = stageNum;
 
@@ -2595,6 +2706,13 @@ function bootstrapJesusStudio() {
   if (btnNavBackTo5) btnNavBackTo5.addEventListener("click", () => switchStage(5));
 
   // Botones de acceso rápido del sidebar
+  const btnSidebarReels = document.getElementById("btnSidebarReels");
+  if (btnSidebarReels) {
+    btnSidebarReels.addEventListener("click", () => {
+      switchProductionMode("reels");
+      switchStep(1);
+    });
+  }
   const btnSidebarMyReels = document.getElementById("btnSidebarMyReels");
   if (btnSidebarMyReels) {
     btnSidebarMyReels.addEventListener("click", () => {

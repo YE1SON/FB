@@ -1081,26 +1081,17 @@ def generate_3scene_prompts_for_script(
     custom_topic: Optional[str] = None
 ) -> Dict[str, str]:
     """
-    Genera 3 prompts de imagen cinematográficos de alta fidelidad:
-    - Escena 1 (Apertura): SIEMPRE retrato en primer plano de Jesucristo con mirada compasiva y luz celestial.
-    - Escena 2 (Intercesión): Escena devocional de fe, oración reverente con la Santa Biblia o persona en comunión divina.
-    - Escena 3 (Cierre / Victoria): Jesucristo bendiciendo con brazos abiertos o radiante amanecer celestial de victoria y paz.
-    Garantiza estricta ausencia de texto, subtítulos o marcas de agua en la imagen generada.
+    Genera 3 prompts de imagen cinematográficos y narrativos de alta fidelidad basados
+    en la narración real del guion, arcos emocionales auténticos y situaciones humanas concretas.
+    Evita repeticiones de imágenes genéricas y soporta coherencia multi-escena con modelo FLUX.2 Klein.
+    Garantiza ausencia estricta de texto, subtítulos o marcas de agua en la imagen generada.
     """
-    raw1 = random.choice(JESUS_PORTRAITS_SCENE1)
-    raw2 = random.choice(SACRED_DEVOTION_SCENE2)
-    raw3 = random.choice(JESUS_VICTORY_SCENE3)
-
-    p1 = f"{raw1}, {ANTI_TEXT_NEGATIVE}"
-    p2 = f"{raw2}, {ANTI_TEXT_NEGATIVE}"
-    p3 = f"{raw3}, {ANTI_TEXT_NEGATIVE}"
-
-    return {
-        "prompt": p1,
-        "scene_1_prompt": p1,
-        "scene_2_prompt": p2,
-        "scene_3_prompt": p3
-    }
+    from engine.narrative_prompts import generate_narrative_prompts_for_script
+    return generate_narrative_prompts_for_script(
+        theme_key=theme_key,
+        script_text=script_text,
+        custom_topic=custom_topic
+    )
 
 
 def generate_seo_caption(

@@ -32,3 +32,5 @@ outputs/*.wav
 ai_keys.json
 data/editorial_results.json
 
+assets/images/custom_ai_*
+data/cloudflare_neurons.json

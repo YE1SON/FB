@@ -110,6 +110,76 @@ function bootstrapJesusStudio() {
   const btnGenScene1Only = document.getElementById("btnGenScene1Only");
   const btnGenScene2Only = document.getElementById("btnGenScene2Only");
   const btnGenScene3Only = document.getElementById("btnGenScene3Only");
+  const cfAccountIdInput = document.getElementById("cfAccountIdInput");
+  const cfApiTokenInput = document.getElementById("cfApiTokenInput");
+  const chkUseScene1Reference = document.getElementById("chkUseScene1Reference");
+  const scene1ModelSelect = document.getElementById("scene1ModelSelect");
+  const scene2ModelSelect = document.getElementById("scene2ModelSelect");
+  const scene3ModelSelect = document.getElementById("scene3ModelSelect");
+  const cfNeuronWidget = document.getElementById("cfNeuronWidget");
+  const neuronRemainingBadge = document.getElementById("neuronRemainingBadge");
+  const neuronReelsBadge = document.getElementById("neuronReelsBadge");
+  const neuronProgressBar = document.getElementById("neuronProgressBar");
+  const neuronDetailsText = document.getElementById("neuronDetailsText");
+  const btnRefreshNeurons = document.getElementById("btnRefreshNeurons");
+  const aiGenErrorBanner = document.getElementById("aiGenErrorBanner");
+  const aiGenErrorTitle = document.getElementById("aiGenErrorTitle");
+  const aiGenErrorMsg = document.getElementById("aiGenErrorMsg");
+  const btnDismissAiError = document.getElementById("btnDismissAiError");
+
+  function showAiGenError(title, message) {
+    if (!aiGenErrorBanner) return;
+    if (aiGenErrorTitle) aiGenErrorTitle.textContent = title || "Error en la Generación con IA";
+    if (aiGenErrorMsg) aiGenErrorMsg.textContent = message || "Ocurrió un fallo en la generación.";
+    aiGenErrorBanner.style.display = "block";
+  }
+
+  function hideAiGenError() {
+    if (aiGenErrorBanner) aiGenErrorBanner.style.display = "none";
+  }
+
+  if (btnDismissAiError) {
+    btnDismissAiError.addEventListener("click", hideAiGenError);
+  }
+
+  async function loadNeuronsStatus() {
+    try {
+      const res = await fetch("/api/cloudflare/neurons");
+      if (!res.ok) return;
+      const data = await res.json();
+      const consumed = Math.round(data.consumed_neurons || 0);
+      const limit = Math.round(data.daily_limit || 10000);
+      const pct = Math.min(100, Math.round(data.percent_used || 0));
+      const reelsRem = data.reels_remaining_approx || 0;
+
+      if (neuronRemainingBadge) {
+        neuronRemainingBadge.textContent = `${consumed.toLocaleString()} / ${limit.toLocaleString()} neuronas`;
+        neuronRemainingBadge.className = pct > 90 ? "badge badge-danger ml-6" : (pct > 70 ? "badge badge-warning ml-6" : "badge badge-success ml-6");
+      }
+
+      if (neuronReelsBadge) {
+        neuronReelsBadge.textContent = data.is_exhausted ? "Cuota agotada hoy" : `~${reelsRem} Reels/día gratis`;
+        neuronReelsBadge.className = data.is_exhausted ? "badge badge-danger" : "badge badge-blue";
+      }
+
+      if (neuronProgressBar) {
+        neuronProgressBar.style.width = `${pct}%`;
+        neuronProgressBar.className = "neuron-progress-bar" + (pct > 90 ? " danger" : (pct > 70 ? " warning" : ""));
+      }
+
+      if (neuronDetailsText) {
+        neuronDetailsText.textContent = `Consumido hoy: ${consumed.toLocaleString()} de ${limit.toLocaleString()} (${pct}%)`;
+      }
+    } catch (e) {
+      console.warn("No se pudo cargar el estado de neuronas:", e);
+    }
+  }
+
+  if (btnRefreshNeurons) {
+    btnRefreshNeurons.addEventListener("click", () => {
+      loadNeuronsStatus();
+    });
+  }
 
   // Modo de Producción (Reels 9:16 vs Tarjetas Feed 4:5)
   const tabModeReels = document.getElementById("tabModeReels");
@@ -1100,30 +1170,37 @@ function bootstrapJesusStudio() {
       btnSaveAiKeys.textContent = "⏳ Guardando...";
       const hordeKey = aiHordeKeyInput ? aiHordeKeyInput.value.trim() : "0000000000";
       const hfTok = hfTokenInput ? hfTokenInput.value.trim() : "";
+      const cfAcc = cfAccountIdInput ? cfAccountIdInput.value.trim() : "";
+      const cfTok = cfApiTokenInput ? cfApiTokenInput.value.trim() : "";
 
       try {
         localStorage.setItem("aihorde_api_key", hordeKey);
         localStorage.setItem("hf_token", hfTok);
+        if (cfAcc) localStorage.setItem("cf_account_id", cfAcc);
+        if (cfTok) localStorage.setItem("cf_api_token", cfTok);
 
         await fetch("/api/save-image-keys", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             aihorde_api_key: hordeKey,
-            hf_token: hfTok
+            hf_token: hfTok,
+            cf_account_id: cfAcc || undefined,
+            cf_api_token: cfTok || undefined
           })
         });
 
         if (aiKeysStatusText) {
-          aiKeysStatusText.textContent = "✅ ¡Configuración guardada y activada con éxito!";
+          aiKeysStatusText.textContent = "✅ ¡Credenciales guardadas y activadas con éxito!";
           setTimeout(() => { if (aiKeysStatusText) aiKeysStatusText.textContent = ""; }, 4000);
         }
-        alert("¡Configuración guardada! Z-Image Turbo y FLUX.1 Schnell están listos para generar en alta definición.");
+        await loadNeuronsStatus();
+        alert("¡Credenciales guardadas! Cloudflare Workers AI FLUX.2 Klein está listo.");
       } catch (err) {
         alert("Aviso al guardar claves: " + err.message);
       } finally {
         btnSaveAiKeys.disabled = false;
-        btnSaveAiKeys.textContent = "💾 Guardar Claves";
+        btnSaveAiKeys.textContent = "💾 Guardar Credenciales";
       }
     });
   }
@@ -1200,7 +1277,24 @@ function bootstrapJesusStudio() {
         throw new Error("Puter AI falló o agotó sus créditos gratuitos: " + (puterErr.message || puterErr) + ". Puedes conectar otra cuenta de Puter o elegir Z-Image Turbo / FLUX.1 Schnell.");
       }
     } else {
-      // Motor de Servidor (Z-Image Turbo, FLUX.1 Schnell, AI Horde, Auto, Biblioteca)
+      hideAiGenError();
+      // Determinar modelo específico por escena si no es auto
+      let modelKey = null;
+      if (sceneNum === 1 && scene1ModelSelect) {
+        modelKey = scene1ModelSelect.value !== "auto" ? scene1ModelSelect.value : null;
+      } else if (sceneNum === 2 && scene2ModelSelect) {
+        modelKey = scene2ModelSelect.value !== "auto" ? scene2ModelSelect.value : null;
+      } else if (sceneNum === 3 && scene3ModelSelect) {
+        modelKey = scene3ModelSelect.value !== "auto" ? scene3ModelSelect.value : null;
+      }
+
+      // Soporte multi-referencia (image1) para consistencia de personaje
+      let refImageUrl = null;
+      const useReference = chkUseScene1Reference ? chkUseScene1Reference.checked : true;
+      if (sceneNum > 1 && useReference && selectedImageName) {
+        refImageUrl = `/assets/images/${selectedImageName}`;
+      }
+
       const res = await fetch("/api/generate-ai-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1208,6 +1302,8 @@ function bootstrapJesusStudio() {
           prompt: cleanPrompt,
           aspect_ratio: aspectRatioSelect ? aspectRatioSelect.value : "9:16",
           provider: activeProvider,
+          model_key: modelKey,
+          reference_image_url: refImageUrl,
           hf_token: hfTok,
           aihorde_api_key: hordeKey,
           scene_num: sceneNum,
@@ -1216,7 +1312,9 @@ function bootstrapJesusStudio() {
       });
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || "Error en el servidor de imágenes.");
+        const errDetail = errJson.detail || errJson.message || `Error HTTP ${res.status} al generar imagen.`;
+        showAiGenError(`Fallo al generar Escena ${sceneNum}`, errDetail);
+        throw new Error(errDetail);
       }
       const data = await res.json();
       savedFilename = data.filename;
@@ -1235,13 +1333,15 @@ function bootstrapJesusStudio() {
       selectedImageName3 = savedFilename;
     }
 
+    loadNeuronsStatus();
     return { filename: savedFilename, url: savedUrl, usedPuter };
   }
 
-  // 8b. Generador en 1 Clic de las 3 Escenas (Crear y Asignar)
+  // 8b. Generador en 1 Clic de las 3 Escenas (Crear y Asignar con Coherencia Visual)
   async function generateAll3Scenes() {
     if (!btnGenerate3ScenesAi) return;
     btnGenerate3ScenesAi.disabled = true;
+    hideAiGenError();
 
     // Asegurar que existan prompts para las 3 tomas
     let p1 = scene1PromptInput ? scene1PromptInput.value.trim() : "";
@@ -1259,28 +1359,31 @@ function bootstrapJesusStudio() {
 
     try {
       // Paso 1: Toma 1 (Apertura)
-      if (batchGenProgressText) batchGenProgressText.textContent = "🎬 Generando Escena 1 de 3 (Apertura e Impacto)...";
-      if (batchGenProgressSub) batchGenProgressSub.textContent = "Creando iluminación dorada y encuadre inicial (0-3.2s)...";
+      const m1Label = (scene1ModelSelect && scene1ModelSelect.value === "klein_4b") ? "Klein 4B" : "Klein 9B (Ultra-Calidad)";
+      if (batchGenProgressText) batchGenProgressText.textContent = `🎬 Generando Escena 1 de 3 (Apertura con ${m1Label})...`;
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Estableciendo personaje principal, vestimenta y luz natural fotorrealista...";
       await generateSingleScene(p1, 1, "Toma 1 (Apertura)");
       await loadImages();
       updateSceneTabsUI();
 
-      // Paso 2: Toma 2 (Intercesión)
-      if (batchGenProgressText) batchGenProgressText.textContent = "✨ Generando Escena 2 de 3 (Intercesión y Oración)...";
-      if (batchGenProgressSub) batchGenProgressSub.textContent = "Creando punto de inflexión de fe y presencia sagrada (3.2s-10s)...";
+      // Paso 2: Toma 2 (Intercesión con Referencia de Escena 1)
+      const m2Label = (scene2ModelSelect && scene2ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B";
+      if (batchGenProgressText) batchGenProgressText.textContent = `✨ Generando Escena 2 de 3 (Intercesión con ${m2Label})...`;
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Conservando personaje, vestimenta y atmósfera de la Escena 1 en oración íntima...";
       await generateSingleScene(p2, 2, "Toma 2 (Intercesión)");
       await loadImages();
       updateSceneTabsUI();
 
-      // Paso 3: Toma 3 (Victoria)
-      if (batchGenProgressText) batchGenProgressText.textContent = "🕊️ Generando Escena 3 de 3 (Victoria y Paz)...";
-      if (batchGenProgressSub) batchGenProgressSub.textContent = "Creando desenlace glorioso y promesa divina (10s al final)...";
+      // Paso 3: Toma 3 (Victoria con Referencia de Escena 1)
+      const m3Label = (scene3ModelSelect && scene3ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B";
+      if (batchGenProgressText) batchGenProgressText.textContent = `🕊️ Generando Escena 3 de 3 (Victoria con ${m3Label})...`;
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Resolviendo la narrativa con el mismo personaje en paz y amanecer restaurado...";
       await generateSingleScene(p3, 3, "Toma 3 (Victoria)");
       await loadImages();
       updateSceneTabsUI();
 
-      if (batchGenProgressText) batchGenProgressText.textContent = "✅ ¡Las 3 Escenas fueron creadas y asignadas en 1 clic!";
-      if (batchGenProgressSub) batchGenProgressSub.textContent = "Asignadas con éxito a las posiciones [1], [2] y [3] de tu Reel.";
+      if (batchGenProgressText) batchGenProgressText.textContent = "✅ ¡Las 3 Escenas fueron creadas y asignadas con Cloudflare Workers AI!";
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Coherencia visual y fidelidad al guion aplicadas a las posiciones [1], [2] y [3].";
 
       showStageView();
       setTimeout(() => {
@@ -1289,11 +1392,12 @@ function bootstrapJesusStudio() {
 
     } catch (err) {
       console.error("Error al generar las 3 escenas:", err);
-      alert("Aviso al crear las 3 escenas: " + extractError(err));
+      showAiGenError("Fallo en la Generación de Escenas", extractError(err));
       if (batchGenProgressBox) batchGenProgressBox.style.display = "none";
     } finally {
       btnGenerate3ScenesAi.disabled = false;
       btnGenerate3ScenesAi.textContent = "🚀 GENERAR LAS 3 ESCENAS CON IA EN 1 CLIC (CREAR Y ASIGNAR)";
+      loadNeuronsStatus();
     }
   }
 
@@ -3279,13 +3383,29 @@ function bootstrapJesusStudio() {
         hfTokenInput.value = localStorage.getItem("hf_token") || "";
       }
 
+      if (cfAccountIdInput && !cfAccountIdInput.value) {
+        cfAccountIdInput.value = localStorage.getItem("cf_account_id") || "";
+      }
+      if (cfApiTokenInput && !cfApiTokenInput.value) {
+        cfApiTokenInput.value = localStorage.getItem("cf_api_token") || "";
+      }
+
       const res = await fetch("/api/image-providers");
       if (res.ok) {
         const data = await res.json();
+        if (data.cloudflare && data.cloudflare.configured) {
+          if (cfAccountIdInput && !cfAccountIdInput.value) {
+            cfAccountIdInput.placeholder = `Configurado en servidor (${data.cloudflare.account_masked})`;
+          }
+          if (cfApiTokenInput && !cfApiTokenInput.value) {
+            cfApiTokenInput.placeholder = "Configurado en servidor (Token activo)";
+          }
+        }
         if (data.flux_schnell && data.flux_schnell.configured && hfTokenInput && !hfTokenInput.value) {
           hfTokenInput.placeholder = `Configurado en servidor (${data.flux_schnell.token_masked})`;
         }
       }
+      await loadNeuronsStatus();
     } catch (_) {}
     updateAiProviderUI();
   }

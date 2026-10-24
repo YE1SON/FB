@@ -6,6 +6,7 @@ import time
 import shutil
 import random
 import requests
+import base64
 from io import BytesIO
 from typing import Dict, Optional, Tuple, List
 from PIL import Image
@@ -17,13 +18,24 @@ KEYS_FILE = os.path.join(BASE_DIR, "ai_keys.json")
 
 os.makedirs(ASSETS_DIR, exist_ok=True)
 
+# ─── Modelos Oficiales de Cloudflare Workers AI ──────────────────────────────
+
+CLOUDFLARE_MODELS = {
+    "klein_9b": "@cf/black-forest-labs/flux-2-klein-9b",
+    "klein_4b": "@cf/black-forest-labs/flux-2-klein-4b",
+    "@cf/black-forest-labs/flux-2-klein-9b": "@cf/black-forest-labs/flux-2-klein-9b",
+    "@cf/black-forest-labs/flux-2-klein-4b": "@cf/black-forest-labs/flux-2-klein-4b"
+}
+
 # ─── Gestión de Claves y Configuración ────────────────────────────────────────
 
 def load_keys() -> Dict[str, str]:
     """Carga claves desde ai_keys.json y variables de entorno."""
     keys = {
         "hf_token": os.environ.get("HF_TOKEN", os.environ.get("HUGGINGFACE_TOKEN", "")),
-        "aihorde_api_key": os.environ.get("AIHORDE_API_KEY", "0000000000")
+        "aihorde_api_key": os.environ.get("AIHORDE_API_KEY", "0000000000"),
+        "cf_account_id": os.environ.get("CF_ACCOUNT_ID", ""),
+        "cf_api_token": os.environ.get("CF_API_TOKEN", "")
     }
     if os.path.exists(KEYS_FILE):
         try:
@@ -33,6 +45,10 @@ def load_keys() -> Dict[str, str]:
                     keys["hf_token"] = saved["hf_token"]
                 if saved.get("aihorde_api_key"):
                     keys["aihorde_api_key"] = saved["aihorde_api_key"]
+                if saved.get("cf_account_id"):
+                    keys["cf_account_id"] = saved["cf_account_id"]
+                if saved.get("cf_api_token"):
+                    keys["cf_api_token"] = saved["cf_api_token"]
         except Exception as e:
             print(f"[ImageGen] Error al leer ai_keys.json: {e}")
     return keys
@@ -40,6 +56,8 @@ def load_keys() -> Dict[str, str]:
 def save_keys(
     hf_token: Optional[str] = None,
     aihorde_api_key: Optional[str] = None,
+    cf_account_id: Optional[str] = None,
+    cf_api_token: Optional[str] = None,
     **kwargs
 ) -> Dict[str, str]:
     """Guarda claves en ai_keys.json."""
@@ -48,6 +66,10 @@ def save_keys(
         current["hf_token"] = hf_token.strip()
     if aihorde_api_key is not None:
         current["aihorde_api_key"] = aihorde_api_key.strip() or "0000000000"
+    if cf_account_id is not None:
+        current["cf_account_id"] = cf_account_id.strip()
+    if cf_api_token is not None:
+        current["cf_api_token"] = cf_api_token.strip()
 
     try:
         with open(KEYS_FILE, "w", encoding="utf-8") as f:
@@ -60,7 +82,26 @@ def get_providers_status() -> Dict:
     """Retorna el estado de los motores de generación de IA integrados."""
     keys = load_keys()
     hf_tok = keys.get("hf_token", "")
+    cf_acc = keys.get("cf_account_id", "")
+    cf_tok = keys.get("cf_api_token", "")
+    cf_configured = bool(cf_acc and cf_tok)
+
+    from engine.cloudflare_neurons import get_neurons_status
+    neurons_status = get_neurons_status()
+
     return {
+        "cloudflare": {
+            "name": "⚡ Cloudflare Workers AI — FLUX.2 Klein (Oficial)",
+            "configured": cf_configured,
+            "status": "Activo y Operativo (10,000 neuronas/día gratis)" if cf_configured else "Credenciales no configuradas",
+            "account_masked": (cf_acc[:6] + "..." + cf_acc[-4:]) if cf_acc else "",
+            "models": {
+                "auto": "Klein 9B (Escena 1) + Klein 4B (Escenas 2 y 3)",
+                "klein_9b": "FLUX.2 Klein 9B (Mayor Calidad)",
+                "klein_4b": "FLUX.2 Klein 4B (Rápido + Consistencia de Referencia)"
+            },
+            "neurons": neurons_status
+        },
         "pollinations": {
             "name": "⚡ Pollinations FLUX (Ilimitado y Rápido — Sin Cuotas de GPU)",
             "configured": True,
@@ -87,29 +128,146 @@ def get_providers_status() -> Dict:
 # ─── Optimización de Prompts Sagrados ────────────────────────────────────────
 
 def enhance_sacred_prompt(prompt: str) -> str:
-    """Optimiza el texto para máximo fotorrealismo bíblico e iluminación dorada."""
+    """Optimiza el texto para máximo fotorrealismo cinematográfico."""
     clean = prompt.strip()
     clean = re.sub(r'(?i)\b(octane render|masterpiece|award winning|trending on artstation|hyperrealistic|8k|4k|unreal engine)\b', '', clean).strip()
     clean = re.sub(r'\s+', ' ', clean)
 
     cues = (
-        "cinematic photograph, warm sacred golden hour lighting, authentic historical biblical atmosphere, "
+        "cinematic photograph, warm natural lighting, authentic human atmosphere, "
         "dramatic depth of field, natural skin texture, 35mm portrait lens, photorealistic"
     )
     if "photograph" not in clean.lower() and "cinematic" not in clean.lower():
         return f"{clean}, {cues}"
-    return f"{clean}, warm sacred golden hour lighting, photorealistic, 35mm lens"
+    return f"{clean}, natural lighting, photorealistic, 35mm lens"
 
-# ─── Motor 0: Pollinations FLUX (Sin cuotas de ZeroGPU) ───────────────────────
+# ─── Motor Cloudflare Workers AI: FLUX.2 Klein 9B & 4B ────────────────────────
+
+def generate_cloudflare_flux_klein(
+    prompt: str,
+    model_name: str = "@cf/black-forest-labs/flux-2-klein-4b",
+    aspect_ratio: str = "9:16",
+    reference_image_path: Optional[str] = None,
+    scene_num: int = 1
+) -> bytes:
+    """
+    Genera una imagen con Cloudflare Workers AI utilizando FLUX.2 Klein 9B o 4B.
+    - Respeta la cuota gratuita diaria (10,000 neuronas/día).
+    - Permite entrada multi-referencia (image1) para mantener consistencia de personajes.
+    - Soporta 9:16 (768x1360 ~1.04 MP).
+    - Notifica errores reales y nunca sustituye silenciosamente con imágenes predeterminadas.
+    """
+    from engine.cloudflare_neurons import check_quota_available, record_neurons_consumption
+
+    canonical_model = CLOUDFLARE_MODELS.get(model_name, model_name)
+    has_ref = bool(reference_image_path and os.path.exists(reference_image_path))
+
+    # 1. Verificar cuota antes de cualquier llamada
+    ok, quota_msg, needed = check_quota_available(canonical_model, has_reference=has_ref)
+    if not ok:
+        print(f"[Cloudflare Workers AI] {quota_msg}")
+        raise RuntimeError(quota_msg)
+
+    # 2. Cargar credenciales
+    keys = load_keys()
+    account_id = keys.get("cf_account_id", "").strip()
+    api_token = keys.get("cf_api_token", "").strip()
+
+    if not account_id or not api_token:
+        raise RuntimeError(
+            "Credenciales de Cloudflare Workers AI no configuradas en el servidor. "
+            "Asegúrate de que 'cf_account_id' y 'cf_api_token' estén presentes en ai_keys.json o como variables de entorno."
+        )
+
+    # 3. Dimensiones verticales 9:16 optimizadas (1 MP)
+    dims = {
+        "9:16": (768, 1360),
+        "1:1": (1024, 1024),
+        "4:5": (832, 1040)
+    }
+    width, height = dims.get(aspect_ratio, (768, 1360))
+
+    url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{canonical_model}"
+    headers = {
+        "Authorization": f"Bearer {api_token}"
+    }
+
+    form_data = {
+        "prompt": prompt.strip(),
+        "width": width,
+        "height": height
+    }
+
+    files = None
+    ref_file_handle = None
+    if has_ref:
+        try:
+            ref_file_handle = open(reference_image_path, "rb")
+            files = {
+                "image1": (os.path.basename(reference_image_path), ref_file_handle, "image/jpeg")
+            }
+            print(f"[Cloudflare Workers AI] Adjuntando imagen de referencia '{os.path.basename(reference_image_path)}' como image1...")
+        except Exception as e:
+            print(f"[Cloudflare Workers AI] Advertencia: No se pudo abrir la imagen de referencia: {e}")
+
+    try:
+        print(f"[Cloudflare Workers AI] Solicitando inferencia ({canonical_model}) para escena {scene_num} ({width}x{height}, ref={has_ref})...")
+        resp = requests.post(url, headers=headers, data=form_data, files=files, timeout=50)
+    finally:
+        if ref_file_handle:
+            try:
+                ref_file_handle.close()
+            except Exception:
+                pass
+
+    if resp.status_code != 200:
+        err_detail = resp.text
+        try:
+            err_json = resp.json()
+            if "errors" in err_json and err_json["errors"]:
+                err_detail = "; ".join([str(e.get("message", e)) for e in err_json["errors"]])
+        except Exception:
+            pass
+        raise RuntimeError(f"Cloudflare Workers AI devolvió error HTTP {resp.status_code}: {err_detail}")
+
+    try:
+        data = resp.json()
+    except Exception as e:
+        raise RuntimeError(f"Cloudflare Workers AI devolvió una respuesta no JSON: {resp.text[:200]}")
+
+    if not data.get("success", False):
+        err_msg = "; ".join([str(e.get("message", e)) for e in data.get("errors", [])]) or "Error desconocido"
+        raise RuntimeError(f"Cloudflare Workers AI falló: {err_msg}")
+
+    result = data.get("result", {})
+    if not isinstance(result, dict) or "image" not in result:
+        raise RuntimeError(f"Cloudflare Workers AI reportó éxito pero no devolvió la clave 'image': {str(result)[:200]}")
+
+    try:
+        img_bytes = base64.b64decode(result["image"])
+    except Exception as e:
+        raise RuntimeError(f"Fallo al decodificar la imagen base64 de Cloudflare: {e}")
+
+    if len(img_bytes) < 1000:
+        raise RuntimeError("La imagen devuelta por Cloudflare Workers AI está incompleta o vacía.")
+
+    # 4. Registrar consumo exitoso en el tracker de neuronas
+    record_neurons_consumption(
+        model_name=canonical_model,
+        scene_num=scene_num,
+        has_reference=has_ref,
+        prompt_preview=prompt[:80]
+    )
+    print(f"[Cloudflare Workers AI] Inferencia completada ({len(img_bytes)} bytes). Neuronas registradas con éxito.")
+    return img_bytes
+
+# ─── Motores Secundarios y Alternativos ──────────────────────────────────────
 
 def generate_pollinations(
     prompt: str,
     aspect_ratio: str = "9:16"
 ) -> bytes:
-    """
-    Genera imagen fotorrealista con Pollinations.ai (Flux/SDXL).
-    100% gratuito, sin límites de ZeroGPU, sin tarjeta, ultra-rápido (sub-10s).
-    """
+    """Genera imagen fotorrealista con Pollinations.ai (Flux/SDXL)."""
     clean_prompt = enhance_sacred_prompt(prompt)
     dims = {
         "9:16": (768, 1344),
@@ -129,17 +287,12 @@ def generate_pollinations(
         return resp.content
     raise RuntimeError(f"Pollinations falló con status {resp.status_code}")
 
-# ─── Motor 1: Z-Image Turbo (Tongyi-MAI DiT) ──────────────────────────────────
-
 def generate_z_image_turbo(
     prompt: str,
     aspect_ratio: str = "9:16",
     hf_token: Optional[str] = None
 ) -> bytes:
-    """
-    Genera imagen fotorrealista con Z-Image Turbo (Tongyi-MAI DiT).
-    Tiempo de respuesta: ~5 segundos en VPS. Calidad superior con anatomía impecable.
-    """
+    """Genera imagen con Z-Image Turbo (Tongyi-MAI DiT)."""
     clean_prompt = enhance_sacred_prompt(prompt)
     res_map = {
         "9:16": "720x1280 ( 9:16 )",
@@ -171,18 +324,12 @@ def generate_z_image_turbo(
 
     raise RuntimeError(f"Z-Image Turbo no devolvió un archivo de imagen válido: {result}")
 
-# ─── Motor 2: FLUX.1 Schnell (Black Forest Labs Oficial) ─────────────────────
-
 def generate_flux_schnell_space(
     prompt: str,
     aspect_ratio: str = "9:16",
     hf_token: Optional[str] = None
 ) -> bytes:
-    """
-    Genera imagen con el modelo oficial FLUX.1 [schnell] de Black Forest Labs.
-    Fotorrealismo cinematográfico, iluminación de atardecer y proporciones exactas.
-    Incluye reintento automático anónimo si el token del usuario agota la cuota ZeroGPU.
-    """
+    """Genera imagen con el modelo oficial FLUX.1 [schnell] de Black Forest Labs en Space HF."""
     clean_prompt = enhance_sacred_prompt(prompt)
     dims = {
         "9:16": (768, 1360),
@@ -193,7 +340,7 @@ def generate_flux_schnell_space(
 
     tokens_to_try = [hf_token] if hf_token else [None]
     if hf_token:
-        tokens_to_try.append(None)  # Respaldo anónimo de alta velocidad
+        tokens_to_try.append(None)
 
     last_err = None
     for tok in tokens_to_try:
@@ -221,18 +368,13 @@ def generate_flux_schnell_space(
 
     raise RuntimeError(f"FLUX.1 Schnell no devolvió un archivo de imagen válido: {last_err}")
 
-# ─── Motor 3: AI Horde (Red Comunitaria de GPUs) ─────────────────────────────
-
 def generate_ai_horde(
     prompt: str,
     api_key: str = "0000000000",
     aspect_ratio: str = "9:16",
     timeout_sec: int = 50
 ) -> bytes:
-    """
-    Genera imagen usando el cluster distribuido de AI Horde (aihorde.net).
-    100% gratuito, sin tarjeta ni suscripción.
-    """
+    """Genera imagen usando el cluster distribuido de AI Horde."""
     dim_map = {
         "9:16": (512, 768),
         "1:1": (512, 512),
@@ -247,8 +389,8 @@ def generate_ai_horde(
     }
 
     full_prompt = (
-        f"{prompt.strip()}, cinematic sacred holy lighting, warm golden rays, "
-        f"detailed biblical portrait, photorealistic, 8k ### ugly, deformed, blurry, low quality, modern clothes, text, watermark"
+        f"{prompt.strip()}, natural lighting, photorealistic, 35mm portrait lens "
+        f"### ugly, deformed, blurry, low quality, cartoon, 3d render, watermark, text"
     )
 
     target_models = ["stable_diffusion"]
@@ -311,19 +453,24 @@ def generate_ai_scene_image(
     prompt: str,
     aspect_ratio: str = "9:16",
     label: str = "Escena IA",
-    provider: str = "auto",
-    hf_token: Optional[str] = None,
-    aihorde_api_key: Optional[str] = None,
+    provider: str = "cloudflare_auto",
+    model_key: Optional[str] = None,
+    reference_image_path: Optional[str] = None,
     scene_num: int = 1,
     used_images: Optional[List[str]] = None,
+    hf_token: Optional[str] = None,
+    aihorde_api_key: Optional[str] = None,
     **kwargs
 ) -> Dict:
     """
-    Genera una escena de alta calidad utilizando los motores avanzados:
-    1. FLUX.1 Schnell (Black Forest Labs) — Fotorrealismo extremo en sub-4 segundos.
-    2. Z-Image Turbo (Tongyi-MAI DiT) — Renderizado cinematográfico DiT.
-    3. AI Horde — Respaldo gratuito comunitario.
-    4. Biblioteca Local HD — Respaldo instantáneo con 3 pools temáticos (CERO REPETICIONES).
+    Genera una escena visual de alta fidelidad:
+    1. Cloudflare Workers AI FLUX.2 Klein (Auto: 9B en Escena 1, 4B en Escenas 2 y 3 con multi-referencia).
+    2. Modelos individuales Klein 9B o Klein 4B con control manual por escena.
+    3. Motores alternativos si el usuario los selecciona (Pollinations, Z-Image, Schnell, Horde).
+    4. Biblioteca local HD exclusivamente cuando se solicita explícitamente.
+    
+    REGLA ESTRICTA: Cuando falle una generación de IA, reporta el error real.
+    NUNCA sustituye silenciosamente una imagen fallida por una de la biblioteca.
     """
     prompt = prompt.strip()
     if not prompt:
@@ -339,186 +486,125 @@ def generate_ai_scene_image(
     img_bytes = None
     engine_used = None
 
-    # ─── Ejecución con Respaldo Automático Resiliente (CERO FALLOS 500) ──────────────
-    if provider == "pollinations":
-        try:
-            print(f"[ImageGen] Ejecutando Pollinations FLUX para escena {scene_num}...")
-            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-            engine_used = "Pollinations FLUX"
-        except Exception as e:
-            print(f"[ImageGen] Pollinations falló ({e}), intentando AI Horde...")
+    # Normalizar proveedor
+    norm_provider = provider.lower() if provider else "cloudflare_auto"
 
-    elif provider == "z_image":
-        try:
-            print(f"[ImageGen] Ejecutando Z-Image Turbo para escena {scene_num}...")
-            img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-            engine_used = "Z-Image Turbo HD"
-        except Exception as e:
-            print(f"[ImageGen] Z-Image Turbo falló ({e}). Activando respaldo automático...")
-            try:
-                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-                engine_used = "Pollinations FLUX (Respaldo por Cuota)"
-            except Exception as e2:
-                print(f"[ImageGen] Respaldo Pollinations falló ({e2}), intentando AI Horde...")
-                try:
-                    img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
-                    engine_used = "AI Horde (Respaldo por Cuota)"
-                except Exception:
-                    pass
+    # ─── Cloudflare Workers AI (Motor Principal Oficial) ──────────────────────
+    if norm_provider in ("cloudflare_auto", "auto", "cloudflare", "cloudflare_klein_9b", "cloudflare_klein_4b", "klein_9b", "klein_4b"):
+        # Determinar modelo específico
+        target_model = None
+        if model_key and model_key in CLOUDFLARE_MODELS:
+            target_model = CLOUDFLARE_MODELS[model_key]
+            engine_used = f"Cloudflare FLUX.2 {model_key.upper()}"
+        elif norm_provider in ("cloudflare_klein_9b", "klein_9b"):
+            target_model = CLOUDFLARE_MODELS["klein_9b"]
+            engine_used = "Cloudflare FLUX.2 Klein 9B"
+        elif norm_provider in ("cloudflare_klein_4b", "klein_4b"):
+            target_model = CLOUDFLARE_MODELS["klein_4b"]
+            engine_used = "Cloudflare FLUX.2 Klein 4B"
+        else:
+            # Modo Auto Oficial: Escena 1 usa Klein 9B, Escenas 2 y 3 usan Klein 4B
+            if scene_num == 1:
+                target_model = CLOUDFLARE_MODELS["klein_9b"]
+                engine_used = "Cloudflare FLUX.2 Klein 9B (Auto Escena 1)"
+            else:
+                target_model = CLOUDFLARE_MODELS["klein_4b"]
+                engine_used = "Cloudflare FLUX.2 Klein 4B (Auto Escena 2/3)"
 
-    elif provider == "flux_schnell":
-        try:
-            print(f"[ImageGen] Ejecutando FLUX.1 Schnell para escena {scene_num}...")
-            img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-            engine_used = "FLUX.1 Schnell HD"
-        except Exception as e:
-            print(f"[ImageGen] FLUX.1 Schnell falló ({e}). Activando respaldo automático...")
-            try:
-                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-                engine_used = "Pollinations FLUX (Respaldo por Cuota)"
-            except Exception as e2:
-                print(f"[ImageGen] Respaldo Pollinations falló ({e2}), intentando AI Horde...")
-                try:
-                    img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
-                    engine_used = "AI Horde (Respaldo por Cuota)"
-                except Exception:
-                    pass
+        # Ejecutar llamada oficial (las excepciones se propagan directamente para informar el error real)
+        img_bytes = generate_cloudflare_flux_klein(
+            prompt=prompt,
+            model_name=target_model,
+            aspect_ratio=aspect_ratio,
+            reference_image_path=reference_image_path,
+            scene_num=scene_num
+        )
 
-    elif provider == "aihorde":
-        try:
-            print(f"[ImageGen] Ejecutando AI Horde para escena {scene_num}...")
-            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=25)
-            engine_used = "AI Horde (Comunidad Gratuita)"
-        except Exception as e:
-            print(f"[ImageGen] AI Horde falló ({e}), intentando Pollinations...")
-            try:
-                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-                engine_used = "Pollinations FLUX (Respaldo)"
-            except Exception:
-                pass
+    # ─── Proveedores Alternativos (Solo si son explícitamente solicitados) ───────
+    elif norm_provider == "pollinations":
+        img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+        engine_used = "Pollinations FLUX"
 
-    elif provider in ("curated", "library"):
-        print(f"[ImageGen] Seleccionando toma de la Biblioteca Curada HD para escena {scene_num}...")
-        img_bytes = None
+    elif norm_provider == "z_image":
+        img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+        engine_used = "Z-Image Turbo HD"
+
+    elif norm_provider == "flux_schnell":
+        img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+        engine_used = "FLUX.1 Schnell HD"
+
+    elif norm_provider == "aihorde":
+        img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=35)
+        engine_used = "AI Horde"
+
+    elif norm_provider in ("curated", "library"):
+        # Selección deliberada desde la biblioteca local existente
         engine_used = "Biblioteca Curada HD"
+        used_set = set(used_images or [])
+        scene1_pool = ["jesus_healing_miracle.jpg", "holy_cross_calvary.jpg", "jesus_walking_storm.jpg", "jesus_teaching_crowd.jpg", "jesus_light_world.jpg"]
+        scene2_pool = ["jesus_praying_gethsemane.jpg", "jesus_reaching_hand.jpg", "jesus_holy_bible.jpg", "jesus_kneeling_prayer.jpg"]
+        scene3_pool = ["jesus_comforting_embrace.jpg", "jesus_resurrection_glory.jpg", "jesus_walking_water.jpg", "jesus_shepherd_lamb.jpg"]
+
+        target_pool = scene1_pool if scene_num == 1 else (scene2_pool if scene_num == 2 else scene3_pool)
+        available = [img for img in target_pool if img not in used_set and os.path.exists(os.path.join(ASSETS_DIR, img))]
+        if not available:
+            all_lib = [
+                f for f in os.listdir(ASSETS_DIR)
+                if f.lower().endswith((".jpg", ".jpeg", ".png")) and not f.startswith("custom_") and f not in used_set
+            ]
+            available = all_lib or target_pool
+
+        matched_img = None
+        prompt_low = prompt.lower()
+        for img_candidate in available:
+            stem = img_candidate.replace(".jpg", "").replace("jesus_", "").replace("_", " ")
+            if any(word in prompt_low for word in stem.split() if len(word) > 3):
+                matched_img = os.path.join(ASSETS_DIR, img_candidate)
+                break
+        if not matched_img and available:
+            matched_img = os.path.join(ASSETS_DIR, available[0])
+
+        if matched_img and os.path.exists(matched_img):
+            shutil.copyfile(matched_img, filepath)
+        else:
+            fb_img = Image.new("RGB", (768, 1344), (20, 24, 38))
+            fb_img.save(filepath, "JPEG")
+
+        return {
+            "status": "success",
+            "filename": filename,
+            "url": f"/assets/images/{filename}",
+            "label": f"{label} (Biblioteca Curada HD)",
+            "engine": engine_used,
+            "deletable": True,
+            "notice": f"Se asignó una toma de la biblioteca local para la escena {scene_num}."
+        }
 
     else:
-        # provider == "auto": Cascada Inteligente (Pollinations -> FLUX.1 -> Z-Image -> Horde)
-        print(f"[ImageGen] Modo Auto para escena {scene_num}: Intentando Pollinations FLUX...")
-        try:
-            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-            engine_used = "Pollinations FLUX (Auto)"
-        except Exception as e:
-            print(f"[ImageGen] Auto: Pollinations no completó ({e}), intentando FLUX.1 Schnell...")
+        # Fallback de seguridad: intentar Cloudflare Workers AI
+        target_model = CLOUDFLARE_MODELS["klein_9b"] if scene_num == 1 else CLOUDFLARE_MODELS["klein_4b"]
+        engine_used = f"Cloudflare FLUX.2 ({'Klein 9B' if scene_num==1 else 'Klein 4B'})"
+        img_bytes = generate_cloudflare_flux_klein(
+            prompt=prompt,
+            model_name=target_model,
+            aspect_ratio=aspect_ratio,
+            reference_image_path=reference_image_path,
+            scene_num=scene_num
+        )
 
-        if not img_bytes:
-            try:
-                img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-                engine_used = "FLUX.1 Schnell HD (Auto)"
-            except Exception as e:
-                print(f"[ImageGen] Auto: FLUX.1 no completó ({e}), intentando Z-Image Turbo...")
-
-        if not img_bytes:
-            try:
-                img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-                engine_used = "Z-Image Turbo HD (Auto)"
-            except Exception as e:
-                print(f"[ImageGen] Auto: Z-Image no completó ({e}), intentando AI Horde...")
-
-        if not img_bytes:
-            try:
-                img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
-                engine_used = "AI Horde (Auto)"
-            except Exception as e:
-                print(f"[ImageGen] Auto: AI Horde no completó: {e}")
-
-    # Si ninguno de los proveedores en línea generó bytes (y no era curated explícito), un último intento con Pollinations
-    if not img_bytes and provider not in ("curated", "library"):
-        try:
-            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-            engine_used = "Pollinations FLUX (Respaldo Definitivo)"
-        except Exception:
-            pass
-
-    # Procesar y guardar bytes generados
+    # Si se generaron bytes con el motor de IA, procesar y guardar la imagen
     if img_bytes:
-        try:
-            pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
-            pil_img.save(filepath, "JPEG", quality=95)
-            print(f"[ImageGen] Imagen generada con éxito ({engine_used}) -> {filename}")
-            return {
-                "status": "success",
-                "filename": filename,
-                "url": f"/assets/images/{filename}",
-                "label": f"{label} ({engine_used})",
-                "engine": engine_used,
-                "deletable": True
-            }
-        except Exception as e:
-            print(f"[ImageGen] Error al procesar imagen generada: {e}")
+        pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
+        pil_img.save(filepath, "JPEG", quality=95)
+        print(f"[ImageGen] Imagen generada con éxito ({engine_used}) -> {filename}")
+        return {
+            "status": "success",
+            "filename": filename,
+            "url": f"/assets/images/{filename}",
+            "label": f"{label} ({engine_used})",
+            "engine": engine_used,
+            "deletable": True,
+            "has_reference": bool(reference_image_path)
+        }
 
-    # ─── Fallback Seguro: 3 Pools Temáticos Estrictamente Diferenciados ──────
-    # Garantiza al 100% que las escenas 1, 2 y 3 NUNCA se repiten
-    prompt_low = prompt.lower()
-    used_set = set(used_images or [])
-
-    # 1. Pool de Toma 1 (Apertura e Impacto Inicial)
-    scene1_pool = [
-        "jesus_healing_miracle.jpg",
-        "holy_cross_calvary.jpg",
-        "jesus_walking_storm.jpg",
-        "jesus_teaching_crowd.jpg",
-        "jesus_light_world.jpg"
-    ]
-    # 2. Pool de Toma 2 (Intercesión y Punto de Inflexión de Fe)
-    scene2_pool = [
-        "jesus_praying_gethsemane.jpg",
-        "jesus_reaching_hand.jpg",
-        "jesus_holy_bible.jpg",
-        "jesus_kneeling_prayer.jpg"
-    ]
-    # 3. Pool de Toma 3 (Victoria, Paz y Gloria Final)
-    scene3_pool = [
-        "jesus_comforting_embrace.jpg",
-        "jesus_resurrection_glory.jpg",
-        "jesus_walking_water.jpg",
-        "jesus_shepherd_lamb.jpg"
-    ]
-
-    target_pool = scene1_pool if scene_num == 1 else (scene2_pool if scene_num == 2 else scene3_pool)
-
-    # Filtrar imágenes disponibles que no hayan sido usadas ya en este Reel
-    available = [img for img in target_pool if img not in used_set and os.path.exists(os.path.join(ASSETS_DIR, img))]
-    if not available:
-        # Respaldo amplio de la biblioteca completa descartando las ya utilizadas
-        all_lib = [
-            f for f in os.listdir(ASSETS_DIR)
-            if f.lower().endswith((".jpg", ".jpeg", ".png")) and not f.startswith("custom_") and f not in used_set
-        ]
-        available = all_lib or target_pool
-
-    matched_img = None
-    for img_candidate in available:
-        stem = img_candidate.replace(".jpg", "").replace("jesus_", "").replace("_", " ")
-        if any(word in prompt_low for word in stem.split() if len(word) > 3):
-            matched_img = os.path.join(ASSETS_DIR, img_candidate)
-            break
-
-    if not matched_img and available:
-        matched_img = os.path.join(ASSETS_DIR, available[0])
-
-    if matched_img and os.path.exists(matched_img):
-        shutil.copyfile(matched_img, filepath)
-    else:
-        fb_img = Image.new("RGB", (768, 1344), (20, 24, 38))
-        fb_img.save(filepath, "JPEG")
-
-    return {
-        "status": "success",
-        "filename": filename,
-        "url": f"/assets/images/{filename}",
-        "label": f"{label} (Biblioteca Curada HD)",
-        "engine": "Biblioteca Curada HD",
-        "deletable": True,
-        "notice": f"Se asignó una toma no repetida de la biblioteca temática para la escena {scene_num}."
-    }
+    raise RuntimeError(f"Fallo al generar imagen para la escena {scene_num} con el proveedor '{provider}'.")

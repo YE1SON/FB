@@ -171,11 +171,16 @@ class ImagePromptRequest(BaseModel):
 class SaveKeysRequest(BaseModel):
     hf_token: Optional[str] = None
     aihorde_api_key: Optional[str] = None
+    cf_account_id: Optional[str] = None
+    cf_api_token: Optional[str] = None
 
 class GenerateAiImageRequest(BaseModel):
     prompt: str
     aspect_ratio: str = "9:16"
-    provider: str = "auto"
+    provider: str = "cloudflare_auto"
+    model_key: Optional[str] = None
+    reference_image_url: Optional[str] = None
+    reference_image_path: Optional[str] = None
     hf_token: Optional[str] = None
     aihorde_api_key: Optional[str] = None
     scene_num: int = 1
@@ -184,7 +189,11 @@ class GenerateAiImageRequest(BaseModel):
 class BatchGenerateAiImageRequest(BaseModel):
     prompts: List[str]
     aspect_ratio: str = "9:16"
-    provider: str = "auto"
+    provider: str = "cloudflare_auto"
+    model_key: Optional[str] = "auto"
+    scene_models: Optional[List[str]] = None
+    use_scene1_reference: bool = True
+    reference_image_url: Optional[str] = None
     hf_token: Optional[str] = None
     aihorde_api_key: Optional[str] = None
 
@@ -503,12 +512,26 @@ async def upload_image(file: UploadFile = File(...)):
 def api_image_providers():
     return get_providers_status()
 
+@app.get("/api/cloudflare/neurons")
+@app.get("/studio/api/cloudflare/neurons")
+def api_cloudflare_neurons():
+    from engine.cloudflare_neurons import get_neurons_status
+    return get_neurons_status()
+
+@app.post("/api/cloudflare/neurons/reset")
+@app.post("/studio/api/cloudflare/neurons/reset")
+def api_cloudflare_neurons_reset():
+    from engine.cloudflare_neurons import reset_daily_neurons
+    return reset_daily_neurons()
+
 @app.post("/api/save-image-keys")
 @app.post("/studio/api/save-image-keys")
 def api_save_image_keys(req: SaveKeysRequest):
     save_keys(
         hf_token=req.hf_token,
-        aihorde_api_key=req.aihorde_api_key
+        aihorde_api_key=req.aihorde_api_key,
+        cf_account_id=req.cf_account_id,
+        cf_api_token=req.cf_api_token
     )
     return {"status": "success", "providers": get_providers_status()}
 
@@ -516,15 +539,26 @@ def api_save_image_keys(req: SaveKeysRequest):
 @app.post("/studio/api/generate-ai-image")
 def api_generate_ai_image(req: GenerateAiImageRequest):
     try:
+        ref_path = None
+        if req.reference_image_path and os.path.exists(req.reference_image_path):
+            ref_path = req.reference_image_path
+        elif req.reference_image_url:
+            clean_url = req.reference_image_url.split("?")[0]
+            possible = os.path.join(ASSETS_DIR, os.path.basename(clean_url))
+            if os.path.exists(possible):
+                ref_path = possible
+
         return generate_ai_scene_image(
             prompt=req.prompt,
             aspect_ratio=req.aspect_ratio,
             label=f"Escena {req.scene_num} IA",
             provider=req.provider,
-            hf_token=req.hf_token,
-            aihorde_api_key=req.aihorde_api_key,
+            model_key=req.model_key,
+            reference_image_path=ref_path,
             scene_num=req.scene_num,
-            used_images=req.used_images
+            used_images=req.used_images,
+            hf_token=req.hf_token,
+            aihorde_api_key=req.aihorde_api_key
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con IA: {str(e)}")
@@ -536,29 +570,58 @@ def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
     if not prompts:
         raise HTTPException(status_code=400, detail="Debe proporcionar al menos un prompt.")
 
-    import concurrent.futures
     labels = ["Escena 1 (Apertura)", "Escena 2 (Intercesión)", "Escena 3 (Victoria)"]
     results = [None] * len(prompts)
 
-    def _worker(idx, prompt_text):
-        lbl = labels[idx] if idx < len(labels) else f"Escena {idx+1}"
-        return generate_ai_scene_image(
-            prompt=prompt_text,
+    # Coherencia visual multi-escena:
+    # Generar Escena 1 primero para poder pasarla como 'image1' a las Escenas 2 y 3.
+    scene1_ref_path = None
+    if req.reference_image_url:
+        clean_url = req.reference_image_url.split("?")[0]
+        possible = os.path.join(ASSETS_DIR, os.path.basename(clean_url))
+        if os.path.exists(possible):
+            scene1_ref_path = possible
+
+    # Generar Escena 1
+    m1 = (req.scene_models[0] if (req.scene_models and len(req.scene_models) > 0) else req.model_key)
+    try:
+        results[0] = generate_ai_scene_image(
+            prompt=prompts[0],
             aspect_ratio=req.aspect_ratio,
-            label=lbl,
+            label=labels[0],
             provider=req.provider,
+            model_key=m1,
+            reference_image_path=scene1_ref_path,
+            scene_num=1,
             hf_token=req.hf_token,
             aihorde_api_key=req.aihorde_api_key
         )
+        if req.use_scene1_reference and results[0] and results[0].get("filename"):
+            cand_path = os.path.join(ASSETS_DIR, results[0]["filename"])
+            if os.path.exists(cand_path):
+                scene1_ref_path = cand_path
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fallo al generar Escena 1: {str(e)}")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(prompts), 3)) as executor:
-        future_to_idx = {executor.submit(_worker, i, p): i for i, p in enumerate(prompts[:3])}
-        for future in concurrent.futures.as_completed(future_to_idx):
-            idx = future_to_idx[future]
-            try:
-                results[idx] = future.result()
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Fallo al generar imagen {idx+1}: {str(e)}")
+    # Generar Escenas 2 y 3 (usando la imagen de Escena 1 como referencia para consistencia de personaje)
+    for idx in range(1, min(len(prompts), 3)):
+        p_text = prompts[idx]
+        lbl = labels[idx] if idx < len(labels) else f"Escena {idx+1}"
+        m_idx = (req.scene_models[idx] if (req.scene_models and len(req.scene_models) > idx) else req.model_key)
+        try:
+            results[idx] = generate_ai_scene_image(
+                prompt=p_text,
+                aspect_ratio=req.aspect_ratio,
+                label=lbl,
+                provider=req.provider,
+                model_key=m_idx,
+                reference_image_path=scene1_ref_path if req.use_scene1_reference else None,
+                scene_num=idx + 1,
+                hf_token=req.hf_token,
+                aihorde_api_key=req.aihorde_api_key
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Fallo al generar Escena {idx+1}: {str(e)}")
 
     return {"status": "success", "images": results}
 

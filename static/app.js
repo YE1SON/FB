@@ -2032,14 +2032,8 @@ function bootstrapJesusStudio() {
     staleScriptWarning.style.display = "none";
   }
 
-  async function updateOptimizedCaption(force = false) {
+  async function updateOptimizedCaption(force = true) {
     if (!reelPostCopyArea) return;
-    if (reelPostCopyArea.dataset.userEdited === "true" && !force) {
-      const confirmOverwrite = confirm(
-        "Has realizado ediciones manuales en el texto de la publicación.\n\n¿Deseas regenerarlo con la nueva configuración editorial?"
-      );
-      if (!confirmOverwrite) return;
-    }
 
     const curTheme = themeSelect ? themeSelect.value : "lost_child";
     const curHook = scriptHook ? scriptHook.value.trim() : "";
@@ -2047,7 +2041,10 @@ function bootstrapJesusStudio() {
     const curCta = scriptCta ? scriptCta.value.trim() : "";
 
     try {
-      if (btnRegenerateCaption) btnRegenerateCaption.disabled = true;
+      if (btnRegenerateCaption) {
+        btnRegenerateCaption.disabled = true;
+        btnRegenerateCaption.innerHTML = "⏳ Generando texto...";
+      }
       const res = await fetch("/api/editorial-caption", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2079,7 +2076,10 @@ function bootstrapJesusStudio() {
     } catch (err) {
       console.error("[Caption Error]:", err);
     } finally {
-      if (btnRegenerateCaption) btnRegenerateCaption.disabled = false;
+      if (btnRegenerateCaption) {
+        btnRegenerateCaption.disabled = false;
+        btnRegenerateCaption.innerHTML = "✨ Regenerar Descripción con Guion Actual";
+      }
     }
   }
 
@@ -2151,7 +2151,7 @@ function bootstrapJesusStudio() {
       btnFormatA.classList.add("active");
       if (btnFormatB) btnFormatB.classList.remove("active");
       updateExperimentGroupBadge();
-      updateOptimizedCaption();
+      updateOptimizedCaption(true);
     });
   }
   if (btnFormatB) {
@@ -2160,7 +2160,7 @@ function bootstrapJesusStudio() {
       btnFormatB.classList.add("active");
       if (btnFormatA) btnFormatA.classList.remove("active");
       updateExperimentGroupBadge();
-      updateOptimizedCaption();
+      updateOptimizedCaption(true);
     });
   }
 
@@ -2171,7 +2171,7 @@ function bootstrapJesusStudio() {
         btn.classList.add("active");
         selectedHashtagStrategy = parseInt(btn.dataset.tags, 10);
         updateExperimentGroupBadge();
-        updateOptimizedCaption();
+        updateOptimizedCaption(true);
       });
     }
   });

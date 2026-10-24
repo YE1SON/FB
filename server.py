@@ -9,7 +9,7 @@ import urllib.parse
 from PIL import Image
 from typing import Optional, List, Literal
 from pydantic import BaseModel, Field, HttpUrl
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 
@@ -61,6 +61,16 @@ app.add_middleware(
 )
 
 # Mount static, assets and cards output folders
+# ─── Disable Browser Cache for Static Assets ─────────────────────────────────
+@app.middleware("http")
+async def add_no_cache_for_static(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
 app.mount("/outputs/cards", StaticFiles(directory=CARDS_DIR), name="outputs_cards")

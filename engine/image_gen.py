@@ -61,16 +61,21 @@ def get_providers_status() -> Dict:
     keys = load_keys()
     hf_tok = keys.get("hf_token", "")
     return {
-        "z_image": {
-            "name": "🥇 Z-Image Turbo (Alibaba Tongyi DiT — Máxima Calidad y Rapidez)",
+        "pollinations": {
+            "name": "⚡ Pollinations FLUX (Ilimitado y Rápido — Sin Cuotas de GPU)",
             "configured": True,
-            "status": "Activo y Gratuito (Sub-5s)"
+            "status": "Activo y Gratuito (Sub-8s)"
+        },
+        "z_image": {
+            "name": "🥇 Z-Image Turbo (Alibaba Tongyi DiT — Respaldo Activo)",
+            "configured": True,
+            "status": "Activo con Respaldo Automático"
         },
         "flux_schnell": {
             "name": "🥈 FLUX.1 Schnell (Black Forest Labs HD)",
             "configured": bool(hf_tok),
             "token_masked": (hf_tok[:7] + "...") if hf_tok else "",
-            "status": "Activo con Token HF" if hf_tok else "Disponible (Con o sin Token)"
+            "status": "Activo con Token HF" if hf_tok else "Disponible con Respaldo"
         },
         "aihorde": {
             "name": "🥉 AI Horde (Comunidad Gratuita Descentralizada)",
@@ -94,6 +99,35 @@ def enhance_sacred_prompt(prompt: str) -> str:
     if "photograph" not in clean.lower() and "cinematic" not in clean.lower():
         return f"{clean}, {cues}"
     return f"{clean}, warm sacred golden hour lighting, photorealistic, 35mm lens"
+
+# ─── Motor 0: Pollinations FLUX (Sin cuotas de ZeroGPU) ───────────────────────
+
+def generate_pollinations(
+    prompt: str,
+    aspect_ratio: str = "9:16"
+) -> bytes:
+    """
+    Genera imagen fotorrealista con Pollinations.ai (Flux/SDXL).
+    100% gratuito, sin límites de ZeroGPU, sin tarjeta, ultra-rápido (sub-10s).
+    """
+    clean_prompt = enhance_sacred_prompt(prompt)
+    dims = {
+        "9:16": (768, 1344),
+        "1:1": (1024, 1024),
+        "4:5": (832, 1040)
+    }
+    width, height = dims.get(aspect_ratio, (768, 1344))
+    seed = random.randint(1, 999999)
+    url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(clean_prompt)}?width={width}&height={height}&model=flux&nologo=true&seed={seed}"
+    print(f"[Pollinations] Generando imagen Flux ({width}x{height})...")
+    resp = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) JesusReelsStudio/4.0"},
+        timeout=25
+    )
+    if resp.status_code == 200 and len(resp.content) > 1000:
+        return resp.content
+    raise RuntimeError(f"Pollinations falló con status {resp.status_code}")
 
 # ─── Motor 1: Z-Image Turbo (Tongyi-MAI DiT) ──────────────────────────────────
 
@@ -305,33 +339,63 @@ def generate_ai_scene_image(
     img_bytes = None
     engine_used = None
 
-    # ─── Ejecución Estricta y Aislada por Proveedor Seleccionado ──────────────
-    if provider == "z_image":
+    # ─── Ejecución con Respaldo Automático Resiliente (CERO FALLOS 500) ──────────────
+    if provider == "pollinations":
         try:
-            print(f"[ImageGen] Ejecutando exclusivamente Z-Image Turbo para escena {scene_num}...")
+            print(f"[ImageGen] Ejecutando Pollinations FLUX para escena {scene_num}...")
+            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+            engine_used = "Pollinations FLUX"
+        except Exception as e:
+            print(f"[ImageGen] Pollinations falló ({e}), intentando AI Horde...")
+
+    elif provider == "z_image":
+        try:
+            print(f"[ImageGen] Ejecutando Z-Image Turbo para escena {scene_num}...")
             img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
             engine_used = "Z-Image Turbo HD"
         except Exception as e:
-            print(f"[ImageGen] Z-Image Turbo no pudo completar: {e}")
-            raise RuntimeError(f"Fallo en Z-Image Turbo: {e}")
+            print(f"[ImageGen] Z-Image Turbo falló ({e}). Activando respaldo automático...")
+            try:
+                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+                engine_used = "Pollinations FLUX (Respaldo por Cuota)"
+            except Exception as e2:
+                print(f"[ImageGen] Respaldo Pollinations falló ({e2}), intentando AI Horde...")
+                try:
+                    img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
+                    engine_used = "AI Horde (Respaldo por Cuota)"
+                except Exception:
+                    pass
 
     elif provider == "flux_schnell":
         try:
-            print(f"[ImageGen] Ejecutando exclusivamente FLUX.1 Schnell para escena {scene_num}...")
+            print(f"[ImageGen] Ejecutando FLUX.1 Schnell para escena {scene_num}...")
             img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
             engine_used = "FLUX.1 Schnell HD"
         except Exception as e:
-            print(f"[ImageGen] FLUX.1 Schnell no pudo completar: {e}")
-            raise RuntimeError(f"Fallo en FLUX.1 Schnell: {e}")
+            print(f"[ImageGen] FLUX.1 Schnell falló ({e}). Activando respaldo automático...")
+            try:
+                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+                engine_used = "Pollinations FLUX (Respaldo por Cuota)"
+            except Exception as e2:
+                print(f"[ImageGen] Respaldo Pollinations falló ({e2}), intentando AI Horde...")
+                try:
+                    img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
+                    engine_used = "AI Horde (Respaldo por Cuota)"
+                except Exception:
+                    pass
 
     elif provider == "aihorde":
         try:
-            print(f"[ImageGen] Ejecutando exclusivamente AI Horde para escena {scene_num}...")
-            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=30)
+            print(f"[ImageGen] Ejecutando AI Horde para escena {scene_num}...")
+            img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=25)
             engine_used = "AI Horde (Comunidad Gratuita)"
         except Exception as e:
-            print(f"[ImageGen] AI Horde no pudo completar: {e}")
-            raise RuntimeError(f"Fallo en AI Horde: {e}")
+            print(f"[ImageGen] AI Horde falló ({e}), intentando Pollinations...")
+            try:
+                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+                engine_used = "Pollinations FLUX (Respaldo)"
+            except Exception:
+                pass
 
     elif provider in ("curated", "library"):
         print(f"[ImageGen] Seleccionando toma de la Biblioteca Curada HD para escena {scene_num}...")
@@ -339,13 +403,20 @@ def generate_ai_scene_image(
         engine_used = "Biblioteca Curada HD"
 
     else:
-        # provider == "auto": Cascada Inteligente (FLUX.1 -> Z-Image -> Horde)
-        print(f"[ImageGen] Modo Auto: Intentando FLUX.1 Schnell...")
+        # provider == "auto": Cascada Inteligente (Pollinations -> FLUX.1 -> Z-Image -> Horde)
+        print(f"[ImageGen] Modo Auto para escena {scene_num}: Intentando Pollinations FLUX...")
         try:
-            img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
-            engine_used = "FLUX.1 Schnell HD (Auto)"
+            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+            engine_used = "Pollinations FLUX (Auto)"
         except Exception as e:
-            print(f"[ImageGen] Auto: FLUX.1 no completó ({e}), intentando Z-Image Turbo...")
+            print(f"[ImageGen] Auto: Pollinations no completó ({e}), intentando FLUX.1 Schnell...")
+
+        if not img_bytes:
+            try:
+                img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+                engine_used = "FLUX.1 Schnell HD (Auto)"
+            except Exception as e:
+                print(f"[ImageGen] Auto: FLUX.1 no completó ({e}), intentando Z-Image Turbo...")
 
         if not img_bytes:
             try:
@@ -356,10 +427,18 @@ def generate_ai_scene_image(
 
         if not img_bytes:
             try:
-                img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=15)
+                img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=20)
                 engine_used = "AI Horde (Auto)"
             except Exception as e:
                 print(f"[ImageGen] Auto: AI Horde no completó: {e}")
+
+    # Si ninguno de los proveedores en línea generó bytes (y no era curated explícito), un último intento con Pollinations
+    if not img_bytes and provider not in ("curated", "library"):
+        try:
+            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+            engine_used = "Pollinations FLUX (Respaldo Definitivo)"
+        except Exception:
+            pass
 
     # Procesar y guardar bytes generados
     if img_bytes:

@@ -788,12 +788,9 @@ function bootstrapJesusStudio() {
 
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
-        const postCopyArea = document.getElementById("reelPostCopyText");
-        if (postCopyArea) {
-          postCopyArea.value = data.seo_caption;
-          postCopyArea.dataset.userEdited = "false";
-        }
       }
+      // Actualizar automáticamente la descripción optimizada basada en el guion final
+      updateOptimizedCaption(true);
 
       if (data.pinned_comment) {
         currentPinnedComment = data.pinned_comment;
@@ -1965,32 +1962,258 @@ function bootstrapJesusStudio() {
     }
   }
 
-  // 11. Copiar Texto y Hashtags para Facebook
+  // ─── 11. FaithSpark Daily: Optimización Editorial & Experimentos A/B ───
+  let selectedCaptionFormat = "A";
+  let selectedHashtagStrategy = 3;
+  let currentExperimentGroup = "A2";
+  let captionSourceHook = "";
+  let captionSourceBody = "";
+
+  const btnFormatA = document.getElementById("btnFormatA");
+  const btnFormatB = document.getElementById("btnFormatB");
+  const btnTags0 = document.getElementById("btnTags0");
+  const btnTags3 = document.getElementById("btnTags3");
+  const btnTags5 = document.getElementById("btnTags5");
+  const badgeExperimentGroup = document.getElementById("badgeExperimentGroup");
+  const btnSuggestNextExperiment = document.getElementById("btnSuggestNextExperiment");
+  const btnRegenerateCaption = document.getElementById("btnRegenerateCaption");
+  const captionWordCountBadge = document.getElementById("captionWordCountBadge");
+  const staleScriptWarning = document.getElementById("staleScriptWarning");
   const reelPostCopyArea = document.getElementById("reelPostCopyText");
-  if (reelPostCopyArea) {
-    reelPostCopyArea.addEventListener("input", () => {
-      reelPostCopyArea.dataset.userEdited = "true";
+  const preflightWarningsList = document.getElementById("preflightWarningsList");
+  const preflightStatusBadge = document.getElementById("preflightStatusBadge");
+
+  const checkSpanish = document.getElementById("checkSpanish");
+  const checkManipulative = document.getElementById("checkManipulative");
+  const checkScripture = document.getElementById("checkScripture");
+  const checkAlignment = document.getElementById("checkAlignment");
+  const checkDuplicate = document.getElementById("checkDuplicate");
+
+  const expPostUrlInput = document.getElementById("expPostUrlInput");
+  const expCheckpointSelect = document.getElementById("expCheckpointSelect");
+  const mViews = document.getElementById("mViews");
+  const mAvgWatchSec = document.getElementById("mAvgWatchSec");
+  const mAvgWatchedPct = document.getElementById("mAvgWatchedPct");
+  const mReactions = document.getElementById("mReactions");
+  const mComments = document.getElementById("mComments");
+  const mShares = document.getElementById("mShares");
+  const mFollowers = document.getElementById("mFollowers");
+  const mUsViewerPct = document.getElementById("mUsViewerPct");
+  const btnSaveObservation = document.getElementById("btnSaveObservation");
+  const saveObservationStatus = document.getElementById("saveObservationStatus");
+
+  function updateExperimentGroupBadge() {
+    const groupMap = {
+      "A-0": "A1 (Breve · 0 Tags)",
+      "A-3": "A2 (Breve · 3 Tags)",
+      "A-5": "A3 (Breve · 5 Tags)",
+      "B-0": "B1 (Reflexivo · 0 Tags)",
+      "B-3": "B2 (Reflexivo · 3 Tags)",
+      "B-5": "B3 (Reflexivo · 5 Tags)"
+    };
+    const key = `${selectedCaptionFormat}-${selectedHashtagStrategy}`;
+    currentExperimentGroup = key.replace("-", "");
+    if (currentExperimentGroup === "A0") currentExperimentGroup = "A1";
+    if (badgeExperimentGroup) {
+      badgeExperimentGroup.textContent = `Grupo: ${groupMap[key] || currentExperimentGroup}`;
+    }
+  }
+
+  function checkScriptStaleness() {
+    if (!staleScriptWarning) return;
+    const curHook = scriptHook ? scriptHook.value.trim() : "";
+    const curBody = scriptBody ? scriptBody.value.trim() : "";
+    if (captionSourceHook && captionSourceBody) {
+      if (curHook !== captionSourceHook || curBody !== captionSourceBody) {
+        staleScriptWarning.style.display = "block";
+        return;
+      }
+    }
+    staleScriptWarning.style.display = "none";
+  }
+
+  async function updateOptimizedCaption(force = false) {
+    if (!reelPostCopyArea) return;
+    if (reelPostCopyArea.dataset.userEdited === "true" && !force) {
+      const confirmOverwrite = confirm(
+        "Has realizado ediciones manuales en el texto de la publicación.\n\n¿Deseas regenerarlo con la nueva configuración editorial?"
+      );
+      if (!confirmOverwrite) return;
+    }
+
+    const curTheme = themeSelect ? themeSelect.value : "lost_child";
+    const curHook = scriptHook ? scriptHook.value.trim() : "";
+    const curBody = scriptBody ? scriptBody.value.trim() : "";
+    const curCta = scriptCta ? scriptCta.value.trim() : "";
+
+    try {
+      if (btnRegenerateCaption) btnRegenerateCaption.disabled = true;
+      const res = await fetch("/api/editorial-caption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme_key: curTheme,
+          hook: curHook,
+          body: curBody,
+          scripture: currentScripture || "",
+          cta: curCta,
+          format_type: selectedCaptionFormat,
+          hashtag_strategy: selectedHashtagStrategy
+        })
+      });
+
+      if (!res.ok) throw new Error("Error HTTP " + res.status);
+      const data = await res.json();
+
+      reelPostCopyArea.value = data.full_post_text;
+      reelPostCopyArea.dataset.userEdited = "false";
+      captionSourceHook = curHook;
+      captionSourceBody = curBody;
+      if (staleScriptWarning) staleScriptWarning.style.display = "none";
+
+      if (captionWordCountBadge) {
+        captionWordCountBadge.textContent = `~${data.word_count} palabras · Formato ${data.format_type}`;
+      }
+
+      validatePostInUi();
+    } catch (err) {
+      console.error("[Caption Error]:", err);
+    } finally {
+      if (btnRegenerateCaption) btnRegenerateCaption.disabled = false;
+    }
+  }
+
+  async function validatePostInUi() {
+    if (!reelPostCopyArea) return;
+    const curTheme = themeSelect ? themeSelect.value : "lost_child";
+    const curHook = scriptHook ? scriptHook.value.trim() : "";
+    const curBody = scriptBody ? scriptBody.value.trim() : "";
+    const curCta = scriptCta ? scriptCta.value.trim() : "";
+    const captionText = reelPostCopyArea.value;
+
+    try {
+      const res = await fetch("/api/editorial-validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme_key: curTheme,
+          script_hook: curHook,
+          script_body: curBody,
+          script_cta: curCta,
+          caption_text: captionText,
+          scripture_text: currentScripture || "",
+          caption_source_hook: captionSourceHook,
+          caption_source_body: captionSourceBody
+        })
+      });
+
+      if (!res.ok) return;
+      const data = await res.json();
+
+      function updateCheck(el, passed) {
+        if (!el) return;
+        el.className = passed ? "check-pill text-success" : "check-pill text-warning";
+      }
+
+      updateCheck(checkSpanish, data.checks.no_accidental_spanish);
+      updateCheck(checkManipulative, data.checks.no_manipulative_cta);
+      updateCheck(checkScripture, data.checks.biblical_reference_valid);
+      updateCheck(checkAlignment, data.checks.caption_script_aligned);
+      updateCheck(checkDuplicate, data.checks.no_recent_duplicate);
+
+      if (data.warnings && data.warnings.length > 0) {
+        if (preflightStatusBadge) {
+          preflightStatusBadge.className = "badge badge-warning text-xs";
+          preflightStatusBadge.textContent = `⚠️ ${data.warnings.length} aviso(s)`;
+        }
+        if (preflightWarningsList) {
+          preflightWarningsList.style.display = "block";
+          preflightWarningsList.innerHTML = data.warnings.map(w => `<div>• ${escapeHtml(w)}</div>`).join("");
+        }
+      } else {
+        if (preflightStatusBadge) {
+          preflightStatusBadge.className = "badge badge-success text-xs";
+          preflightStatusBadge.textContent = "✓ Todo Correcto";
+        }
+        if (preflightWarningsList) {
+          preflightWarningsList.style.display = "none";
+          preflightWarningsList.innerHTML = "";
+        }
+      }
+    } catch (e) {
+      console.warn("[Validation Error]:", e);
+    }
+  }
+
+  if (btnFormatA) {
+    btnFormatA.addEventListener("click", () => {
+      selectedCaptionFormat = "A";
+      btnFormatA.classList.add("active");
+      if (btnFormatB) btnFormatB.classList.remove("active");
+      updateExperimentGroupBadge();
+      updateOptimizedCaption();
+    });
+  }
+  if (btnFormatB) {
+    btnFormatB.addEventListener("click", () => {
+      selectedCaptionFormat = "B";
+      btnFormatB.classList.add("active");
+      if (btnFormatA) btnFormatA.classList.remove("active");
+      updateExperimentGroupBadge();
+      updateOptimizedCaption();
+    });
+  }
+
+  [btnTags0, btnTags3, btnTags5].forEach(btn => {
+    if (btn) {
+      btn.addEventListener("click", () => {
+        [btnTags0, btnTags3, btnTags5].forEach(b => { if (b) b.classList.remove("active"); });
+        btn.classList.add("active");
+        selectedHashtagStrategy = parseInt(btn.dataset.tags, 10);
+        updateExperimentGroupBadge();
+        updateOptimizedCaption();
+      });
+    }
+  });
+
+  if (btnRegenerateCaption) {
+    btnRegenerateCaption.addEventListener("click", () => updateOptimizedCaption(true));
+  }
+
+  if (btnSuggestNextExperiment) {
+    btnSuggestNextExperiment.addEventListener("click", async () => {
+      try {
+        btnSuggestNextExperiment.disabled = true;
+        const res = await fetch("/api/editorial-experiment-matrix");
+        if (!res.ok) throw new Error("Error HTTP " + res.status);
+        const data = await res.json();
+        const nextSlot = data.next_slot;
+        if (nextSlot) {
+          if (nextSlot.format === "B" && btnFormatB) btnFormatB.click();
+          else if (btnFormatA) btnFormatA.click();
+
+          if (nextSlot.tags === 0 && btnTags0) btnTags0.click();
+          else if (nextSlot.tags === 5 && btnTags5) btnTags5.click();
+          else if (btnTags3) btnTags3.click();
+
+          alert(`Sugerencia de Matriz:\nSlot #${nextSlot.slot} · Grupo ${nextSlot.group}\nTemática recomendada: ${nextSlot.theme_label} (${nextSlot.theme_key})\nHorario de prueba sugerido: ${nextSlot.slot_time}`);
+        }
+      } catch (err) {
+        alert("No se pudo consultar la matriz: " + err.message);
+      } finally {
+        btnSuggestNextExperiment.disabled = false;
+      }
     });
   }
 
   if (btnCopyCaption) {
     btnCopyCaption.addEventListener("click", () => {
-      const postCopyArea = document.getElementById("reelPostCopyText");
-      let caption = "";
-      if (postCopyArea && postCopyArea.value.trim()) {
-        caption = postCopyArea.value.trim();
-      } else if (currentSeoCaption) {
-        caption = currentSeoCaption;
-      } else {
-        const hook = scriptHook ? scriptHook.value.trim() : "";
-        const body = scriptBody ? scriptBody.value.trim() : "";
-        const cta = scriptCta ? scriptCta.value.trim() : "";
-        const pinned = currentPinnedComment || (scriptPinnedComment ? scriptPinnedComment.value.trim() : "");
-        const scriptureText = currentScripture ? `📖 Scripture:\n"${currentScripture}"\n\n` : "";
-        caption = `${hook}\n\n${body}\n\n${scriptureText}${cta}${pinned ? `\n\nReflection: ${pinned}` : ""}\n\n#DailyPrayer #Faith #ChristianReels #JesusChrist #GodIsGood`;
+      const textToCopy = reelPostCopyArea ? reelPostCopyArea.value.trim() : "";
+      if (!textToCopy) {
+        alert("No hay texto de publicación para copiar.");
+        return;
       }
-
-      navigator.clipboard.writeText(caption).then(() => {
+      navigator.clipboard.writeText(textToCopy).then(() => {
         btnCopyCaption.textContent = "✅ ¡Publicación Copiada al Portapapeles!";
         setTimeout(() => {
           btnCopyCaption.textContent = "📋 Copiar Publicación Completa para Facebook";
@@ -1998,6 +2221,97 @@ function bootstrapJesusStudio() {
       }).catch(err => {
         alert("No se pudo copiar automáticamente: " + err);
       });
+    });
+  }
+
+  if (btnCopyFinalPinnedComment) {
+    btnCopyFinalPinnedComment.addEventListener("click", () => {
+      const commentToCopy = currentPinnedComment || "May this moment of prayer bring comfort to your heart today. 🙏";
+      navigator.clipboard.writeText(commentToCopy).then(() => {
+        btnCopyFinalPinnedComment.textContent = "✅ ¡Comentario Copiado!";
+        setTimeout(() => {
+          btnCopyFinalPinnedComment.textContent = "📌 Copiar Comentario Fijado";
+        }, 2500);
+      }).catch(err => {
+        alert("No se pudo copiar: " + err);
+      });
+    });
+  }
+
+  if (btnSaveObservation) {
+    btnSaveObservation.addEventListener("click", async () => {
+      function parseOptionalMetric(inputEl) {
+        if (!inputEl || inputEl.value === "" || inputEl.value === null) return null;
+        const val = Number(inputEl.value);
+        return isNaN(val) ? null : val;
+      }
+
+      const curTheme = themeSelect ? themeSelect.value : "lost_child";
+      const payload = {
+        record_id: currentProjectReelId || null,
+        experiment_group: currentExperimentGroup,
+        creative: {
+          theme_key: curTheme,
+          series_key: "everyday",
+          format: "prayer",
+          hook: scriptHook ? scriptHook.value : "",
+          body: scriptBody ? scriptBody.value : "",
+          cta: scriptCta ? scriptCta.value : "",
+          caption: reelPostCopyArea ? reelPostCopyArea.value : "",
+          voice: voiceSelect ? voiceSelect.value : "guy",
+          provider: "studio",
+          opening_variant: 0,
+          experiment_group: currentExperimentGroup,
+          caption_type: selectedCaptionFormat === "A" ? "short" : "reflective",
+          hashtags: []
+        },
+        checkpoint: expCheckpointSelect ? expCheckpointSelect.value : "48h",
+        post_url: expPostUrlInput ? expPostUrlInput.value.trim() : null,
+        metrics: {
+          views: parseOptionalMetric(mViews),
+          average_watch_sec: parseOptionalMetric(mAvgWatchSec),
+          average_watched_pct: parseOptionalMetric(mAvgWatchedPct),
+          reactions: parseOptionalMetric(mReactions),
+          comments: parseOptionalMetric(mComments),
+          shares: parseOptionalMetric(mShares),
+          followers: parseOptionalMetric(mFollowers),
+          us_viewer_pct: parseOptionalMetric(mUsViewerPct)
+        }
+      };
+
+      try {
+        btnSaveObservation.disabled = true;
+        saveObservationStatus.textContent = "⏳ Guardando...";
+        const res = await fetch("/api/editorial-results", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Error HTTP ${res.status}`);
+        }
+
+        const savedRecord = await res.json();
+        currentProjectReelId = savedRecord.id;
+        saveObservationStatus.textContent = `✅ Guardado exitoso (ID: ${savedRecord.id.slice(0, 8)}...)`;
+        setTimeout(() => {
+          saveObservationStatus.textContent = "";
+        }, 4000);
+      } catch (err) {
+        saveObservationStatus.textContent = "";
+        alert("Error al guardar en el registro: " + err.message);
+      } finally {
+        btnSaveObservation.disabled = false;
+      }
+    });
+  }
+
+  if (reelPostCopyArea) {
+    reelPostCopyArea.addEventListener("input", () => {
+      reelPostCopyArea.dataset.userEdited = "true";
+      validatePostInUi();
     });
   }
 
@@ -2741,9 +3055,24 @@ function bootstrapJesusStudio() {
     }
   }
 
-  if (scriptHook) scriptHook.addEventListener("input", updateCharCounters);
-  if (scriptBody) scriptBody.addEventListener("input", updateCharCounters);
-  if (scriptCta) scriptCta.addEventListener("input", updateCharCounters);
+  if (scriptHook) {
+    scriptHook.addEventListener("input", () => {
+      updateCharCounters();
+      checkScriptStaleness();
+    });
+  }
+  if (scriptBody) {
+    scriptBody.addEventListener("input", () => {
+      updateCharCounters();
+      checkScriptStaleness();
+    });
+  }
+  if (scriptCta) {
+    scriptCta.addEventListener("input", () => {
+      updateCharCounters();
+      checkScriptStaleness();
+    });
+  }
   if (hookBadgeInput) hookBadgeInput.addEventListener("input", updateCharCounters);
 
   // Botón para limpiar campos del guion

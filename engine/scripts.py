@@ -1316,9 +1316,9 @@ def generate_script(
     )
     result = script_result.model_dump()
     result["body"] = clean_narration(result["body"])
-    result["cta"] = clean_narration(result["cta"])
-    if not result["cta"]:
-        result["cta"] = "Leave your first name below so we can keep you in our prayers tonight."
+    result["cta"] = clean_narration(result.get("cta") or "")
+    if brief and not brief.get("include_cta", True):
+        result["cta"] = ""
     result["full_text"] = " ".join(filter(None, [result["hook"], result["body"], result["cta"]]))
     result["word_count"] = len(result["full_text"].split())
     result["estimated_duration_sec"] = round(min(34.0, max(15.0, (result["word_count"] / 2.15) + 1.2)), 1)

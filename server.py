@@ -11,7 +11,7 @@ from typing import Optional, List, Literal
 from pydantic import BaseModel, Field, HttpUrl
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -110,12 +110,17 @@ class CreativeSnapshot(BaseModel):
     voice: str = Field(default="", max_length=80)
     provider: str = Field(default="", max_length=160)
     opening_variant: int = Field(default=0, ge=0, le=2)
+    experiment_group: Optional[str] = Field(default="A1", max_length=10)
+    caption_type: Optional[str] = Field(default="short", max_length=20)
+    hashtags: Optional[List[str]] = Field(default_factory=list)
 
 class ObservedMetrics(BaseModel):
     duration_sec: Optional[float] = Field(default=None, gt=0)
     views: Optional[int] = Field(default=None, ge=0)
     average_watch_sec: Optional[float] = Field(default=None, ge=0)
     average_watched_pct: Optional[float] = Field(default=None, ge=0)
+    reactions: Optional[int] = Field(default=None, ge=0)
+    comments: Optional[int] = Field(default=None, ge=0)
     followers: Optional[int] = Field(default=None, ge=0)
     shares: Optional[int] = Field(default=None, ge=0)
     us_viewer_pct: Optional[float] = Field(default=None, ge=0, le=100)
@@ -125,8 +130,28 @@ class ObservationRequest(BaseModel):
     record_id: Optional[str] = Field(default=None, max_length=40)
     creative: CreativeSnapshot
     checkpoint: Literal["48h", "7d", "other"] = "48h"
-    post_url: Optional[HttpUrl] = None
+    post_url: Optional[str] = None
     metrics: ObservedMetrics
+
+class GenerateOptimizedCaptionRequest(BaseModel):
+    theme_key: str
+    hook: str
+    body: str
+    scripture: Optional[str] = ""
+    cta: Optional[str] = ""
+    format_type: str = "A"
+    hashtag_strategy: int = 3
+    custom_tags: Optional[List[str]] = None
+
+class ValidatePostReadinessRequest(BaseModel):
+    theme_key: str
+    script_hook: str
+    script_body: str
+    script_cta: Optional[str] = ""
+    caption_text: str
+    scripture_text: Optional[str] = ""
+    caption_source_hook: Optional[str] = None
+    caption_source_body: Optional[str] = None
 
 class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
@@ -271,6 +296,75 @@ def record_editorial_results(req: ObservationRequest):
         return save_observation(payload)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+@app.post("/api/editorial-caption")
+@app.post("/studio/api/editorial-caption")
+def api_generate_editorial_caption(req: GenerateOptimizedCaptionRequest):
+    from engine.editorial_captions import generate_optimized_social_post
+    return generate_optimized_social_post(
+        theme_key=req.theme_key,
+        hook=req.hook,
+        body=req.body,
+        scripture=req.scripture or "",
+        cta=req.cta or "",
+        format_type=req.format_type,
+        hashtag_strategy=req.hashtag_strategy,
+        custom_tags=req.custom_tags
+    )
+
+@app.post("/api/editorial-validate")
+@app.post("/studio/api/editorial-validate")
+def api_validate_editorial_post(req: ValidatePostReadinessRequest):
+    from engine.editorial_validator import validate_post_readiness
+    from engine.results import list_results
+    records = list_results()
+    recent_captions = [r.get("creative", {}).get("caption", "") for r in records[-10:] if r.get("creative", {}).get("caption")]
+    return validate_post_readiness(
+        theme_key=req.theme_key,
+        script_hook=req.script_hook,
+        script_body=req.script_body,
+        script_cta=req.script_cta or "",
+        caption_text=req.caption_text,
+        scripture_text=req.scripture_text or "",
+        recent_captions=recent_captions,
+        caption_source_hook=req.caption_source_hook,
+        caption_source_body=req.caption_source_body
+    )
+
+@app.get("/api/editorial-experiment-matrix")
+@app.get("/studio/api/editorial-experiment-matrix")
+def api_get_experiment_matrix():
+    from engine.editorial_captions import EXPERIMENT_MATRIX_18, get_next_recommended_experiment
+    from engine.results import list_results
+    records = list_results()
+    next_slot = get_next_recommended_experiment(records)
+    return {
+        "matrix": EXPERIMENT_MATRIX_18,
+        "total_recorded": len(records),
+        "next_slot": next_slot
+    }
+
+@app.get("/api/editorial-results/export/csv")
+@app.get("/studio/api/editorial-results/export/csv")
+def api_export_results_csv():
+    from engine.results import export_results_csv
+    csv_data = export_results_csv()
+    return PlainTextResponse(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="faithspark_experiment_results.csv"'}
+    )
+
+@app.get("/api/editorial-results/export/json")
+@app.get("/studio/api/editorial-results/export/json")
+def api_export_results_json():
+    from engine.results import export_results_json
+    json_data = export_results_json()
+    return Response(
+        content=json_data,
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="faithspark_experiment_results.json"'}
+    )
 
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")

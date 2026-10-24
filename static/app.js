@@ -534,8 +534,11 @@ function bootstrapJesusStudio() {
           : `~${seconds} s`)
       : "sin estimación todavía";
     const target = `objetivo: ~22 s`;
-    scriptDurationEstimate.textContent =
-      `Estimación orientativa de locución: ${words} palabras · ${duration}. ${target}. Cálculo aproximado a 125 palabras/min; el narrador, las pausas y el render pueden cambiar la duración real.`;
+    if (words) {
+      scriptDurationEstimate.innerHTML = `⏱️ <strong>Duración estimada:</strong> ${duration} (${words} palabras) · ${target}`;
+    } else {
+      scriptDurationEstimate.textContent = `Estimación de locución: genera un guion para calcular la duración estimada.`;
+    }
   }
 
   [scriptHook, scriptBody, scriptCta].forEach(field => {
@@ -771,10 +774,10 @@ function bootstrapJesusStudio() {
           scriptProviderBadge.style.color = "#059669";
           scriptProviderBadge.innerHTML = `🧠 <strong>Motor:</strong> IA Local activa (${escapeHtml(data.provider_used)}).`;
         } else if (prov.includes("fallback")) {
-          scriptProviderBadge.style.background = "rgba(245, 158, 11, 0.12)";
-          scriptProviderBadge.style.borderColor = "rgba(245, 158, 11, 0.35)";
-          scriptProviderBadge.style.color = "#d97706";
-          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Plantilla temática con rotación contextual (Ollama no disponible o sin conexión).`;
+          scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.08)";
+          scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.20)";
+          scriptProviderBadge.style.color = "#93c5fd";
+          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Plantilla temática con rotación contextual y catálogo bíblico.`;
         } else {
           scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.10)";
           scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.30)";
@@ -2000,36 +2003,7 @@ function bootstrapJesusStudio() {
 
   // ─── MODO DE PRODUCCIÓN (REELS 9:16 VS TARJETAS FEED 4:5) ─────────────
   function switchProductionMode(mode) {
-    const centerReels = document.getElementById("centerStagePanel");
-    const centerCards = document.getElementById("workspaceCards");
-    const previewReels = document.getElementById("previewSection");
-    const previewCards = document.getElementById("cardPreviewSection");
-    const sReels = document.getElementById("btnSidebarReels");
-    const sCards = document.getElementById("btnSidebarPrayerCards");
-    if (mode === "cards") {
-      if (tabModeReels) tabModeReels.classList.remove("active");
-      if (tabModeFeedCards) tabModeFeedCards.classList.add("active");
-      if (sReels) sReels.classList.remove("active");
-      if (sCards) sCards.classList.add("active");
-      if (centerReels) centerReels.style.display = "none";
-      if (centerCards) centerCards.style.display = "flex";
-      if (previewReels) previewReels.style.display = "none";
-      if (previewCards) previewCards.style.display = "flex";
-      if (!cardStudioInitialized) {
-        syncCardTemplate(cardThemeSelect ? cardThemeSelect.value : "morning_favor");
-        cardStudioInitialized = true;
-      }
-    } else {
-      if (tabModeFeedCards) tabModeFeedCards.classList.remove("active");
-      if (tabModeReels) tabModeReels.classList.add("active");
-      if (sCards) sCards.classList.remove("active");
-      if (sReels) sReels.classList.add("active");
-      if (centerCards) centerCards.style.display = "none";
-      if (centerReels) centerReels.style.display = "flex";
-      if (previewCards) previewCards.style.display = "none";
-      if (previewReels) previewReels.style.display = "flex";
-    }
-    return;
+    legacySwitchProductionMode(mode);
   }
   function legacySwitchProductionMode(mode) {
     if (mode === "cards") {
@@ -2536,6 +2510,8 @@ function bootstrapJesusStudio() {
 
   // Inicialización de Eventos Principales
   btnGenerateScript.addEventListener("click", triggerGenerateScript);
+  const btnTopGenerateScript = document.getElementById("btnTopGenerateScript");
+  if (btnTopGenerateScript) btnTopGenerateScript.addEventListener("click", triggerGenerateScript);
   btnSyncScriptToImage.addEventListener("click", triggerSyncPrompt);
   btnPreviewAudio.addEventListener("click", triggerAudioPreview);
   btnRenderVideo.addEventListener("click", triggerRenderVideo);
@@ -2624,12 +2600,7 @@ function bootstrapJesusStudio() {
   });
 
   function switchStage(stageNum) {
-    if (stageNum === 1) switchStep(1);
-    else if (stageNum === 2 || stageNum === 3) switchStep(2);
-    else if (stageNum === 4 || stageNum === 5) switchStep(3);
-    else if (stageNum === 6) switchStep(4);
-    else switchStep(stageNum);
-    return;
+    legacySwitchStage(stageNum);
   }
 
   function legacySwitchStage(stageNum) {

@@ -56,84 +56,15 @@ VOICES: Dict[str, Dict] = {
         "gender": "Hombre",
         "base_speed": 0.94,
     },
-    "jenny": {
-        "id": "jenny",
-        "engine": "edge",
-        "voice_name": "en-US-JennyNeural",
-        "name": "Jenny (Clara, Luminosa y Pacífica — Edge HD)",
-        "gender": "Mujer",
-        "base_speed": 0.94,
-    },
 
-    # ─── Kokoro-82M Neural Voices (Ultra-Natural Local 24kHz) ─────────────────
-    "adam": {
-        "id": "adam",
-        "engine": "kokoro",
-        "kokoro_voice": "am_adam",
-        "name": "Adam (Solemne, Profundo y Reverente — Kokoro Neural)",
-        "gender": "Hombre",
-        "base_speed": 0.90,
-    },
-    "michael": {
-        "id": "michael",
-        "engine": "kokoro",
-        "kokoro_voice": "am_michael",
-        "name": "Michael (Emocional, Cercano y Apasionado — Kokoro Neural)",
-        "gender": "Hombre",
-        "base_speed": 0.92,
-    },
-    "george": {
-        "id": "george",
-        "engine": "kokoro",
-        "kokoro_voice": "bm_george",
-        "name": "George (Elegante, Profético y Majestuoso — Kokoro Neural)",
-        "gender": "Hombre",
-        "base_speed": 0.88,
-    },
-    "sarah": {
-        "id": "sarah",
-        "engine": "kokoro",
-        "kokoro_voice": "af_sarah",
-        "name": "Sarah (Suave, Dulce y Reconfortante — Kokoro Neural)",
-        "gender": "Mujer",
-        "base_speed": 0.92,
-    },
-    "bella": {
-        "id": "bella",
-        "engine": "kokoro",
-        "kokoro_voice": "af_bella",
-        "name": "Bella (Tierna y Compasiva — Kokoro Neural)",
-        "gender": "Mujer",
-        "base_speed": 0.90,
-    },
-
-    # ─── Piper Local TTS (Offline Fallback) ───────────────────────────────────
-    "bryce": {
-        "id": "bryce",
-        "engine": "piper",
-        "model": "en_US-bryce-medium",
-        "name": "Bryce (Cálido y Directo — Piper Local)",
-        "gender": "Hombre",
-        "rate_factor": 0.90,
-    },
-    "ryan": {
-        "id": "ryan",
-        "engine": "piper",
-        "model": "en_US-ryan-high",
-        "name": "Ryan (Profundo y Resonante — Piper Local HD)",
-        "gender": "Hombre",
-        "rate_factor": 0.90,
-    }
 }
 
 LEGACY_VOICE_MAP = {
+    "en-US-GuyNeural": "guy",
     "en-US-ChristopherNeural": "christopher",
     "en-US-BrianNeural": "brian",
-    "en-US-GuyNeural": "guy",
-    "en-US-AndrewMultilingualNeural": "andrew",
-    "en-US-JennyNeural": "jenny",
-    "en_US-bryce-medium": "bryce",
-    "en_US-ryan-high": "ryan"
+    "en-US-AndrewMultilingualNeural": "andrew"
+
 }
 
 # Singletons
@@ -342,7 +273,7 @@ async def synthesize_speech(
 
     # Si la voz no existe, asignar la primera voz válida recomendada
     if not voice_cfg:
-        voice_cfg = VOICES.get("guy", list(VOICES.values())[0])
+        voice_cfg = VOICES["guy"]
 
     engine_pref = voice_cfg.get("engine", "kokoro")
     user_rate = _parse_rate(rate)
@@ -351,7 +282,7 @@ async def synthesize_speech(
     if tmp_wav == output_path:
         tmp_wav = output_path + ".tmp.wav"
 
-    kokoro_inst = _get_kokoro()
+    kokoro_inst = None
     engine_used = None
 
     # ─── Intento 1: Kokoro si está solicitado y disponible ───────────────────
@@ -453,7 +384,7 @@ async def synthesize_speech(
     # Extraer marcas de tiempo exactas por palabra con faster-whisper
     cues = _extract_whisper_word_cues(output_path)
 
-    # Si whisper no devolvió marcas, estimar según duración total del audio
+    # Si Whisper no devolvió marcas, usar segmentos aproximados
     if not cues:
         probe_cmd = [
             "ffprobe", "-v", "quiet",
@@ -471,7 +402,7 @@ async def synthesize_speech(
             dur = float(probe_out.decode().strip())
         except Exception:
             dur = 20.0
-        cues = _estimate_cues(clean_text, dur)
+        cues = _estimate_segment_cues(clean_text, dur)
 
     return cues
 

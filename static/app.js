@@ -13,6 +13,9 @@ function bootstrapJesusStudio() {
   const scriptHook = document.getElementById("scriptHook");
   const scriptBody = document.getElementById("scriptBody");
   const scriptCta = document.getElementById("scriptCta");
+  const narrationTypeSelect = document.getElementById("narrationTypeSelect");
+  const includeNarratedCta = document.getElementById("includeNarratedCta");
+  let promptsSourceSignature = "";
   const btnSyncScriptToImage = document.getElementById("btnSyncScriptToImage");
 
   const voiceSelect = document.getElementById("voiceSelect");
@@ -806,6 +809,8 @@ function bootstrapJesusStudio() {
           theme_key: themeSelect.value,
           custom_topic: customTopic ? customTopic.value : "",
           mode: durationMode,
+          narration_type: narrationTypeSelect?.value || "prayer",
+          include_cta: includeNarratedCta?.value !== "no",
           seamless_loop: false
         })
       });
@@ -838,7 +843,7 @@ function bootstrapJesusStudio() {
       if (scriptProviderBadge) {
         scriptProviderBadge.style.display = "block";
         const prov = (data.provider_used || "").toLowerCase();
-        if (prov.includes("ollama") && !prov.includes("fallback")) {
+        if (false) {
           scriptProviderBadge.style.background = "rgba(16, 185, 129, 0.12)";
           scriptProviderBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
           scriptProviderBadge.style.color = "#059669";
@@ -847,12 +852,12 @@ function bootstrapJesusStudio() {
           scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.08)";
           scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.20)";
           scriptProviderBadge.style.color = "#93c5fd";
-          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Plantilla temática con rotación contextual y catálogo bíblico.`;
+          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Compositor editorial local con variación narrativa.`;
         } else {
           scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.10)";
           scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.30)";
           scriptProviderBadge.style.color = "#2563eb";
-          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Plantilla temática estructurada con catálogo bíblico verificado.`;
+          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Compositor narrativo local con catálogo bíblico.`;
         }
       }
 
@@ -876,6 +881,7 @@ function bootstrapJesusStudio() {
       if (data.image_prompt) {
         aiImagePrompt.value = data.image_prompt;
       }
+      promptsSourceSignature = currentScriptSignature();
 
       // Auto-adaptar estilo de la insignia superior según la temática
       const tKey = (themeSelect.value || "").toLowerCase();
@@ -940,6 +946,11 @@ function bootstrapJesusStudio() {
   }
 
   // 5. Sincronizar Prompts de las 3 Escenas según el Guion Editado
+  function currentScriptSignature() {
+    return JSON.stringify([themeSelect?.value, narrationTypeSelect?.value,
+      customTopic?.value, scriptHook?.value, scriptBody?.value, scriptCta?.value]);
+  }
+
   async function triggerSyncPrompt() {
     const fullText = `${scriptHook.value} ${scriptBody.value} ${scriptCta.value}`.trim();
     if (!fullText) {
@@ -957,7 +968,11 @@ function bootstrapJesusStudio() {
         body: JSON.stringify({
           theme_key: themeSelect.value,
           script_text: fullText,
-          custom_topic: customTopic.value
+          custom_topic: customTopic.value,
+          narration_type: narrationTypeSelect?.value || "prayer",
+          script_hook: scriptHook.value,
+          script_body: scriptBody.value,
+          script_cta: scriptCta.value
         })
       });
       const data = await res.json();
@@ -965,6 +980,7 @@ function bootstrapJesusStudio() {
       if (data.scene_1_prompt && scene1PromptInput) scene1PromptInput.value = data.scene_1_prompt;
       if (data.scene_2_prompt && scene2PromptInput) scene2PromptInput.value = data.scene_2_prompt;
       if (data.scene_3_prompt && scene3PromptInput) scene3PromptInput.value = data.scene_3_prompt;
+      promptsSourceSignature = currentScriptSignature();
 
       btnSyncScriptToImage.textContent = "✅ ¡3 Escenas Sincronizadas con la Oración!";
       setTimeout(() => {
@@ -1395,7 +1411,7 @@ function bootstrapJesusStudio() {
     let p2 = scene2PromptInput ? scene2PromptInput.value.trim() : "";
     let p3 = scene3PromptInput ? scene3PromptInput.value.trim() : "";
 
-    if (!p1 || !p2 || !p3) {
+    if (!p1 || !p2 || !p3 || promptsSourceSignature !== currentScriptSignature()) {
       await triggerSyncPrompt();
       p1 = scene1PromptInput ? scene1PromptInput.value.trim() : "";
       p2 = scene2PromptInput ? scene2PromptInput.value.trim() : "";

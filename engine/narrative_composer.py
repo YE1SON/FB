@@ -247,7 +247,7 @@ def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent
             detail = f"Lord, You know the situation we carry today: {context}."
         body = f"{detail} {body}"
 
-    budget = {"micro": 23, "deep": 48, "story": 78}.get(mode, 48)
+    budget = {"micro": 14, "deep": 28, "story": 62}.get(mode, 28)
     body = _shorten_at_sentence(body, budget)
     recent_closings = [r.get("closing", "") for r in recent_records[-35:]]
     closings = theme.get("closings", [])

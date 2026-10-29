@@ -38,7 +38,7 @@ def calculate_jaccard_similarity(text1: str, text2: str, n: int = 2) -> float:
 class ScriptHistoryManager:
     """Gestiona el almacenamiento y comprobación de guiones recientes."""
 
-    def __init__(self, history_file: str = HISTORY_FILE, max_records: int = 30):
+    def __init__(self, history_file: str = HISTORY_FILE, max_records: int = 240):
         self.history_file = history_file
         self.max_records = max_records
         os.makedirs(os.path.dirname(os.path.abspath(self.history_file)), exist_ok=True)
@@ -67,7 +67,9 @@ class ScriptHistoryManager:
         hook: str,
         body: str,
         cta: str = "",
-        scene_prompts: Optional[List[str]] = None
+        scene_prompts: Optional[List[str]] = None,
+        closing: str = "",
+        narration_type: str = "prayer"
     ) -> None:
         """Registra un nuevo guion generado."""
         records = self.load_history()
@@ -77,6 +79,8 @@ class ScriptHistoryManager:
             "hook": hook.strip(),
             "body_snippet": body.strip()[:350],
             "cta": cta.strip(),
+            "closing": closing.strip(),
+            "narration_type": narration_type,
             "prompts_snippet": " | ".join(scene_prompts or [])[:200]
         }
         records.append(new_entry)

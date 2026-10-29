@@ -73,7 +73,7 @@ async def main():
     test_text = "The Lord is your keeper today. He will preserve your soul from all evil, and give you quiet rest tonight."
     audio_test = os.path.join(OUTPUTS_DIR, "phase8_test_audio.mp3")
 
-    v_key = "adam" if engines.get("kokoro") else "christopher"
+    v_key = "christopher"
     t0 = time.time()
     cues = await synthesize_speech(test_text, VOICES[v_key]["id"], audio_test, rate="+0%")
     dur = time.time() - t0

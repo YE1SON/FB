@@ -414,6 +414,7 @@
               <label for="aiImageProviderSelect">🤖 Motor de Generación IA</label>
               <select id="aiImageProviderSelect" class="form-control" style="font-weight: 600;">
                 <option value="puter" selected>💎 Puter AI (DALL-E 3 HD — Gratuito y Sin Límites)</option>
+                <option value="google_imagen">✨ Google Imagen 3 (Google AI Studio — 100-500/día Gratis)</option>
                 <option value="cloudflare_auto">⚡ Cloudflare Workers AI — Auto (Escena 1: Klein 9B + Escenas 2 y 3: Klein 4B)</option>
                 <option value="klein_9b">🌟 Cloudflare FLUX.2 Klein 9B (Ultra-Calidad Hero)</option>
                 <option value="klein_4b">⚡ Cloudflare FLUX.2 Klein 4B (Rápido + Consistencia de Referencia)</option>
@@ -474,6 +475,11 @@
               <button type="button" id="btnCloseAiKeys" class="btn btn-sm btn-outline">✕ Cerrar</button>
             </div>
             <div class="form-group mb-8">
+              <label>✨ Google AI Studio API Key (Para Google Imagen 3 — 100-500/día Gratis)</label>
+              <input type="password" id="geminiApiKeyInput" class="form-control" placeholder="Clave AIzaSy... (Obtén tu API key gratis en aistudio.google.com)">
+              <small class="text-muted" style="display: block; margin-top: 4px;">Cuota diaria gratuita: 100 a 500 imágenes por día sin costo ni tarjeta requerida.</small>
+            </div>
+            <div class="form-group mb-8">
               <label>⚡ Cloudflare Account ID</label>
               <input type="text" id="cfAccountIdInput" class="form-control" placeholder="ID de cuenta Cloudflare (ej. 752431fe...)">
             </div>
@@ -492,6 +498,17 @@
             <div class="flex-between">
               <span id="aiKeysStatusText" class="text-success text-sm"></span>
               <button type="button" id="btnSaveAiKeys" class="btn btn-sm btn-primary">💾 Guardar Credenciales</button>
+            </div>
+          </div>
+
+          <!-- Estado de Google Imagen 3 (Google AI Studio) -->
+          <div id="googleImagenStatusBox" class="puter-status-box mt-10" style="display: none;">
+            <div class="flex-gap-8 align-center">
+              <span id="googleImagenStatusDot" class="status-dot-green"></span>
+              <span id="googleImagenStatusText" class="text-sm">Google Imagen 3: Conectado (100–500 imágenes/día gratis)</span>
+            </div>
+            <div class="flex-gap-4">
+              <button type="button" id="btnConfigGoogleKey" class="btn btn-sm btn-outline">🔑 Configurar Clave</button>
             </div>
           </div>
 

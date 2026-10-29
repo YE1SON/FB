@@ -1135,9 +1135,28 @@ function bootstrapJesusStudio() {
   const aiKeysConfigBox = document.getElementById("aiKeysConfigBox");
   const aiHordeKeyInput = document.getElementById("aiHordeKeyInput");
   const hfTokenInput = document.getElementById("hfTokenInput");
+  const geminiApiKeyInput = document.getElementById("geminiApiKeyInput");
   const btnSaveAiKeys = document.getElementById("btnSaveAiKeys");
   const aiKeysStatusText = document.getElementById("aiKeysStatusText");
   const btnCopyPromptForExternal = document.getElementById("btnCopyPromptForExternal");
+
+  const googleImagenStatusBox = document.getElementById("googleImagenStatusBox");
+  const googleImagenStatusDot = document.getElementById("googleImagenStatusDot");
+  const googleImagenStatusText = document.getElementById("googleImagenStatusText");
+  const btnConfigGoogleKey = document.getElementById("btnConfigGoogleKey");
+
+  function updateGoogleImagenStatus(configured, maskedKey) {
+    if (!googleImagenStatusDot || !googleImagenStatusText) return;
+    if (configured) {
+      googleImagenStatusDot.className = "status-dot-green";
+      googleImagenStatusText.textContent = `Google Imagen 3: Conectado (${maskedKey || "Clave activa"}) — 100 a 500/día gratis`;
+      if (btnConfigGoogleKey) btnConfigGoogleKey.textContent = "✏️ Cambiar Clave";
+    } else {
+      googleImagenStatusDot.className = "status-dot-yellow";
+      googleImagenStatusText.textContent = "Google Imagen 3: Clave no configurada (Obténla gratis en aistudio.google.com)";
+      if (btnConfigGoogleKey) btnConfigGoogleKey.textContent = "🔑 Configurar Clave";
+    }
+  }
 
   function updateAiProviderUI() {
     if (!aiImageProviderSelect) return;
@@ -1145,6 +1164,9 @@ function bootstrapJesusStudio() {
     const puterBox = document.getElementById("puterStatusBox");
     if (puterBox) {
       puterBox.style.display = prov === "puter" ? "flex" : "none";
+    }
+    if (googleImagenStatusBox) {
+      googleImagenStatusBox.style.display = prov === "google_imagen" ? "flex" : "none";
     }
     const cfWidget = document.getElementById("cfNeuronWidget");
     if (cfWidget) {
@@ -1154,6 +1176,15 @@ function bootstrapJesusStudio() {
 
   if (aiImageProviderSelect) {
     aiImageProviderSelect.addEventListener("change", updateAiProviderUI);
+  }
+
+  if (btnConfigGoogleKey && aiKeysConfigBox) {
+    btnConfigGoogleKey.addEventListener("click", () => {
+      aiKeysConfigBox.style.display = "block";
+      if (geminiApiKeyInput) {
+        geminiApiKeyInput.focus();
+      }
+    });
   }
 
   if (btnToggleAiSettings && aiKeysConfigBox) {
@@ -1176,21 +1207,24 @@ function bootstrapJesusStudio() {
       const hfTok = hfTokenInput ? hfTokenInput.value.trim() : "";
       const cfAcc = cfAccountIdInput ? cfAccountIdInput.value.trim() : "";
       const cfTok = cfApiTokenInput ? cfApiTokenInput.value.trim() : "";
+      const gemKey = geminiApiKeyInput ? geminiApiKeyInput.value.trim() : "";
 
       try {
         localStorage.setItem("aihorde_api_key", hordeKey);
         localStorage.setItem("hf_token", hfTok);
         if (cfAcc) localStorage.setItem("cf_account_id", cfAcc);
         if (cfTok) localStorage.setItem("cf_api_token", cfTok);
+        if (gemKey) localStorage.setItem("gemini_api_key", gemKey);
 
-        await fetch("/api/save-image-keys", {
+        const saveRes = await fetch("/api/save-image-keys", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             aihorde_api_key: hordeKey,
             hf_token: hfTok,
             cf_account_id: cfAcc || undefined,
-            cf_api_token: cfTok || undefined
+            cf_api_token: cfTok || undefined,
+            gemini_api_key: gemKey || undefined
           })
         });
 
@@ -1199,7 +1233,13 @@ function bootstrapJesusStudio() {
           setTimeout(() => { if (aiKeysStatusText) aiKeysStatusText.textContent = ""; }, 4000);
         }
         await loadNeuronsStatus();
-        alert("¡Credenciales guardadas! Cloudflare Workers AI FLUX.2 Klein está listo.");
+        if (saveRes.ok) {
+          const respData = await saveRes.json();
+          if (respData.providers && respData.providers.google_imagen) {
+            updateGoogleImagenStatus(respData.providers.google_imagen.configured, respData.providers.google_imagen.key_masked);
+          }
+        }
+        alert("¡Credenciales guardadas con éxito!");
       } catch (err) {
         alert("Aviso al guardar claves: " + err.message);
       } finally {
@@ -1299,6 +1339,8 @@ function bootstrapJesusStudio() {
         refImageUrl = `/assets/images/${selectedImageName}`;
       }
 
+      const gemKey = (geminiApiKeyInput ? geminiApiKeyInput.value.trim() : "") || localStorage.getItem("gemini_api_key") || "";
+
       const res = await fetch("/api/generate-ai-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1310,6 +1352,7 @@ function bootstrapJesusStudio() {
           reference_image_url: refImageUrl,
           hf_token: hfTok,
           aihorde_api_key: hordeKey,
+          gemini_api_key: gemKey,
           scene_num: sceneNum,
           used_images: [selectedImageName, selectedImageName2, selectedImageName3].filter(Boolean)
         })
@@ -1364,9 +1407,10 @@ function bootstrapJesusStudio() {
     try {
       const activeProv = aiImageProviderSelect ? aiImageProviderSelect.value : "puter";
       const isPuter = activeProv === "puter";
+      const isGoogle = activeProv === "google_imagen";
 
       // Paso 1: Toma 1 (Apertura)
-      const m1Label = isPuter ? "Puter AI (DALL-E 3 HD)" : ((scene1ModelSelect && scene1ModelSelect.value === "klein_4b") ? "Klein 4B" : "Klein 9B (Ultra-Calidad)");
+      const m1Label = isPuter ? "Puter AI (DALL-E 3 HD)" : (isGoogle ? "Google Imagen 3" : ((scene1ModelSelect && scene1ModelSelect.value === "klein_4b") ? "Klein 4B" : "Klein 9B (Ultra-Calidad)"));
       if (batchGenProgressText) batchGenProgressText.textContent = `🎬 Generando Escena 1 de 3 (Apertura con ${m1Label})...`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Estableciendo personaje principal, vestimenta y luz natural fotorrealista...";
       await generateSingleScene(p1, 1, "Toma 1 (Apertura)");
@@ -1374,7 +1418,7 @@ function bootstrapJesusStudio() {
       updateSceneTabsUI();
 
       // Paso 2: Toma 2 (Intercesión)
-      const m2Label = isPuter ? "Puter AI (DALL-E 3 HD)" : ((scene2ModelSelect && scene2ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B");
+      const m2Label = isPuter ? "Puter AI (DALL-E 3 HD)" : (isGoogle ? "Google Imagen 3" : ((scene2ModelSelect && scene2ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B"));
       if (batchGenProgressText) batchGenProgressText.textContent = `✨ Generando Escena 2 de 3 (Intercesión con ${m2Label})...`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Conservando personaje, vestimenta y atmósfera en oración íntima...";
       await generateSingleScene(p2, 2, "Toma 2 (Intercesión)");
@@ -1382,14 +1426,14 @@ function bootstrapJesusStudio() {
       updateSceneTabsUI();
 
       // Paso 3: Toma 3 (Victoria)
-      const m3Label = isPuter ? "Puter AI (DALL-E 3 HD)" : ((scene3ModelSelect && scene3ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B");
+      const m3Label = isPuter ? "Puter AI (DALL-E 3 HD)" : (isGoogle ? "Google Imagen 3" : ((scene3ModelSelect && scene3ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B"));
       if (batchGenProgressText) batchGenProgressText.textContent = `🕊️ Generando Escena 3 de 3 (Victoria con ${m3Label})...`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Resolviendo la narrativa con el mismo personaje en paz y amanecer restaurado...";
       await generateSingleScene(p3, 3, "Toma 3 (Victoria)");
       await loadImages();
       updateSceneTabsUI();
 
-      const finalProvLabel = isPuter ? "Puter AI (DALL-E 3)" : (activeProv.startsWith("cloudflare") ? "Cloudflare Workers AI" : "IA");
+      const finalProvLabel = isPuter ? "Puter AI (DALL-E 3)" : (isGoogle ? "Google Imagen 3" : (activeProv.startsWith("cloudflare") ? "Cloudflare Workers AI" : "IA"));
       if (batchGenProgressText) batchGenProgressText.textContent = `✅ ¡Las 3 Escenas fueron creadas y asignadas con ${finalProvLabel}!`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Coherencia visual y fidelidad al guion aplicadas a las posiciones [1], [2] y [3].";
 
@@ -3397,10 +3441,19 @@ function bootstrapJesusStudio() {
       if (cfApiTokenInput && !cfApiTokenInput.value) {
         cfApiTokenInput.value = localStorage.getItem("cf_api_token") || "";
       }
+      if (geminiApiKeyInput && !geminiApiKeyInput.value) {
+        geminiApiKeyInput.value = localStorage.getItem("gemini_api_key") || "";
+      }
 
       const res = await fetch("/api/image-providers");
       if (res.ok) {
         const data = await res.json();
+        if (data.google_imagen) {
+          updateGoogleImagenStatus(data.google_imagen.configured, data.google_imagen.key_masked);
+          if (data.google_imagen.configured && geminiApiKeyInput && !geminiApiKeyInput.value) {
+            geminiApiKeyInput.placeholder = `Configurado en servidor (${data.google_imagen.key_masked})`;
+          }
+        }
         if (data.cloudflare && data.cloudflare.configured) {
           if (cfAccountIdInput && !cfAccountIdInput.value) {
             cfAccountIdInput.placeholder = `Configurado en servidor (${data.cloudflare.account_masked})`;

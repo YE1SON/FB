@@ -35,7 +35,8 @@ def load_keys() -> Dict[str, str]:
         "hf_token": os.environ.get("HF_TOKEN", os.environ.get("HUGGINGFACE_TOKEN", "")),
         "aihorde_api_key": os.environ.get("AIHORDE_API_KEY", "0000000000"),
         "cf_account_id": os.environ.get("CF_ACCOUNT_ID", ""),
-        "cf_api_token": os.environ.get("CF_API_TOKEN", "")
+        "cf_api_token": os.environ.get("CF_API_TOKEN", ""),
+        "gemini_api_key": os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
     }
     if os.path.exists(KEYS_FILE):
         try:
@@ -49,6 +50,8 @@ def load_keys() -> Dict[str, str]:
                     keys["cf_account_id"] = saved["cf_account_id"]
                 if saved.get("cf_api_token"):
                     keys["cf_api_token"] = saved["cf_api_token"]
+                if saved.get("gemini_api_key"):
+                    keys["gemini_api_key"] = saved["gemini_api_key"]
         except Exception as e:
             print(f"[ImageGen] Error al leer ai_keys.json: {e}")
     return keys
@@ -58,6 +61,7 @@ def save_keys(
     aihorde_api_key: Optional[str] = None,
     cf_account_id: Optional[str] = None,
     cf_api_token: Optional[str] = None,
+    gemini_api_key: Optional[str] = None,
     **kwargs
 ) -> Dict[str, str]:
     """Guarda claves en ai_keys.json."""
@@ -70,6 +74,8 @@ def save_keys(
         current["cf_account_id"] = cf_account_id.strip()
     if cf_api_token is not None:
         current["cf_api_token"] = cf_api_token.strip()
+    if gemini_api_key is not None:
+        current["gemini_api_key"] = gemini_api_key.strip()
 
     try:
         with open(KEYS_FILE, "w", encoding="utf-8") as f:
@@ -84,12 +90,24 @@ def get_providers_status() -> Dict:
     hf_tok = keys.get("hf_token", "")
     cf_acc = keys.get("cf_account_id", "")
     cf_tok = keys.get("cf_api_token", "")
+    gem_key = keys.get("gemini_api_key", "")
     cf_configured = bool(cf_acc and cf_tok)
 
     from engine.cloudflare_neurons import get_neurons_status
     neurons_status = get_neurons_status()
 
     return {
+        "google_imagen": {
+            "name": "✨ Google Imagen 3 (Google AI Studio — 100-500/día Gratis)",
+            "configured": bool(gem_key),
+            "key_masked": (gem_key[:6] + "..." + gem_key[-4:]) if gem_key else "",
+            "status": "Activo y Operativo (100–500 imágenes/día gratis)" if gem_key else "Clave no configurada (Obténla gratis en aistudio.google.com)"
+        },
+        "puter": {
+            "name": "💎 Puter AI (DALL-E 3 HD — Gratuito y Sin Límites)",
+            "configured": True,
+            "status": "Activo en Navegador (Créditos Renovables)"
+        },
         "cloudflare": {
             "name": "⚡ Cloudflare Workers AI — FLUX.2 Klein (Oficial)",
             "configured": cf_configured,
@@ -447,6 +465,114 @@ def generate_ai_horde(
 
     raise TimeoutError(f"AI Horde tardó más de {timeout_sec}s en la cola comunitaria.")
 
+# ─── Google Imagen 3 (Google AI Studio — Cuota Gratuita) ──────────────────────
+
+def generate_google_imagen(
+    prompt: str,
+    aspect_ratio: str = "9:16",
+    api_key: Optional[str] = None,
+    negative_prompt: Optional[str] = None
+) -> bytes:
+    """
+    Genera una imagen cinematográfica fotorrealista usando Google Imagen 3 (imagen-3.0-generate-002)
+    a través de Google AI Studio (API Key gratuita con cuota de 100 a 500 imágenes diarias).
+    """
+    key = (api_key or "").strip()
+    if not key:
+        keys = load_keys()
+        key = keys.get("gemini_api_key", "").strip()
+
+    if not key:
+        raise ValueError(
+            "Falta la clave API de Google AI Studio (GEMINI_API_KEY). "
+            "Para usar Google Imagen 3 con cuota gratuita (100 a 500 imágenes/día), obtén tu clave gratis en "
+            "https://aistudio.google.com e ingrésala en '⚙️ Tokens / Claves' -> 'Google AI Studio API Key'."
+        )
+
+    # Validar y mapear aspect ratio soportado por Google Imagen 3
+    valid_ratios = {"1:1", "3:4", "4:3", "9:16", "16:9"}
+    ratio = aspect_ratio if aspect_ratio in valid_ratios else "9:16"
+
+    neg_prompt = negative_prompt or (
+        "blurry, distorted, bad anatomy, deformed limbs, extra fingers, text, watermark, "
+        "logo, cartoon, 3d render, doll, plastic skin, oversaturated"
+    )
+
+    clean_prompt = prompt.strip()
+    if "cinematic" not in clean_prompt.lower() and "photograph" not in clean_prompt.lower():
+        clean_prompt = f"Cinematic 35mm photograph of {clean_prompt}, authentic human expression, natural skin texture, realistic documentary lighting, 8k resolution, photorealistic"
+
+    print(f"[Google Imagen 3] Solicitando inferencia (modelo=imagen-3.0-generate-002, ratio={ratio})...")
+
+    # Intento 1: SDK oficial google-genai
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=key)
+        config = types.GenerateImagesConfig(
+            number_of_images=1,
+            aspect_ratio=ratio,
+            output_mime_type="image/jpeg",
+            person_generation="ALLOW_ADULT",
+            negative_prompt=neg_prompt
+        )
+
+        response = client.models.generate_images(
+            model="imagen-3.0-generate-002",
+            prompt=clean_prompt,
+            config=config
+        )
+
+        if response and response.generated_images:
+            gen_img = response.generated_images[0]
+            if gen_img.image and gen_img.image.image_bytes:
+                print(f"[Google Imagen 3] Imagen generada con éxito ({len(gen_img.image.image_bytes)} bytes).")
+                return gen_img.image.image_bytes
+            elif getattr(gen_img, "rai_filtered_reason", None):
+                raise RuntimeError(f"Google Imagen 3 bloqueó la generación por políticas de contenido: {gen_img.rai_filtered_reason}")
+    except Exception as e:
+        err_msg = str(e)
+        if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg:
+            raise RuntimeError("Límite de solicitudes o cuota diaria alcanzada en Google AI Studio (429 RESOURCE_EXHAUSTED). Espera un minuto antes de reintentar.")
+        if "API_KEY_INVALID" in err_msg or "PERMISSION_DENIED" in err_msg or "403" in err_msg:
+            raise RuntimeError("La clave API de Google AI Studio es inválida o no tiene permisos. Verifica tu clave en aistudio.google.com.")
+        print(f"[Google Imagen 3] SDK reportó: {err_msg}. Intentando REST predict como respaldo...")
+
+    # Intento 2: REST predict directo como respaldo
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={key}"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "instances": [{"prompt": clean_prompt}],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": ratio,
+                "outputMimeType": "image/jpeg",
+                "personGeneration": "ALLOW_ADULT"
+            }
+        }
+        resp = requests.post(url, json=payload, headers=headers, timeout=50)
+        if resp.status_code == 200:
+            data = resp.json()
+            predictions = data.get("predictions", [])
+            if predictions and "bytesBase64Encoded" in predictions[0]:
+                b64_str = predictions[0]["bytesBase64Encoded"]
+                img_data = base64.b64decode(b64_str)
+                print(f"[Google Imagen 3] Imagen generada con éxito vía REST ({len(img_data)} bytes).")
+                return img_data
+        elif resp.status_code == 429:
+            raise RuntimeError("Cuota diaria o límite por minuto alcanzado en Google AI Studio (429). Espera un momento antes de volver a intentar.")
+        elif resp.status_code in (400, 403):
+            raise RuntimeError(f"Error de autenticación en Google AI Studio ({resp.status_code}): {resp.text[:200]}")
+        else:
+            raise RuntimeError(f"Error en Google Imagen 3 ({resp.status_code}): {resp.text[:200]}")
+    except Exception as rest_err:
+        if "Google AI Studio" in str(rest_err) or "Google Imagen 3" in str(rest_err):
+            raise
+        raise RuntimeError(f"Fallo de conexión con Google Imagen 3: {rest_err}")
+
+
 # ─── Función Maestra de Generación de Escena ──────────────────────────────────
 
 def generate_ai_scene_image(
@@ -460,6 +586,7 @@ def generate_ai_scene_image(
     used_images: Optional[List[str]] = None,
     hf_token: Optional[str] = None,
     aihorde_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None,
     **kwargs
 ) -> Dict:
     """
@@ -519,6 +646,12 @@ def generate_ai_scene_image(
             reference_image_path=reference_image_path,
             scene_num=scene_num
         )
+
+    # ─── Google Imagen 3 (Google AI Studio — Cuota Gratuita) ──────────────────
+    elif norm_provider in ("google_imagen", "imagen3", "google", "imagen_3"):
+        gem_key = gemini_api_key or keys.get("gemini_api_key", "")
+        img_bytes = generate_google_imagen(prompt=prompt, aspect_ratio=aspect_ratio, api_key=gem_key)
+        engine_used = "Google Imagen 3 (Google AI Studio)"
 
     # ─── Proveedores Alternativos (Solo si son explícitamente solicitados) ───────
     elif norm_provider == "pollinations":

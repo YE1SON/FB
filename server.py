@@ -173,6 +173,7 @@ class SaveKeysRequest(BaseModel):
     aihorde_api_key: Optional[str] = None
     cf_account_id: Optional[str] = None
     cf_api_token: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
 class GenerateAiImageRequest(BaseModel):
     prompt: str
@@ -183,6 +184,7 @@ class GenerateAiImageRequest(BaseModel):
     reference_image_path: Optional[str] = None
     hf_token: Optional[str] = None
     aihorde_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
     scene_num: int = 1
     used_images: Optional[List[str]] = None
 
@@ -196,6 +198,7 @@ class BatchGenerateAiImageRequest(BaseModel):
     reference_image_url: Optional[str] = None
     hf_token: Optional[str] = None
     aihorde_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
 class AudioPreviewRequest(BaseModel):
     text: str
@@ -531,7 +534,8 @@ def api_save_image_keys(req: SaveKeysRequest):
         hf_token=req.hf_token,
         aihorde_api_key=req.aihorde_api_key,
         cf_account_id=req.cf_account_id,
-        cf_api_token=req.cf_api_token
+        cf_api_token=req.cf_api_token,
+        gemini_api_key=req.gemini_api_key
     )
     return {"status": "success", "providers": get_providers_status()}
 
@@ -558,7 +562,8 @@ def api_generate_ai_image(req: GenerateAiImageRequest):
             scene_num=req.scene_num,
             used_images=req.used_images,
             hf_token=req.hf_token,
-            aihorde_api_key=req.aihorde_api_key
+            aihorde_api_key=req.aihorde_api_key,
+            gemini_api_key=req.gemini_api_key
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fallo al generar imagen con IA: {str(e)}")
@@ -594,7 +599,8 @@ def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
             reference_image_path=scene1_ref_path,
             scene_num=1,
             hf_token=req.hf_token,
-            aihorde_api_key=req.aihorde_api_key
+            aihorde_api_key=req.aihorde_api_key,
+            gemini_api_key=req.gemini_api_key
         )
         if req.use_scene1_reference and results[0] and results[0].get("filename"):
             cand_path = os.path.join(ASSETS_DIR, results[0]["filename"])
@@ -618,7 +624,8 @@ def api_generate_ai_image_batch(req: BatchGenerateAiImageRequest):
                 reference_image_path=scene1_ref_path if req.use_scene1_reference else None,
                 scene_num=idx + 1,
                 hf_token=req.hf_token,
-                aihorde_api_key=req.aihorde_api_key
+                aihorde_api_key=req.aihorde_api_key,
+                gemini_api_key=req.gemini_api_key
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Fallo al generar Escena {idx+1}: {str(e)}")

@@ -561,8 +561,16 @@ def generate_google_imagen(
                 img_data = base64.b64decode(b64_str)
                 print(f"[Google Imagen 3] Imagen generada con éxito vía REST ({len(img_data)} bytes).")
                 return img_data
-        elif resp.status_code == 429:
-            raise RuntimeError("Cuota diaria o límite por minuto alcanzado en Google AI Studio (429). Espera un momento antes de volver a intentar.")
+        elif resp.status_code == 404 or "not found" in resp.text.lower():
+            raise RuntimeError(
+                "Google AI Studio requiere tener vinculada una tarjeta o facturacion para habilitar Imagen 3 (en cuentas gratuitas sin tarjeta no esta activado). "
+                "Para generar imagenes 100% gratis y sin tarjeta, selecciona en el menu 'Puter AI (DALL-E 3 HD)' o 'Pollinations FLUX'."
+            )
+        elif resp.status_code == 429 or "limit: 0" in resp.text.lower():
+            raise RuntimeError(
+                "Google AI Studio ha establecido la cuota de imagenes de esta clave en cero (limit: 0). "
+                "Para generar gratis sin tarjeta, selecciona en el menu 'Puter AI (DALL-E 3 HD)' o 'Pollinations FLUX'."
+            )
         elif resp.status_code in (400, 403):
             raise RuntimeError(f"Error de autenticación en Google AI Studio ({resp.status_code}): {resp.text[:200]}")
         else:

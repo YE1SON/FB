@@ -147,6 +147,20 @@ def generate_narrative_prompts_for_script(
     if custom_topic and len(custom_topic.strip()) > 5:
         custom_context = f", reflecting the situation: '{custom_topic.strip()}'"
 
+    # Extraer contexto vivo de la narración real del guion para evitar prompts idénticos
+    narration_s1 = ""
+    narration_s2 = ""
+    narration_s3 = ""
+    if script_text and len(script_text.strip()) > 10:
+        clean_text = re.sub(r'[\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf"“”]', '', script_text)
+        sentences = [s.strip() for s in re.split(r'[.!?\n]+', clean_text) if len(s.strip()) > 8]
+        if sentences:
+            narration_s1 = f", depicting: '{sentences[0]}'"
+            if len(sentences) > 1:
+                narration_s2 = f", prayer focus: '{sentences[min(1, len(sentences)-1)]}'"
+            if len(sentences) > 2:
+                narration_s3 = f", atmosphere of: '{sentences[-1]}'"
+
     # Escena 1: Apertura e impacto emocional
     char = blueprint["character"]
     setting = blueprint["setting"]
@@ -155,21 +169,21 @@ def generate_narrative_prompts_for_script(
     # Se añade la referencia contextual de fe en Jesús para cumplir la coherencia temática
     # y la verificación de pruebas unitarias existentes
     prompt_1 = (
-        f"A cinematic candid photograph of {char} in {setting}, {s1_action}{custom_context}, "
+        f"A cinematic candid photograph of {char} in {setting}, {s1_action}{custom_context}{narration_s1}, "
         f"reflecting quiet faith in Jesus and emotional depth, {PHOTO_CUES}"
     )
 
     # Escena 2: Momento de fe e intercesión (diseñado para admitir imagen de referencia)
     s2_action = blueprint["scene_2"]
     prompt_2 = (
-        f"The same person and same clothing as image1 in {setting}, {s2_action}, "
+        f"The same person and same clothing as image1 in {setting}, {s2_action}{narration_s2}, "
         f"intimate moment of quiet prayer and inner surrender, natural light, {PHOTO_CUES}"
     )
 
     # Escena 3: Cierre, paz y esperanza restaurada
     s3_action = blueprint["scene_3"]
     prompt_3 = (
-        f"The same person as image1 in {setting}, {s3_action}, "
+        f"The same person as image1 in {setting}, {s3_action}{narration_s3}, "
         f"gentle natural illumination of hopeful restoration, relaxed peaceful expression, {PHOTO_CUES}"
     )
 

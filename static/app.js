@@ -1146,6 +1146,10 @@ function bootstrapJesusStudio() {
     if (puterBox) {
       puterBox.style.display = prov === "puter" ? "flex" : "none";
     }
+    const cfWidget = document.getElementById("cfNeuronWidget");
+    if (cfWidget) {
+      cfWidget.style.display = (prov.startsWith("cloudflare") || prov.startsWith("klein")) ? "block" : "none";
+    }
   }
 
   if (aiImageProviderSelect) {
@@ -1245,8 +1249,8 @@ function bootstrapJesusStudio() {
       }
       try {
         let enhancedPuterPrompt = cleanPrompt;
-        if (!enhancedPuterPrompt.toLowerCase().includes("cinematic")) {
-          enhancedPuterPrompt = `Ultra-realistic cinematic portrait of ${cleanPrompt}, warm divine golden hour lighting, sacred holy atmosphere, highly detailed, dramatic, majestic, sharp focus`;
+        if (!enhancedPuterPrompt.toLowerCase().includes("cinematic") && !enhancedPuterPrompt.toLowerCase().includes("photograph")) {
+          enhancedPuterPrompt = `Cinematic 35mm photograph of ${cleanPrompt}, realistic lighting, authentic skin texture, highly detailed, photorealistic, no text`;
         }
         const imgElement = await puter.ai.txt2img(enhancedPuterPrompt);
         let blob;
@@ -1358,31 +1362,35 @@ function bootstrapJesusStudio() {
     if (batchGenProgressBox) batchGenProgressBox.style.display = "block";
 
     try {
+      const activeProv = aiImageProviderSelect ? aiImageProviderSelect.value : "puter";
+      const isPuter = activeProv === "puter";
+
       // Paso 1: Toma 1 (Apertura)
-      const m1Label = (scene1ModelSelect && scene1ModelSelect.value === "klein_4b") ? "Klein 4B" : "Klein 9B (Ultra-Calidad)";
+      const m1Label = isPuter ? "Puter AI (DALL-E 3 HD)" : ((scene1ModelSelect && scene1ModelSelect.value === "klein_4b") ? "Klein 4B" : "Klein 9B (Ultra-Calidad)");
       if (batchGenProgressText) batchGenProgressText.textContent = `🎬 Generando Escena 1 de 3 (Apertura con ${m1Label})...`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Estableciendo personaje principal, vestimenta y luz natural fotorrealista...";
       await generateSingleScene(p1, 1, "Toma 1 (Apertura)");
       await loadImages();
       updateSceneTabsUI();
 
-      // Paso 2: Toma 2 (Intercesión con Referencia de Escena 1)
-      const m2Label = (scene2ModelSelect && scene2ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B";
+      // Paso 2: Toma 2 (Intercesión)
+      const m2Label = isPuter ? "Puter AI (DALL-E 3 HD)" : ((scene2ModelSelect && scene2ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B");
       if (batchGenProgressText) batchGenProgressText.textContent = `✨ Generando Escena 2 de 3 (Intercesión con ${m2Label})...`;
-      if (batchGenProgressSub) batchGenProgressSub.textContent = "Conservando personaje, vestimenta y atmósfera de la Escena 1 en oración íntima...";
+      if (batchGenProgressSub) batchGenProgressSub.textContent = "Conservando personaje, vestimenta y atmósfera en oración íntima...";
       await generateSingleScene(p2, 2, "Toma 2 (Intercesión)");
       await loadImages();
       updateSceneTabsUI();
 
-      // Paso 3: Toma 3 (Victoria con Referencia de Escena 1)
-      const m3Label = (scene3ModelSelect && scene3ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B";
+      // Paso 3: Toma 3 (Victoria)
+      const m3Label = isPuter ? "Puter AI (DALL-E 3 HD)" : ((scene3ModelSelect && scene3ModelSelect.value === "klein_9b") ? "Klein 9B" : "Klein 4B");
       if (batchGenProgressText) batchGenProgressText.textContent = `🕊️ Generando Escena 3 de 3 (Victoria con ${m3Label})...`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Resolviendo la narrativa con el mismo personaje en paz y amanecer restaurado...";
       await generateSingleScene(p3, 3, "Toma 3 (Victoria)");
       await loadImages();
       updateSceneTabsUI();
 
-      if (batchGenProgressText) batchGenProgressText.textContent = "✅ ¡Las 3 Escenas fueron creadas y asignadas con Cloudflare Workers AI!";
+      const finalProvLabel = isPuter ? "Puter AI (DALL-E 3)" : (activeProv.startsWith("cloudflare") ? "Cloudflare Workers AI" : "IA");
+      if (batchGenProgressText) batchGenProgressText.textContent = `✅ ¡Las 3 Escenas fueron creadas y asignadas con ${finalProvLabel}!`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Coherencia visual y fidelidad al guion aplicadas a las posiciones [1], [2] y [3].";
 
       showStageView();

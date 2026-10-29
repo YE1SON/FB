@@ -55,7 +55,7 @@ Los 26 temas están organizados en cinco pilares para facilitar la selección y 
 
 | Componente | Motor | Características |
 | :--- | :--- | :--- |
-| **Generador de Guiones** | Motor interno (`engine/scripts.py`) | Categorizado en 5 pilares temáticos con ganchos, oraciones, CTAs y referencias bíblicas verificadas. |
+| **Generador de Guiones** | Compositor local (`engine/narrative_composer.py`) | Categorizado en 5 pilares temáticos con ganchos, oraciones, CTAs y referencias bíblicas verificadas. |
 | **Voz en Inglés (TTS)** | **Edge-TTS** (Microsoft Neural Voices) | Voces solemnes y de dicción clara como `en-US-ChristopherNeural` (Voz de Jesús) y `en-US-GuyNeural`. |
 | **Generador de Imágenes IA** | Motor Directo FLUX (`1080x1920`) | Generación en formato vertical 9:16 con iluminación cinematográfica y composición equilibrada. |
 | **Galería de Imágenes** | Galería Bundled (`assets/images/`) | Retratos cinematográficos verticales 9:16 con mirada compasiva. Permite subir imágenes propias con validación estricta de formato y tamaño. |

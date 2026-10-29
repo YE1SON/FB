@@ -75,7 +75,7 @@ class ScriptHistoryManager:
             "timestamp": time.time(),
             "theme_key": theme_key,
             "hook": hook.strip(),
-            "body_snippet": body.strip()[:140],
+            "body_snippet": body.strip()[:350],
             "cta": cta.strip(),
             "prompts_snippet": " | ".join(scene_prompts or [])[:200]
         }
@@ -102,8 +102,8 @@ class ScriptHistoryManager:
                 return True, f"Gancho similar ({sim_hook:.0%}) a uno reciente: '{prev_hook[:40]}...'"
             
             if body and r.get("body_snippet"):
-                sim_body = calculate_jaccard_similarity(body[:140], r["body_snippet"])
-                if sim_body >= 0.75:
+                sim_body = calculate_jaccard_similarity(body[:300], r["body_snippet"][:300])
+                if sim_body >= 0.50:
                     return True, f"Cuerpo similar ({sim_body:.0%}) a uno reciente."
 
         return False, None

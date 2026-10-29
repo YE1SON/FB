@@ -1184,24 +1184,77 @@ def generate_internal_template_script(
         different_candidates = [h for h in hook_candidates if h.strip() != last_hook.strip()]
         chosen_hook = random.choice(different_candidates) if different_candidates else random.choice(hook_candidates)
 
-    # 2. Perspectiva / Desarrollo (Body)
+    # 2. Perspectiva / Desarrollo (Body): Variedad real y anti-repetición
+    from engine.thematic_variations import get_candidate_bodies_for_theme
+    from engine.history import calculate_jaccard_similarity
+
     perspectives = theme.get("perspectives", {})
     available_perspectives = list(perspectives.keys())
     chosen_perspective_key = tone if (tone in available_perspectives) else random.choice(available_perspectives or ["prayer"])
-    base_body = perspectives.get(chosen_perspective_key, perspectives.get("prayer", "Lord, cover our home in Your gentle peace."))
+
+    # Recoger candidatos de la variación temática
+    candidate_bodies = []
+    if tone and tone in perspectives and tone != "prayer":
+        candidate_bodies.append(perspectives[tone])
+    else:
+        candidate_bodies.extend(get_candidate_bodies_for_theme(chosen_key))
+        default_p = perspectives.get("prayer")
+        if default_p and default_p not in candidate_bodies:
+            candidate_bodies.append(default_p)
+        for p_key in ["heart_comfort", "scripture_reflection"]:
+            if p_key in perspectives and perspectives[p_key] not in candidate_bodies:
+                candidate_bodies.append(perspectives[p_key])
+
+    # Extraer cuerpos recientes del historial para evitar repeticiones
+    recent_bodies = [r.get("body_snippet", "") for r in recent_records[-15:] if r.get("body_snippet")]
+    last_body = recent_records[-1].get("body_snippet", "") if recent_records else ""
+
+    # Barajar candidatos
+    random.shuffle(candidate_bodies)
+
+    chosen_body = None
+    for cand in candidate_bodies:
+        is_dup = False
+        for past_b in recent_bodies:
+            if calculate_jaccard_similarity(cand, past_b) >= 0.40:
+                is_dup = True
+                break
+        if not is_dup:
+            chosen_body = cand
+            break
+
+    # Si todos coinciden o se han usado, elegir el más distante al último generado
+    if not chosen_body:
+        different = [c for c in candidate_bodies if c.strip() != last_body.strip()]
+        if different:
+            scored = sorted(different, key=lambda c: calculate_jaccard_similarity(c, last_body))
+            chosen_body = scored[0]
+        else:
+            chosen_body = random.choice(candidate_bodies) if candidate_bodies else perspectives.get("prayer", "Lord, cover our home in Your gentle peace.")
+
+    base_body = chosen_body
 
     # Adaptar cuerpo según tema personalizado
     if custom_topic and custom_topic.strip():
         topic_phrase = _translate_topic(custom_topic)
-        body = f"{base_body} Specifically, Lord, we bring {topic_phrase} into Your loving hands, trusting Your unfailing care."
+        personal_petitions = [
+            f"Specifically, Lord, we bring {topic_phrase} into Your loving hands, trusting Your unfailing care.",
+            f"Father, we especially place {topic_phrase} before You today, knowing that nothing is impossible with You.",
+            f"Lord Jesus, touch every circumstance regarding {topic_phrase}, granting wisdom, peace, and divine provision.",
+            f"In this moment, Lord, we surrender {topic_phrase} completely to You, resting in Your promise never to forsake us."
+        ]
+        chosen_petition = random.choice(personal_petitions)
+        body = f"{base_body} {chosen_petition}"
     else:
         body = base_body
 
-    # 3. Cierre (Closing)
+    # 3. Cierre (Closing): Rotación sin repetir el último
     closings = theme.get("closings", ["May His peace guard your heart and mind tonight."])
-    closing = random.choice(closings)
+    last_closing = recent_records[-1].get("closing", "") if (recent_records and "closing" in recent_records[-1]) else ""
+    diff_closings = [c for c in closings if c.strip() != last_closing.strip()]
+    closing = random.choice(diff_closings) if diff_closings else random.choice(closings)
 
-    # 4. CTA Dinámico y Reintegrado
+    # 4. CTA Dinámico y Reintegrado: Rotación sin repetir el último
     theme_ctas = theme.get("ctas", [])
     universal_ctas = [
         "Leave your first name below so we can keep you in our prayers tonight.",
@@ -1211,7 +1264,9 @@ def generate_internal_template_script(
         "Type Amen if you receive this blessing in your heart tonight."
     ]
     all_ctas = (theme_ctas + universal_ctas) if theme_ctas else universal_ctas
-    cta = random.choice(all_ctas)
+    last_cta = recent_records[-1].get("cta", "") if recent_records else ""
+    diff_ctas = [c for c in all_ctas if c.strip() != last_cta.strip()]
+    cta = random.choice(diff_ctas) if diff_ctas else random.choice(all_ctas)
 
     # Looping is a render choice, never permission to append an unfinished sentence.
 

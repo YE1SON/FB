@@ -617,7 +617,7 @@ def generate_ai_scene_image(
     norm_provider = provider.lower() if provider else "cloudflare_auto"
 
     # ─── Cloudflare Workers AI (Motor Principal Oficial) ──────────────────────
-    if norm_provider in ("cloudflare_auto", "auto", "cloudflare", "cloudflare_klein_9b", "cloudflare_klein_4b", "klein_9b", "klein_4b"):
+    if norm_provider in ("cloudflare_auto", "cloudflare", "cloudflare_klein_9b", "cloudflare_klein_4b", "klein_9b", "klein_4b"):
         # Determinar modelo específico
         target_model = None
         if model_key and model_key in CLOUDFLARE_MODELS:
@@ -652,6 +652,30 @@ def generate_ai_scene_image(
         gem_key = gemini_api_key or keys.get("gemini_api_key", "")
         img_bytes = generate_google_imagen(prompt=prompt, aspect_ratio=aspect_ratio, api_key=gem_key)
         engine_used = "Google Imagen 3 (Google AI Studio)"
+
+    # ─── Cascada Automática Resiliente (Pollinations -> FLUX -> Z-Image -> Horde)
+    elif norm_provider in ("auto", "cascada", "resilient"):
+        print(f"[ImageGen] Cascada Resiliente para escena {scene_num}: Intentando Pollinations FLUX...")
+        try:
+            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+            engine_used = "Pollinations FLUX (Cascada Resiliente)"
+        except Exception as e1:
+            print(f"[ImageGen] Cascada: Pollinations falló ({e1}), intentando FLUX.1 Schnell...")
+            try:
+                img_bytes = generate_flux_schnell_space(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+                engine_used = "FLUX.1 Schnell HD (Cascada Resiliente)"
+            except Exception as e2:
+                print(f"[ImageGen] Cascada: FLUX.1 falló ({e2}), intentando Z-Image Turbo...")
+                try:
+                    img_bytes = generate_z_image_turbo(prompt, aspect_ratio=aspect_ratio, hf_token=hf_tok)
+                    engine_used = "Z-Image Turbo (Cascada Resiliente)"
+                except Exception as e3:
+                    print(f"[ImageGen] Cascada: Z-Image falló ({e3}), intentando AI Horde...")
+                    try:
+                        img_bytes = generate_ai_horde(prompt, api_key=horde_key, aspect_ratio=aspect_ratio, timeout_sec=25)
+                        engine_used = "AI Horde (Cascada Resiliente)"
+                    except Exception as e4:
+                        raise RuntimeError(f"Cascada Resiliente falló en todos los motores: Pollinations ({e1}), FLUX ({e2}), Z-Image ({e3}), AI Horde ({e4})")
 
     # ─── Proveedores Alternativos (Solo si son explícitamente solicitados) ───────
     elif norm_provider == "pollinations":

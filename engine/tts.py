@@ -282,93 +282,21 @@ async def synthesize_speech(
     if tmp_wav == output_path:
         tmp_wav = output_path + ".tmp.wav"
 
-    kokoro_inst = None
-    engine_used = None
-
-    # ─── Intento 1: Kokoro si está solicitado y disponible ───────────────────
-    if engine_pref == "kokoro" and kokoro_inst:
-        try:
-            k_voice = voice_cfg.get("kokoro_voice", "am_adam")
-            base_speed = voice_cfg.get("base_speed", 0.90)
-            eff_speed = round(max(0.65, min(1.30, base_speed * user_rate)), 2)
-
-            def _run_kokoro():
-                import soundfile as sf
-                samples, sample_rate = kokoro_inst.create(
-                    clean_text, voice=k_voice, speed=eff_speed, lang="en-us"
-                )
-                sf.write(tmp_wav, samples, sample_rate)
-
-            await asyncio.to_thread(_run_kokoro)
-            if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
-                engine_used = "kokoro"
-        except Exception as e:
-            print(f"[TTS Fallback] Kokoro falló ({e}), intentando Edge-TTS...")
-
-    # ─── Intento 2: Edge-TTS (Excelente calidad neural sin costo) ─────────────
-    if not engine_used and (engine_pref == "edge" or engine_pref == "kokoro"):
-        try:
-            import edge_tts
-            v_name = voice_cfg.get("voice_name", "en-US-ChristopherNeural")
-            if engine_pref == "kokoro":
-                # Mapear voz masculina/femenina de Kokoro a Edge
-                v_name = "en-US-ChristopherNeural" if voice_cfg.get("gender") == "Hombre" else "en-US-JennyNeural"
-
-            rate_pct = int((user_rate - 1.0) * 100)
-            edge_rate_str = f"{rate_pct:+d}%"
-
-            communicate = edge_tts.Communicate(clean_text, v_name, rate=edge_rate_str)
-            await communicate.save(tmp_wav)
-            if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
-                engine_used = "edge_tts"
-        except Exception as e:
-            print(f"[TTS Fallback] Edge-TTS falló ({e}), intentando Piper local...")
-
-    # ─── Intento 3: Piper Local TTS (Offline Fallback) ────────────────────────
-    if not engine_used:
-        try:
-            model_name = voice_cfg.get("model", "en_US-bryce-medium")
-            model_path = os.path.join(VOICES_DIR, f"{model_name}.onnx")
-            config_path = os.path.join(VOICES_DIR, f"{model_name}.onnx.json")
-
-            if not os.path.exists(model_path):
-                # Probar cualquier modelo presente en assets/voices
-                models_present = [f for f in os.listdir(VOICES_DIR) if f.endswith(".onnx")] if os.path.exists(VOICES_DIR) else []
-                if models_present:
-                    model_path = os.path.join(VOICES_DIR, models_present[0])
-                    config_path = model_path + ".json"
-
-            if os.path.exists(model_path) and os.path.exists(config_path):
-                voice_factor = voice_cfg.get("rate_factor", 0.90)
-                eff_speed = max(0.65, min(1.30, user_rate * voice_factor))
-                length_scale = 1.0 / eff_speed
-
-                cmd = [
-                    sys.executable, "-m", "piper",
-                    "-m", model_path,
-                    "-c", config_path,
-                    "-f", tmp_wav,
-                    "--length-scale", str(round(length_scale, 3)),
-                    "--noise-scale", "0.667",
-                    "--noise-w-scale", "0.8"
-                ]
-
-                proc = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdin=asyncio.subprocess.PIPE,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    cwd=BASE_DIR
-                )
-                await proc.communicate(input=clean_text.encode("utf-8"))
-                if proc.returncode == 0 and os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
-                    engine_used = "piper"
-        except Exception as e:
-            print(f"[TTS Fallback] Piper local falló: {e}")
-
-    # Si todo falló, generar error con diagnóstico claro
-    if not engine_used or not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 1000:
-        raise RuntimeError("No se pudo generar audio con ningún motor de voz (Kokoro, Edge-TTS ni Piper). Verifica la conexión a internet o los modelos locales.")
+    # Cuatro voces permitidas: exclusivamente Edge-TTS (Guy, Christopher,
+    # Brian y Andrew). No se cambia silenciosamente a una voz eliminada.
+    if engine_pref != "edge":
+        raise RuntimeError("Solo están habilitadas las voces Edge-TTS seleccionadas.")
+    try:
+        import edge_tts
+        v_name = voice_cfg["voice_name"]
+        rate_pct = int((user_rate - 1.0) * 100)
+        communicate = edge_tts.Communicate(clean_text, v_name, rate=f"{rate_pct:+d}%")
+        await communicate.save(tmp_wav)
+    except Exception as exc:
+        raise RuntimeError(f"No fue posible sintetizar la voz {voice_key} con Edge-TTS: {exc}") from exc
+    if not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 1000:
+        raise RuntimeError(f"Edge-TTS no produjo audio para la voz {voice_key}.")
+    engine_used = "edge_tts"
 
     print(f"[TTS Synthesized] Motor: {engine_used} | Voz: {voice_cfg['name']} | Velocidad: {user_rate:.2f}x")
 

@@ -209,66 +209,88 @@ PHOTO_CUES = (
 )
 
 
-def generate_narrative_prompts_for_script(
-    theme_key: Optional[str] = None,
-    script_text: str = "",
-    custom_topic: Optional[str] = None
-) -> Dict[str, str]:
-    """
-    Genera 3 prompts fotorrealistas y cinematográficos basados en la narración real del guion:
-    - Escena 1: Establece la situación humana concreta, personaje real y Jesucristo presente a su lado con consuelo.
-    - Escena 2: Momento de intercesión y oración con Jesucristo posando su mano sobre el hombro/manos (mantiene el personaje de escena 1).
-    - Escena 3: Resolución, alivio, paz restaurada al amanecer y bendición de Jesucristo.
+def generate_narrative_prompts_for_script(theme_key=None, script_text="",
+                                          custom_topic=None, narration_type="prayer",
+                                          hook="", body="", cta=""):
+    """Diseña escenas de fe basadas en acciones del texto, sin interpretar el CTA.
 
-    Elimina cruces genéricas, estatuas o halos falsos, priorizando realismo documental y fidelidad al texto.
+    Toda escena incluye un elemento visual cristiano reconocible, y las tres
+    conservan personaje, vestuario y continuidad emocional.
     """
     blueprint = THEME_NARRATIVE_BLUEPRINTS.get(theme_key, DEFAULT_BLUEPRINT)
-
-    # Analizar si el usuario pasó una situación personalizada
-    custom_context = ""
-    if custom_topic and len(custom_topic.strip()) > 5:
-        custom_context = f", reflecting the situation: '{custom_topic.strip()}'"
-
-    # Extraer contexto vivo de la narración real del guion para anclar el prompt a la oración
-    narration_s1 = ""
-    narration_s2 = ""
-    narration_s3 = ""
-    if script_text and len(script_text.strip()) > 10:
-        clean_text = re.sub(r'[\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf"“”]', '', script_text)
-        sentences = [s.strip() for s in re.split(r'[.!?\n]+', clean_text) if len(s.strip()) > 8]
-        if sentences:
-            narration_s1 = f", depicting: '{sentences[0]}'"
-            if len(sentences) > 1:
-                narration_s2 = f", prayer focus: '{sentences[min(1, len(sentences)-1)]}'"
-            if len(sentences) > 2:
-                narration_s3 = f", atmosphere of: '{sentences[-1]}'"
-
-    # Escena 1: Apertura e impacto emocional con Jesús consolando al personaje
     char = blueprint["character"]
-    setting = blueprint["setting"]
-    s1_action = blueprint["scene_1"]
-    prompt_1 = (
-        f"A cinematic candid photograph of {char} in {setting}, {s1_action}{custom_context}{narration_s1}, "
-        f"reverently depicting Jesus Christ with compassionate eyes and loving divine presence, {PHOTO_CUES}"
+    place = blueprint["setting"]
+    sentences = lambda text: [
+        s.strip() for s in re.split(r"(?<=[.!?])\s+", (text or "").strip())
+        if len(s.strip()) > 7
+    ]
+    if not hook:
+        extracted = sentences(script_text)
+        hook = extracted[0] if extracted else ""
+    if not body:
+        extracted = sentences(script_text)
+        # El cuerpo textual no incluye la instrucción de interactuar si se
+        # especifica un CTA explícito; en el caso heredado, ignorar el cierre.
+        if cta and script_text.endswith(cta):
+            script_text = script_text[:-len(cta)].rstrip()
+            extracted = sentences(script_text)
+        body = " ".join(extracted[1:]) if len(extracted) > 1 else script_text
+    body_sentences = sentences(body)
+    first_beat = body_sentences[0] if body_sentences else hook
+    middle_beat = body_sentences[len(body_sentences)//2] if body_sentences else first_beat
+    closing_beat = body_sentences[-1] if body_sentences else first_beat
+    situation = (custom_topic or "").strip()[:180]
+    personal_note = f" Specific situation: {situation}." if len(situation) > 5 else ""
+    style = narration_type if narration_type in ("prayer","reflection","story","comfort") else "prayer"
+    visual_intent = {
+        "prayer": "a quiet spoken prayer, hands joined naturally, not theatrical",
+        "reflection": "a personal Bible reflection, fingers resting beside an open Bible",
+        "story": "a genuine human moment from a clearly illustrative everyday story",
+        "comfort": "tender presence and companionship instead of exaggerated triumph",
+    }[style]
+    # Los tres planos hacen referencia a la fe, pero alternan símbolos visibles
+    # para no convertir todo el Reel en tres retratos casi idénticos.
+    anchors = (
+        "Jesus Christ present with a compassionate expression; a modest wooden cross visible in the scene",
+        "an open Holy Bible with natural pages and a small wooden cross; Jesus Christ present quietly",
+        "a simple cross and an open Bible in the setting; Jesus Christ alongside the same person",
     )
-
-    # Escena 2: Momento de oración e imposición de manos de Jesús
-    s2_action = blueprint["scene_2"]
-    prompt_2 = (
-        f"The same person and same clothing as image1 in {setting}, {s2_action}{narration_s2}, "
-        f"intimate moment with Jesus Christ placing a loving, comforting hand in prayer, natural warm light, {PHOTO_CUES}"
-    )
-
-    # Escena 3: Cierre, paz, esperanza restaurada y bendición de Jesús
-    s3_action = blueprint["scene_3"]
-    prompt_3 = (
-        f"The same person as image1 in {setting}, {s3_action}{narration_s3}, "
-        f"gentle natural illumination of hopeful restoration with Jesus Christ standing beside them with a blessing smile, {PHOTO_CUES}"
-    )
-
-    return {
-        "prompt": prompt_1,
-        "scene_1_prompt": prompt_1,
-        "scene_2_prompt": prompt_2,
-        "scene_3_prompt": prompt_3
+    # En temas sensibles no mostrar resultados garantizados que el guion no afirma.
+    scene3_override = {
+        "sick_grandchild": "the same grandparent patiently holding the child's hand, quietly comforted, no implied cure",
+        "medical_fear": "the same patient taking a steady breath, feeling accompanied, without implying recovery",
+        "zero_balance": "the same adult making one practical plan at a table, calm without sudden money or wealth",
+        "job_breakthrough": "the same adult taking a small hopeful step, with no implied job offer",
+        "lost_child": "the same parent allowing a peaceful moment by the window, no invented reunion",
+        "grief_loss": "the same grieving person holding a cherished memory, no imaginary resurrection or reunion",
     }
+    scene1_action = blueprint["scene_1"]
+    scene2_action = blueprint["scene_2"]
+    scene3_action = scene3_override.get(theme_key, blueprint["scene_3"])
+    base = (
+        "realistic cinematic documentary photograph, 35mm lens, natural human emotion, "
+        "authentic skin texture, coherent space and lighting, vertical 9:16 composition, "
+        "no text, no letters, no subtitles, no watermark, no CGI"
+    )
+    prompt_1 = (
+        f"OPENING / what the viewer feels: {char} in {place}, {scene1_action}. "
+        f"Visual faith anchor: {anchors[0]}. Exact narration intention: {hook[:230]}. "
+        f"Convey the concrete emotion without adding unrelated objects.{personal_note} {base}"
+    )
+    prompt_2 = (
+        f"DEVELOPMENT / the action behind the words: SAME {char}, identical face, "
+        f"clothes and location as image1 in {place}; {scene2_action}. "
+        f"Focus: {visual_intent}. Visual faith anchor: {anchors[1]}. "
+        f"Spoken message being illustrated: {first_beat[:180]} {middle_beat[:180]}. "
+        f"Show an action that expresses that message rather than writing it. {base}"
+    )
+    prompt_3 = (
+        f"ENDING / emotionally earned next moment: SAME {char}, identical face and clothing "
+        f"as image1 in {place}; {scene3_action}. "
+        f"Visual faith anchor: {anchors[2]}. Narration resolution: {closing_beat[:220]}. "
+        "Hope can be quiet; do not invent a miraculous healing, sudden wealth or reunion "
+        "that the spoken narration never established. Never illustrate a request to like, "
+        f"comment or share. {base}"
+    )
+    return {"prompt":prompt_1,"scene_1_prompt":prompt_1,
+            "scene_2_prompt":prompt_2,"scene_3_prompt":prompt_3}

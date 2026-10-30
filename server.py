@@ -300,7 +300,7 @@ def api_generate_script(req: ScriptRequest):
 @app.get("/studio/api/editorial-config")
 def editorial_config():
     from engine.editorial import SERIES
-    return {"series": SERIES, "primary_voices": ["guy", "christopher", "brian", "andrew"]}
+    return {"series": SERIES, "primary_voices": ["guy", "christopher", "brian"]}
 
 @app.post("/api/editorial-review")
 @app.post("/studio/api/editorial-review")

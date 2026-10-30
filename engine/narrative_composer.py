@@ -308,7 +308,9 @@ def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent
     recent_bodies = [r.get("body_snippet", "") for r in recent_records[-150:]]
     candidates = _build_body_candidates(theme_key, theme, style, context)
     angle = _pick_angle(theme_key, style, recent_records)
-    body = _pick_by_history(candidates, recent_bodies, threshold=0.40)
+    angle_index = NARRATIVE_ANGLES.index(angle)
+    angle_pool = candidates[angle_index::len(NARRATIVE_ANGLES)] or candidates
+    body = _pick_by_history(angle_pool, recent_bodies, threshold=0.40)
     # Introducir la necesidad personalizada de forma visible y pertinente.
     if custom_topic and custom_topic.strip() and custom_topic.lower() not in body.lower():
         if style == "prayer":

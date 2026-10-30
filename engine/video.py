@@ -97,7 +97,8 @@ def build_3scene_video_filter(
     duration: float,
     camera_motion: str = "zoom_in",
     fps: int = 30,
-    transition_style: str = "fade"
+    transition_style: str = "fade",
+    scene_breaks: Optional[Tuple[float, float]] = None
 ) -> Tuple[str, float, float]:
     """
     Construye el filter_complex de FFmpeg con soporte unificado para:
@@ -113,8 +114,13 @@ def build_3scene_video_filter(
     t2 = round(max(duration * 0.60, 4.2), 2)
     d1 = 0.35
     d2 = 0.50
-    offset1 = round(max(3.20 - d1, 0.5), 2)
-    offset2 = round(max(t2 - d2, offset1 + 1.2), 2)
+    if scene_breaks and len(scene_breaks) == 2:
+        first, second = scene_breaks
+        offset1 = round(max(float(first) - d1, 0.5), 2)
+        offset2 = round(max(float(second) - d2, offset1 + 1.2), 2)
+    else:
+        offset1 = round(max(3.20 - d1, 0.5), 2)
+        offset2 = round(max(t2 - d2, offset1 + 1.2), 2)
 
     dur1 = offset1 + d1 + 0.5
     dur2 = (offset2 - offset1) + d2 + 0.5
@@ -271,7 +277,8 @@ def render_reel(
     generate_trending_audio_version: bool = False,
     seamless_loop: bool = False,
     master_lufs: bool = True,
-    target_duration: Optional[float] = None
+    target_duration: Optional[float] = None,
+    scene_breaks: Optional[Tuple[float, float]] = None
 ) -> Dict[str, object]:
     """
     Renderiza el Reel cristiano en formato vertical 9:16 con FFmpeg:
@@ -311,7 +318,8 @@ def render_reel(
         duration=duration,
         camera_motion=camera_motion,
         fps=fps,
-        transition_style=transition_style
+        transition_style=transition_style,
+        scene_breaks=scene_breaks
     )
 
     cmd = ["ffmpeg", "-y", "-threads", "4"]

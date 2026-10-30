@@ -50,8 +50,8 @@ class LocalEditorialEngineTests(unittest.TestCase):
         self.assertNotIn("Share this reel", p["scene_3_prompt"])
         self.assertIn("Holy Bible", p["scene_2_prompt"])
 
-    def test_four_and_only_four_voices(self):
-        self.assertEqual(set(VOICES), {"guy","christopher","brian","andrew"})
+    def test_three_and_only_three_voices(self):
+        self.assertEqual(set(VOICES), {"guy","christopher","brian"})
         self.assertTrue(all(v["engine"] == "edge" for v in VOICES.values()))
 
     def test_recent_scripts_rotate(self):

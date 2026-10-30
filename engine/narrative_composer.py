@@ -173,88 +173,204 @@ def _pick_by_history(candidates, recent_texts, threshold=0.5):
         return ""
     random.shuffle(items)
     def score(candidate):
-        return max((calculate_jaccard_similarity(candidate, old) for old in recent_texts if old), default=0.0)
-    good = [c for c in items if score(c) < threshold]
+        relevant = [old for old in recent_texts[-120:] if old]
+        similarities = [calculate_jaccard_similarity(candidate, old) for old in relevant]
+        peak = max(similarities, default=0.0)
+        # Penalizar especialmente repeticiones en las últimas seis piezas.
+        close = max(similarities[-6:], default=0.0)
+        exact_uses = sum(candidate.casefold() == old.casefold() for old in relevant[-60:])
+        return peak + (0.50 * close) + (0.09 * exact_uses)
+    good = [candidate for candidate in items if score(candidate) < threshold]
     return min(good or items, key=score)
 
 def _shorten_at_sentence(text, max_words):
+    """Conserva ideas completas en vez de cortar arbitrariamente un texto."""
     parts = _sentences(text)
     chosen = []
     for sentence in parts:
-        if len((" ".join(chosen + [sentence])).split()) > max_words:
+        if len((" ".join(chosen + [sentence])).split()) <= max_words:
+            chosen.append(sentence)
+        elif chosen:
             break
-        chosen.append(sentence)
-    return " ".join(chosen) if chosen else (parts[0] if parts else text)
+    if chosen:
+        return " ".join(chosen)
+    # Una oración única demasiado extensa: cortar primero por una cláusula natural.
+    if parts:
+        clauses = re.split(r"(?<=[,;:])\s+", parts[0])
+        if len(clauses) > 1:
+            partial = ""
+            for clause in clauses:
+                if len((partial + " " + clause).split()) > max_words:
+                    break
+                partial = (partial + " " + clause).strip()
+            if partial:
+                return partial.rstrip(",;: ") + "."
+    words = (parts[0] if parts else text).split()
+    if len(words) <= max_words:
+        return " ".join(words)
+    return " ".join(words[:max_words]).rstrip(",;:- ") + "."
+
+
+# Formatos editoriales con arcos distintos. Las situaciones, peticiones y
+# reflexiones provienen del tema; las estructuras no inventan testimonios reales.
+NARRATIVE_ANGLES = (
+    "specific_moment", "quiet_question", "daily_grace", "scripture_lens",
+    "small_next_step", "compassion", "before_after_feeling", "shared_humanity"
+)
+
+def _first_sentences(text, count=1):
+    return " ".join(_sentences(text)[:count])
+
+def _last_sentence(text):
+    parts = _sentences(text)
+    return parts[-1] if parts else text
+
+def build_hook(theme, style, custom_topic, recent_records):
+    """Rotación de ganchos para no reabrir cada Reel con la misma fórmula."""
+    hooks = list(theme.get("hooks", []))
+    context = (custom_topic or theme.get("human_situation", "")).strip().rstrip(".")
+    # La situación existe como necesidad real de la audiencia, no como
+    # testimonio verificado de una persona concreta.
+    if context:
+        hooks += [
+            f"Imagine a familiar moment: {context}.",
+            f"Here is the quieter side of faith: {context}.",
+            f"Some burdens remain unseen: {context}.",
+            f"Behind today's prayer is this ordinary moment: {context}.",
+        ]
+    if style == "reflection":
+        hooks += ["A Scripture can meet us in an ordinary moment.",
+                  "Sometimes a verse feels different after a hard day."]
+    elif style == "story":
+        hooks += ["Picture one ordinary moment where hope feels far away.",
+                  "Sometimes a story begins in a completely ordinary room."]
+    elif style == "comfort":
+        hooks += ["There are days when a little compassion matters most.",
+                  "Not every struggle is visible to those around us."]
+    recent = [r.get("hook", "") for r in recent_records[-120:]]
+    return _pick_by_history(hooks, recent, threshold=0.48)
+
+def _build_body_candidates(theme_key, theme, style, context):
+    perspectives = theme.get("perspectives", {})
+    prayers = list(dict.fromkeys(
+        get_candidate_bodies_for_theme(theme_key) + [perspectives.get("prayer", "")]
+    ))
+    prayers = [p for p in prayers if p]
+    scripture = perspectives.get("scripture_reflection", "").strip()
+    comfort = perspectives.get("heart_comfort", "").strip()
+    central = theme.get("central_idea", "").strip()
+    candidates = []
+    if style == "prayer":
+        for i, one in enumerate(prayers):
+            second = prayers[(i + 2) % len(prayers)]
+            third = prayers[(i + 3) % len(prayers)]
+            candidates.extend([
+                one,
+                f"{_first_sentences(one)} {_last_sentence(second)}",
+                f"{_first_sentences(second, 2)} {_last_sentence(third)}",
+                f"{_first_sentences(one)} {_first_sentences(third)}",
+                f"Lord Jesus, You see this quiet human struggle. {_first_sentences(one, 2)}",
+                f"Heavenly Father, meet us in this ordinary moment. {_first_sentences(second, 2)}",
+            ])
+    elif style == "reflection":
+        for start in REFLECTION_OPENERS:
+            candidates.extend([
+                f"{start} {scripture} {comfort}",
+                f"{start} {comfort} {scripture}",
+                f"{scripture} {central}",
+            ])
+        candidates.extend([f"{comfort} {scripture}", f"{scripture} {comfort}"])
+    elif style == "comfort":
+        for start in COMFORT_OPENERS:
+            candidates.extend([
+                f"{start} {comfort} {central}",
+                f"{start} {scripture} {comfort}",
+                f"{start} {central} {comfort}",
+            ])
+    else:
+        # Nada de «una persona me contó» o testimonios que parecen reales.
+        for start in STORY_OPENERS:
+            candidates.extend([
+                f"{start} {context}. {comfort} {central}",
+                f"{start} {context}. {scripture} {comfort}",
+                f"{start} {context}. {central} {comfort}",
+            ])
+    return list(dict.fromkeys(x.strip() for x in candidates if x.strip()))
+
+def _pick_angle(theme_key, style, recent_records):
+    recent = [r.get("narrative_angle") for r in recent_records[-150:]
+              if r.get("theme_key") == theme_key and r.get("narration_type") == style]
+    ranked = [(sum(a == r for r in recent[-32:]), a) for a in NARRATIVE_ANGLES]
+    fewest = min(x[0] for x in ranked)
+    return random.choice([a for count, a in ranked if count == fewest])
 
 def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent_records, include_cta=True):
-    """Devuelve texto narrativo, cierre y CTA alineados con un estilo explícito."""
+    """Compone devocionales diversos, anclados en necesidades humanas específicas.
+
+    No usa LLM ni atribuye experiencias inventadas a personas reales.
+    """
     style = narration_type if narration_type in NARRATION_TYPES else "prayer"
-    candidates = get_candidate_bodies_for_theme(theme_key)
-    perspectives = theme.get("perspectives", {})
-    recent_bodies = [r.get("body_snippet", "") for r in recent_records[-90:]]
-    context = custom_topic.strip().rstrip(".") if custom_topic else theme.get("human_situation", "").strip().rstrip(".")
-    central = theme.get("central_idea", "").strip()
-    prayer_candidates = list(dict.fromkeys(candidates + [perspectives.get("prayer", "")]))
-    prayer_candidates = [x for x in prayer_candidates if x]
-
-    if style == "prayer":
-        # Aumenta las combinaciones sin añadir frases genéricas: un inicio y
-        # petición de la misma temática pueden provenir de variantes distintas.
-        constructed = []
-        for first in prayer_candidates:
-            sentences = _sentences(first)
-            for second in prayer_candidates:
-                more = _sentences(second)
-                if not sentences or not more:
-                    continue
-                if first == second:
-                    constructed.append(first)
-                else:
-                    constructed.append(" ".join([sentences[0], *sentences[1:2], more[-1]]))
-        body = _pick_by_history(constructed, recent_bodies, threshold=0.43)
-    elif style == "reflection":
-        scripture = perspectives.get("scripture_reflection", "")
-        human = perspectives.get("heart_comfort", "")
-        alternatives = [
-            f"{intro} {scripture} {human}" for intro in REFLECTION_OPENERS
-        ] + [f"{human} {scripture}", f"{scripture} {human}"]
-        body = _pick_by_history(alternatives, recent_bodies)
-    elif style == "comfort":
-        human = perspectives.get("heart_comfort", "")
-        reflection = perspectives.get("scripture_reflection", "")
-        alternatives = [
-            f"{intro} {human} {reflection}" for intro in COMFORT_OPENERS
-        ] + [f"{human} {central}", f"{reflection} {human}"]
-        body = _pick_by_history(alternatives, recent_bodies)
-    else:
-        # Un relato es una ilustración imaginada: no una falsa historia real.
-        lesson = perspectives.get("story_lesson", "")
-        comfort = perspectives.get("heart_comfort", "")
-        scenarios = [
-            f"{opener} {context}. {comfort} {central}"
-            for opener in STORY_OPENERS
-        ] + [
-            f"{opener} {context}. {lesson} {comfort}"
-            for opener in STORY_OPENERS if "once said" not in lesson.lower()
-        ]
-        body = _pick_by_history(scenarios, recent_bodies, threshold=0.48)
-
-    # Una situación personalizada debe aparecer en el desarrollo, pero no
-    # inyectamos fórmulas vacías ni afirmamos que la oración garantiza resultados.
+    context = (custom_topic or theme.get("human_situation", "")).strip().rstrip(".")
+    recent_bodies = [r.get("body_snippet", "") for r in recent_records[-150:]]
+    candidates = _build_body_candidates(theme_key, theme, style, context)
+    angle = _pick_angle(theme_key, style, recent_records)
+    angle_index = NARRATIVE_ANGLES.index(angle)
+    angle_pool = candidates[angle_index::len(NARRATIVE_ANGLES)] or candidates
+    body = _pick_by_history(angle_pool, recent_bodies, threshold=0.40)
+    # Introducir la necesidad personalizada de forma visible y pertinente.
     if custom_topic and custom_topic.strip() and custom_topic.lower() not in body.lower():
-        detail = f"Bring this particular concern into prayer: {context}."
         if style == "prayer":
-            detail = f"Lord, You know the situation we carry today: {context}."
-        body = f"{detail} {body}"
-
-    budget = {"micro": 14, "deep": 28, "story": 62}.get(mode, 28)
-    body = _shorten_at_sentence(body, budget)
-    recent_closings = [r.get("closing", "") for r in recent_records[-35:]]
+            intro = f"Lord Jesus, You know our concern: {context}."
+        elif style == "story":
+            intro = f"Imagine this moment: {context}."
+        elif style == "reflection":
+            intro = f"Consider the weight of this situation: {context}."
+        else:
+            intro = f"If you're carrying a concern about {context}, you're not invisible."
+        body = f"{intro} {body}"
+    # Mantener una duración estimada comprensible y sin cortes a mitad de idea.
+    budgets = {"micro": 12, "deep": 29, "story": 60}
+    budget = budgets.get(mode, 29)
+    if mode == "micro":
+        # A true micro-reflection must be a grammatical complete thought.
+        # Prefer compact *full* sentences from the chosen thematic language.
+        compact = [
+            sentence for candidate in candidates for sentence in _sentences(candidate)
+            if 7 <= len(sentence.split()) <= 12
+            and not sentence.lower().startswith((
+                "scripture offers", "an honest question", "a biblical reminder",
+                "picture an ordinary", "imagine this", "consider this", "faith does not"
+            ))
+        ]
+        if compact:
+            body = _pick_by_history(compact, recent_bodies, 0.55)
+        else:
+            body = _shorten_at_sentence(body, budget)
+    else:
+        body = _shorten_at_sentence(body, budget)
+    # Never publish an introduction without the substance of the reflection.
+    # For example, "Scripture offers a quieter way to see this:" by itself
+    # would be a hollow Reel. Fall back to a relevant, full theme-specific idea.
+    if len(body.split()) < max(9, int(budget * 0.48)):
+        preferred = {
+            "reflection": "scripture_reflection",
+            "comfort": "heart_comfort",
+            "story": "heart_comfort",
+            "prayer": "prayer",
+        }[style]
+        core = theme.get("perspectives", {}).get(preferred, "")
+        if core:
+            alternative = _shorten_at_sentence(core, budget)
+            if len(alternative.split()) > len(body.split()):
+                body = alternative
     closings = theme.get("closings", [])
-    closing = "" if mode == "micro" else _pick_by_history(closings, recent_closings, 0.6)
-
+    recent_closings = [r.get("closing", "") for r in recent_records[-55:]]
+    closing = "" if mode == "micro" else _pick_by_history(closings, recent_closings, 0.50)
     ctas = CONTEXTUAL_CTAS.get(theme_key, [])
-    recent_ctas = [r.get("cta", "") for r in recent_records[-75:]]
-    # Evitar llamadas a la acción genéricas incluso al agotar variaciones.
+    recent_ctas = [r.get("cta", "") for r in recent_records[-85:]]
+    if mode == "micro" and ctas:
+        shortest = min(len(x.split()) for x in ctas)
+        ctas = [x for x in ctas if len(x.split()) <= shortest + 2]
     cta = _pick_by_history(ctas, recent_ctas, 0.55) if include_cta else ""
-    return {"body": body, "closing": closing, "cta": cta, "narration_type": style}
+    return {"body": body, "closing": closing, "cta": cta,
+            "narration_type": style, "narrative_angle": angle}

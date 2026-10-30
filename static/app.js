@@ -16,6 +16,7 @@ function bootstrapJesusStudio() {
   const narrationTypeSelect = document.getElementById("narrationTypeSelect");
   const includeNarratedCta = document.getElementById("includeNarratedCta");
   let promptsSourceSignature = "";
+  let generatedImagesSignature = "";
   const btnSyncScriptToImage = document.getElementById("btnSyncScriptToImage");
 
   const voiceSelect = document.getElementById("voiceSelect");
@@ -606,7 +607,8 @@ function bootstrapJesusStudio() {
           ? `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, "0")} s`
           : `~${seconds} s`)
       : "sin estimación todavía";
-    const target = `objetivo: ~22 s`;
+    const targetSec = ({ micro: 15, deep: 22, story: 38 })[scriptDurationMode?.value || "deep"] || 22;
+    const target = `referencia: ~${targetSec} s (la voz determina la duración real)`;
     if (words) {
       scriptDurationEstimate.innerHTML = `⏱️ <strong>Duración estimada:</strong> ${duration} (${words} palabras) · ${target}`;
     } else {
@@ -963,6 +965,7 @@ function bootstrapJesusStudio() {
         })
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || `Error HTTP ${res.status}`);
       if (data.prompt) aiImagePrompt.value = data.prompt;
       if (data.scene_1_prompt && scene1PromptInput) scene1PromptInput.value = data.scene_1_prompt;
       if (data.scene_2_prompt && scene2PromptInput) scene2PromptInput.value = data.scene_2_prompt;
@@ -979,9 +982,11 @@ function bootstrapJesusStudio() {
       if (scene1PromptInput) {
         scene1PromptInput.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+      return true;
     } catch (err) {
       alert("Error al sincronizar prompts: " + err.message);
       btnSyncScriptToImage.disabled = false;
+      return false;
     }
   }
 
@@ -1399,7 +1404,11 @@ function bootstrapJesusStudio() {
     let p3 = scene3PromptInput ? scene3PromptInput.value.trim() : "";
 
     if (!p1 || !p2 || !p3 || promptsSourceSignature !== currentScriptSignature()) {
-      await triggerSyncPrompt();
+      const synced = await triggerSyncPrompt();
+      if (!synced) {
+        btnGenerate3ScenesAi.disabled = false;
+        return;
+      }
       p1 = scene1PromptInput ? scene1PromptInput.value.trim() : "";
       p2 = scene2PromptInput ? scene2PromptInput.value.trim() : "";
       p3 = scene3PromptInput ? scene3PromptInput.value.trim() : "";
@@ -1440,6 +1449,7 @@ function bootstrapJesusStudio() {
       if (batchGenProgressText) batchGenProgressText.textContent = `✅ ¡Las 3 Escenas fueron creadas y asignadas con ${finalProvLabel}!`;
       if (batchGenProgressSub) batchGenProgressSub.textContent = "Coherencia visual y fidelidad al guion aplicadas a las posiciones [1], [2] y [3].";
 
+      generatedImagesSignature = currentScriptSignature();
       showStageView();
       setTimeout(() => {
         if (batchGenProgressBox) batchGenProgressBox.style.display = "none";
@@ -1981,6 +1991,9 @@ function bootstrapJesusStudio() {
       alert("Escribe una apertura y un mensaje. La despedida o llamada a la acción es opcional.");
       return;
     }
+    if (generatedImagesSignature && generatedImagesSignature !== currentScriptSignature()) {
+      if (!confirm("Cambiaste la narración después de generar las imágenes. Las escenas podrían no coincidir. ¿Deseas continuar igualmente con estas imágenes?")) return;
+    }
 
     // Scroll al reproductor en móviles si está fuera de pantalla
     if (window.innerWidth <= 960) {
@@ -2032,7 +2045,7 @@ function bootstrapJesusStudio() {
           hook: hook,
           body: body,
           cta: cta,
-          target_duration_sec: 22.0,
+          target_duration_sec: ({ micro: 15, deep: 22, story: 38 })[scriptDurationMode?.value || "deep"] || 22,
           duration_mode: scriptDurationMode?.value || "deep",
           voice_key: voiceSelect.value,
           rate: rateSelect.value,

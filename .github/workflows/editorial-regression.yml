@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feat/editorial-diversity-christian-visuals-four-voices]
+    branches: [feat/editorial-diversity-christian-visuals-four-voices, feat/storytelling-audience-fit-scene-sync-three-voices]
 jobs:
   editorial-tests:
     runs-on: ubuntu-latest
@@ -20,6 +20,6 @@ jobs:
           pip install -r requirements.txt httpx
       - name: Check frontend JavaScript syntax
         run: node --check static/app.js
-      - name: API and editorial integration regression tests
+      - name: API, storytelling and voice-timing regression tests
         run: |
-          python -m unittest tests.test_local_editorial_engine tests.test_editorial_workflow tests.test_editorial_experimentation -v
+          python -m unittest tests.test_local_editorial_engine tests.test_audience_storytelling_v2 tests.test_editorial_workflow tests.test_editorial_experimentation -v

@@ -69,7 +69,8 @@ class ScriptHistoryManager:
         cta: str = "",
         scene_prompts: Optional[List[str]] = None,
         closing: str = "",
-        narration_type: str = "prayer"
+        narration_type: str = "prayer",
+        narrative_angle: str = ""
     ) -> None:
         """Registra un nuevo guion generado."""
         records = self.load_history()
@@ -81,6 +82,7 @@ class ScriptHistoryManager:
             "cta": cta.strip(),
             "closing": closing.strip(),
             "narration_type": narration_type,
+            "narrative_angle": narrative_angle,
             "prompts_snippet": " | ".join(scene_prompts or [])[:200]
         }
         records.append(new_entry)

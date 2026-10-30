@@ -240,7 +240,7 @@ def _faith_subject(theme_key, blueprint, custom_topic):
         who, place = "an adult facing a health concern", "an authentic hospital waiting area"
     elif any(x in override for x in ("job", "work", "unemploy", "empleo", "trabajo")):
         who, place = "an adult bearing work uncertainty", "a modest kitchen table with a notebook"
-    elif any(x in override for x in ("son", "daughter", "hijo", "hija", "child")):
+    elif re.search(r"\\b(?:son|daughter|hijo|hija|child|children)\\b", override):
         who, place = "a parent worried about an adult child", "a lived-in family living room"
     elif any(x in override for x in ("debt", "bill", "deuda", "dinero")):
         who, place = "an adult worried about household expenses", "a modest dining table with a closed bill envelope"

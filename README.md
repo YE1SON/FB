@@ -8,8 +8,7 @@ Una aplicación completa, ligera y de código abierto (sin costes obligatorios d
 ## Estudio editorial y seguimiento de publicaciones
 
 El flujo editorial organiza el catálogo existente en dos series, permite comparar
-tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Muestra
-dos voces principales y conserva el resto en opciones avanzadas. Incluye revisión
+tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Expone las cuatro voces Guy, Christopher, Brian y Andrew mediante Edge-TTS. Incluye revisión
 de texto, una maqueta de los primeros tres segundos y un diario manual de resultados.
 
 Consulta [estructura, límites, pruebas y activación](docs/EDITORIAL_WORKFLOW.md).

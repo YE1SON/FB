@@ -304,7 +304,7 @@ def generate_narrative_prompts_for_script(theme_key=None, script_text="",
         "photorealistic documentary-inspired 35mm cinematic image, vertical 9:16, "
         "credible environment, authentic human expressions, natural light and skin texture; "
         "one dominant clear action, legible subject in center-safe area for Reel captions; "
-        "NO printed words, NO logos, NO watermarks, NO fantasy graphics, NO unrelated objects."
+        "no text, no printed words, no logos, no watermarks, no fantasy graphics, no unrelated objects."
     )
     scene1 = (
         f"SCENE 1 — {first}. {continuity}"

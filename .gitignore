@@ -34,3 +34,5 @@ data/editorial_results.json
 
 assets/images/custom_ai_*
 data/cloudflare_neurons.json
+
+scratch/

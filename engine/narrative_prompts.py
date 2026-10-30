@@ -300,34 +300,32 @@ def generate_narrative_prompts_for_script(theme_key=None, script_text="",
         f"across all three images, always in {place}. Jesus Christ is depicted "
         "reverently with a consistent appearance, naturally integrated into the scene. "
     )
+    custom_context = f", setting focus: {custom_topic.strip()}" if (custom_topic and len(custom_topic.strip()) > 3) else ""
+
     constraints = (
-        "photorealistic documentary-inspired 35mm cinematic image, vertical 9:16, "
-        "credible environment, authentic human expressions, natural light and skin texture; "
-        "one dominant clear action, legible subject in center-safe area for Reel captions; "
-        "no text, no printed words, no logos, no watermarks, no fantasy graphics, no unrelated objects."
+        "photorealistic documentary-inspired 35mm cinematic photograph, vertical 9:16, "
+        "credible domestic environment, authentic human expressions, natural light and skin texture, "
+        "pure visual composition, completely text-free, strictly no text, no words, no letters, no alphabet, no subtitles, no captions, no typography, no logos, no watermarks"
     )
     scene1 = (
-        f"SCENE 1 — {first}. {continuity}"
-        f"The concrete opening moment: {opening_action}. "
-        f"Emotion or action to illustrate from the spoken HOOK: {opening[:210]}. "
+        f"Cinematic portrait, {first}. {continuity}"
+        f"The concrete opening moment: {opening_action}{custom_context}. "
+        f"Authentic human atmosphere reflecting: {opening[:180]}. "
         "A modest wooden Christian cross in the room establishes the faith context; "
         f"Jesus Christ is present compassionately without dominating the person. {constraints}"
     )
     scene2 = (
-        f"SCENE 2 — {middle}. SAME protagonist and SAME wardrobe as scene 1. {continuity}"
-        f"Action: {prayer_action}. Type of storytelling: {focus}. "
-        f"Illustrate these spoken DEVELOPMENT beats: {development[:130]} / {inner[:130]}. "
-        "Open Holy Bible visible in foreground; Jesus Christ accompanies the prayer. "
-        f"Do not invent a separate story or turn the Bible passage into screen lettering. {constraints}"
+        f"Cinematic portrait, {middle}. SAME protagonist and SAME wardrobe as scene 1 (consistent with image1). {continuity}"
+        f"Action: {prayer_action}. Spiritual devotional atmosphere reflecting: {inner[:140]}. "
+        "A closed Holy Bible resting nearby on a wooden table; Jesus Christ accompanies the prayer in peace and reassurance. "
+        f"{constraints}"
     )
     scene3 = (
-        f"SCENE 3 — {last}. SAME protagonist and SAME wardrobe as scene 1. {continuity}"
+        f"Cinematic portrait, {last}. SAME protagonist and SAME wardrobe as scene 1 (consistent with image1). {continuity}"
         f"An emotionally believable next moment: {closing_action}. "
-        f"Illustrate this ENDING idea from the narration: {resolution[:190]}. "
-        "A simple cross and Holy Bible remain recognizable; Jesus Christ stands alongside. "
-        "Do not depict new money, an instant cure, a reunion, or a miraculous guarantee "
-        "unless explicitly present and justified in the narration. Never draw the CTA, "
-        f"likes, comments, or social media interface. {constraints}"
+        f"A quiet moment of hope and peace reflecting: {resolution[:160]}. "
+        "A simple cross remains recognizable; Jesus Christ stands alongside with gentle blessing and grace. "
+        f"{constraints}"
     )
     return {
         "prompt": scene1,

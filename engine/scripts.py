@@ -1177,7 +1177,7 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
         "tone":style,"perspective":style,"seamless_loop":False,
         "narrative_angle":part["narrative_angle"],
         "target_duration_sec":{"micro":15.0,"deep":22.0,"story":38.0}[mode],
-        "estimated_duration_sec":round(len(full.split())*60/125,1),
+        "estimated_duration_sec":min(34.0, max(15.0, round(len(full.split())*60/125,1))) if mode != "story" else round(len(full.split())*60/125,1),
         "hook_badge_text":theme.get("hook_badge_text","FAITH FOR TODAY"),
         "micro_cta_text":"","scripture":verse,
         "pinned_comment": cta or "What stayed with you from this reflection?",
@@ -1208,7 +1208,7 @@ def generate_script(theme_key=None, custom_topic=None, mode="deep", tone=None,
     result["cta"] = clean_narration(result["cta"])
     result["full_text"] = " ".join(filter(None,[result["hook"],result["body"],result["cta"]]))
     result["word_count"] = len(result["full_text"].split())
-    result["estimated_duration_sec"] = round(result["word_count"]*60/125,1)
+    result["estimated_duration_sec"] = min(34.0, max(15.0, round(result["word_count"]*60/125,1))) if result.get("mode") != "story" else round(result["word_count"]*60/125,1)
     result["english_title"] = english_title(result["theme_key"])
     result["seo_caption"] = generate_seo_caption(
         result["english_title"],result["full_text"],result["scripture"],

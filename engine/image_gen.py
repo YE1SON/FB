@@ -143,11 +143,62 @@ def get_providers_status() -> Dict:
         }
     }
 
-# ─── Optimización de Prompts Sagrados ────────────────────────────────────────
+# ─── Optimización y Sanitización Estricta Anti-Texto ─────────────────────────
+
+def sanitize_prompt_for_image_engine(prompt: str) -> str:
+    """
+    Elimina cualquier vestigio de etiquetas, prefijos de escena, comandos de subtítulos
+    o frases que inciten a los modelos de difusión (FLUX, DALL-E 3, Imagen 3, SDXL)
+    a pintar texto, letras o marcas tipográficas sobre la imagen.
+    Garantiza una imagen 100% limpia y puramente fotográfica.
+    """
+    if not prompt:
+        return ""
+
+    text = prompt.strip()
+
+    # 1. Eliminar prefijos de escena como 'SCENE 1 —', 'SCENE 2 —', 'SCENE 3 —', 'Scene 1:', etc.
+    text = re.sub(r'(?i)\bSCENE\s+[123]\s*[—\-\:\.]*\s*', '', text)
+
+    # 2. Eliminar etiquetas de metadatos o guion
+    meta_patterns = [
+        r'(?i)\bThe concrete opening moment\s*:\s*',
+        r'(?i)\bEmotion or action to illustrate from the spoken HOOK\s*:\s*',
+        r'(?i)\bIllustrate these spoken DEVELOPMENT beats\s*:\s*',
+        r'(?i)\bIllustrate this ENDING idea from the narration\s*:\s*',
+        r'(?i)\bType of storytelling\s*:\s*',
+        r'(?i)\bAction\s*:\s*',
+        r'(?i)\bfor Reel captions\b',
+        r'(?i)\bturn the Bible passage into screen lettering\b',
+        r'(?i)\bscreen lettering\b',
+        r'(?i)\bReel captions\b',
+        r'(?i)\bspoken HOOK\s*:\s*',
+        r'(?i)\bDEVELOPMENT beats\s*:\s*',
+        r'(?i)\bENDING idea\s*:\s*',
+    ]
+    for pat in meta_patterns:
+        text = re.sub(pat, '', text)
+
+    # 3. Eliminar comillas dobles o tipográficas que confunden al modelo
+    text = re.sub(r'["“”]', '', text)
+
+    # 4. Asegurar que las referencias a la Biblia indiquen que está cerrada sin texto
+    text = re.sub(r'(?i)\bOpen Holy Bible\b', 'closed Holy Bible on a wooden table', text)
+    text = re.sub(r'(?i)\bopen Bible\b', 'closed Bible', text)
+
+    # 5. Normalizar espacios
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    # 6. Refuerzo positivo y estricto anti-texto para el modelo
+    anti_text_cues = "completely text-free image, clean photographic composition without words, strictly no text, no letters, no typography, no subtitles, no captions, no watermark, no logos"
+    if "text-free" not in text.lower():
+        text = f"{text}, {anti_text_cues}"
+
+    return text
 
 def enhance_sacred_prompt(prompt: str) -> str:
-    """Optimiza el texto para máximo fotorrealismo cinematográfico."""
-    clean = prompt.strip()
+    """Optimiza el texto para máximo fotorrealismo cinematográfico sin texto."""
+    clean = sanitize_prompt_for_image_engine(prompt)
     clean = re.sub(r'(?i)\b(octane render|masterpiece|award winning|trending on artstation|hyperrealistic|8k|4k|unreal engine)\b', '', clean).strip()
     clean = re.sub(r'\s+', ' ', clean)
 
@@ -210,8 +261,9 @@ def generate_cloudflare_flux_klein(
         "Authorization": f"Bearer {api_token}"
     }
 
+    clean_prompt = sanitize_prompt_for_image_engine(prompt)
     form_data = {
-        "prompt": prompt.strip(),
+        "prompt": clean_prompt,
         "width": width,
         "height": height
     }
@@ -294,7 +346,7 @@ def generate_pollinations(
     }
     width, height = dims.get(aspect_ratio, (768, 1344))
     seed = random.randint(1, 999999)
-    url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(clean_prompt)}?width={width}&height={height}&model=flux&nologo=true&seed={seed}"
+    url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(clean_prompt)}?width={width}&height={height}&model=flux&nologo=true&nofeed=true&seed={seed}"
     print(f"[Pollinations] Generando imagen Flux ({width}x{height})...")
     resp = requests.get(
         url,
@@ -494,11 +546,12 @@ def generate_google_imagen(
     ratio = aspect_ratio if aspect_ratio in valid_ratios else "9:16"
 
     neg_prompt = negative_prompt or (
-        "blurry, distorted, bad anatomy, deformed limbs, extra fingers, text, watermark, "
-        "logo, cartoon, 3d render, doll, plastic skin, oversaturated"
+        "text, words, letters, alphabet, typography, subtitles, captions, watermark, signature, logo, "
+        "clapperboard, scene title, open book with writing, screen lettering, overlay, banner, signs, labels, poster, "
+        "blurry, distorted, bad anatomy, deformed limbs, extra fingers, cartoon, 3d render, doll, plastic skin, oversaturated"
     )
 
-    clean_prompt = prompt.strip()
+    clean_prompt = sanitize_prompt_for_image_engine(prompt)
     if "cinematic" not in clean_prompt.lower() and "photograph" not in clean_prompt.lower():
         clean_prompt = f"Cinematic 35mm photograph of {clean_prompt}, authentic human expression, natural skin texture, realistic documentary lighting, 8k resolution, photorealistic"
 
@@ -607,7 +660,7 @@ def generate_ai_scene_image(
     REGLA ESTRICTA: Cuando falle una generación de IA, reporta el error real.
     NUNCA sustituye silenciosamente una imagen fallida por una de la biblioteca.
     """
-    prompt = prompt.strip()
+    prompt = sanitize_prompt_for_image_engine(prompt.strip())
     if not prompt:
         raise ValueError("El prompt no puede estar vacío.")
 

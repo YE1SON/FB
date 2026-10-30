@@ -1270,11 +1270,39 @@ function bootstrapJesusStudio() {
     });
   }
 
+  // Función de sanitización estricta anti-texto para todos los motores de imagen
+  function sanitizePromptForAi(prompt) {
+    if (!prompt) return "";
+    let clean = prompt.trim();
+    clean = clean.replace(/\bSCENE\s+[123]\s*[—\-\:\.]*\s*/gi, "");
+    clean = clean.replace(/\bThe concrete opening moment\s*:\s*/gi, "");
+    clean = clean.replace(/\bEmotion or action to illustrate from the spoken HOOK\s*:\s*/gi, "");
+    clean = clean.replace(/\bIllustrate these spoken DEVELOPMENT beats\s*:\s*/gi, "");
+    clean = clean.replace(/\bIllustrate this ENDING idea from the narration\s*:\s*/gi, "");
+    clean = clean.replace(/\bType of storytelling\s*:\s*/gi, "");
+    clean = clean.replace(/\bAction\s*:\s*/gi, "");
+    clean = clean.replace(/\bfor Reel captions\b/gi, "");
+    clean = clean.replace(/\bturn the Bible passage into screen lettering\b/gi, "");
+    clean = clean.replace(/\bscreen lettering\b/gi, "");
+    clean = clean.replace(/\bReel captions\b/gi, "");
+    clean = clean.replace(/\bspoken HOOK\s*:\s*/gi, "");
+    clean = clean.replace(/\bDEVELOPMENT beats\s*:\s*/gi, "");
+    clean = clean.replace(/\bENDING idea\s*:\s*/gi, "");
+    clean = clean.replace(/["“”]/g, "");
+    clean = clean.replace(/\bOpen Holy Bible\b/gi, "closed Holy Bible on a wooden table");
+    clean = clean.replace(/\bopen Bible\b/gi, "closed Bible");
+    clean = clean.replace(/\s+/g, " ").trim();
+    if (!clean.toLowerCase().includes("text-free") && !clean.toLowerCase().includes("no text")) {
+      clean += ", completely text-free image, clean photographic composition without words, strictly no text, no letters, no typography, no subtitles, no captions, no watermark";
+    }
+    return clean;
+  }
+
   // 8. Motor de Generación Cinemática de 3 Escenas con IA (Cloudflare / Hugging Face / Puter)
   async function generateSingleScene(promptText, sceneNum = 1, label = "Escena") {
-    let cleanPrompt = (promptText || "").trim();
+    let cleanPrompt = sanitizePromptForAi(promptText || "");
     if (!cleanPrompt) {
-      cleanPrompt = "Jesus Christ with compassionate loving eyes, gentle smile, sacred warm golden hour light, cinematic photorealistic";
+      cleanPrompt = "Jesus Christ with compassionate loving eyes, gentle smile, sacred warm golden hour light, cinematic photorealistic, completely text-free, no text";
     }
 
     const providerSelect = document.getElementById("aiImageProviderSelect");
@@ -2568,7 +2596,8 @@ function bootstrapJesusStudio() {
   // Generador de Imagen Sagrada con IA Personalizada para la Tarjeta (4:5)
   async function generateCardAiImage() {
     const defaultPrompt = cardTitleInput ? `${cardTitleInput.value}, sacred golden light, serene divine presence, high contrast cinematic render --ar 4:5` : "A devout Christian praying with folded hands, warm glowing candlelight, sacred divine light, ultra realistic 4:5 --ar 4:5";
-    const promptText = (cardAiPrompt ? cardAiPrompt.value.trim() : "") || defaultPrompt;
+    let promptText = (cardAiPrompt ? cardAiPrompt.value.trim() : "") || defaultPrompt;
+    promptText = sanitizePromptForAi(promptText);
     const provider = cardAiProviderSelect ? cardAiProviderSelect.value : "auto";
 
     if (btnGenerateCardAiImage) {

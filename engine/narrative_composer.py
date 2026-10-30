@@ -173,8 +173,14 @@ def _pick_by_history(candidates, recent_texts, threshold=0.5):
         return ""
     random.shuffle(items)
     def score(candidate):
-        return max((calculate_jaccard_similarity(candidate, old) for old in recent_texts if old), default=0.0)
-    good = [c for c in items if score(c) < threshold]
+        relevant = [old for old in recent_texts[-120:] if old]
+        similarities = [calculate_jaccard_similarity(candidate, old) for old in relevant]
+        peak = max(similarities, default=0.0)
+        # Penalizar especialmente repeticiones en las últimas seis piezas.
+        close = max(similarities[-6:], default=0.0)
+        exact_uses = sum(candidate.casefold() == old.casefold() for old in relevant[-60:])
+        return peak + (0.50 * close) + (0.09 * exact_uses)
+    good = [candidate for candidate in items if score(candidate) < threshold]
     return min(good or items, key=score)
 
 def _shorten_at_sentence(text, max_words):

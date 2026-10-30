@@ -2,6 +2,7 @@ import os
 import sys
 import uuid
 import shutil
+import subprocess
 import io
 import random
 import urllib.request
@@ -39,7 +40,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="JesusReels Studio", version="4.0.0")
+app = FastAPI(title="JesusReels Studio", version="4.1.0")
 
 env_origins = os.environ.get("ALLOWED_ORIGINS", "").strip()
 if env_origins:
@@ -269,12 +270,44 @@ def list_worship_tracks():
 
 # ─── Health & Index ──────────────────────────────────────────────────────────
 
+def _deployed_commit() -> str:
+    """Identify the checkout actually running this process; never expose secrets."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short=12", "HEAD"],
+            cwd=BASE_DIR, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, timeout=2, check=True
+        )
+        return result.stdout.strip() or "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
 @app.get("/health")
 def health_check():
     return {
         "status": "ok",
         "app": "JesusReels Studio",
-        "version": "4.0.0"
+        "version": app.version,
+    }
+
+
+@app.get("/api/version")
+@app.get("/studio/api/version")
+def api_version():
+    """Compare the running server with the GitHub main branch after deployment."""
+    return {
+        "app": "JesusReels Studio",
+        "version": app.version,
+        "git_commit": _deployed_commit(),
+        "voices": sorted(VOICES),
+        "narration_formats": ["prayer", "reflection", "story", "comfort"],
+        "features": {
+            "local_script_generator": True,
+            "contextual_calls_to_action": True,
+            "christian_scene_prompts": True,
+            "audio_aligned_scene_transitions": True,
+        },
     }
 
 @app.get("/")

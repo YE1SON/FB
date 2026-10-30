@@ -842,23 +842,10 @@ function bootstrapJesusStudio() {
       const scriptProviderBadge = document.getElementById("scriptProviderStatus");
       if (scriptProviderBadge) {
         scriptProviderBadge.style.display = "block";
-        const prov = (data.provider_used || "").toLowerCase();
-        if (false) {
-          scriptProviderBadge.style.background = "rgba(16, 185, 129, 0.12)";
-          scriptProviderBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
-          scriptProviderBadge.style.color = "#059669";
-          scriptProviderBadge.innerHTML = `🧠 <strong>Motor:</strong> IA Local activa (${escapeHtml(data.provider_used)}).`;
-        } else if (prov.includes("fallback")) {
-          scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.08)";
-          scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.20)";
-          scriptProviderBadge.style.color = "#93c5fd";
-          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Compositor editorial local con variación narrativa.`;
-        } else {
-          scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.10)";
-          scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.30)";
-          scriptProviderBadge.style.color = "#2563eb";
-          scriptProviderBadge.innerHTML = `📋 <strong>Motor:</strong> Compositor narrativo local con catálogo bíblico.`;
-        }
+        scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.10)";
+        scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.30)";
+        scriptProviderBadge.style.color = "#2563eb";
+        scriptProviderBadge.innerHTML = "📋 <strong>Motor:</strong> Compositor editorial local sin Ollama.";
       }
 
       if (data.seo_caption) {

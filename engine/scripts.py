@@ -1144,6 +1144,14 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
         style = "prayer"
     mode = mode if mode in ("micro", "deep", "story") else "deep"
     hook = build_hook(theme, style, _translate_topic(custom_topic), records)
+    if mode == "micro":
+        # In 12–16s mode, prefer complete short hooks over long situation setups.
+        short_hooks = [h for h in theme.get("hooks", []) if len(h.split()) <= 11]
+        if short_hooks:
+            from engine.narrative_composer import _pick_by_history
+            hook = _pick_by_history(short_hooks, [r.get("hook", "") for r in records[-100:]], 0.5)
+        else:
+            hook = min(theme.get("hooks", [hook]), key=lambda h: len(h.split()))
     part = build_narration(theme_key, theme, style, mode, _translate_topic(custom_topic),
                            records, include_cta=include_cta)
     closing, cta = part["closing"], part["cta"]

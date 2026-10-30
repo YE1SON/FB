@@ -41,6 +41,15 @@ class AudienceStorytellingTests(unittest.TestCase):
                    for _ in range(15)]
         self.assertGreaterEqual(len(set(scripts)), 10)
 
+    def test_micro_mode_stays_brief_across_randomized_regenerations(self):
+        for key in ("night_anxiety", "lost_child", "medical_fear", "zero_balance"):
+            for _ in range(8):
+                micro = generate_script(key, mode="micro")
+                standard = generate_script(key, mode="deep")
+                self.assertLessEqual(micro["word_count"], standard["word_count"])
+                self.assertTrue(micro["cta"])
+                self.assertTrue(micro["body"].endswith((".", "!", "?")))
+
     def test_custom_topic_affects_actual_image_story(self):
         data = generate_3scene_prompts_for_script(
             "divine_grace",

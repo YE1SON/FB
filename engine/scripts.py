@@ -1129,7 +1129,7 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
                                       tone=None, seamless_loop=False, narration_type="prayer",
                                       include_cta=True):
     """Composer local con memoria, perspectiva seleccionada y CTA empático."""
-    from engine.narrative_composer import build_narration, NARRATION_TYPES, _pick_by_history
+    from engine.narrative_composer import build_narration, build_hook, NARRATION_TYPES
     history = get_history_manager()
     records = history.load_history()
     if theme_key not in VIRAL_THEMES:
@@ -1143,16 +1143,7 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
     if style not in NARRATION_TYPES:
         style = "prayer"
     mode = mode if mode in ("micro", "deep", "story") else "deep"
-    hooks = list(theme.get("hooks", []))
-    if custom_topic and custom_topic.strip():
-        subject = _translate_topic(custom_topic).rstrip(".")
-        hooks += [
-            f"When you're carrying a private concern about {subject}...",
-            f"What does faith look like while facing {subject}?",
-            f"Some prayers begin with a worry about {subject}.",
-            f"There's a story behind the words {subject}.",
-        ]
-    hook = _pick_by_history(hooks, [r.get("hook","") for r in records[-100:]], 0.5)
+    hook = build_hook(theme, style, _translate_topic(custom_topic), records)
     part = build_narration(theme_key, theme, style, mode, _translate_topic(custom_topic),
                            records, include_cta=include_cta)
     closing, cta = part["closing"], part["cta"]
@@ -1165,7 +1156,7 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
     )
     history.record_script(
         theme_key=theme_key, hook=hook, body=body, cta=cta, closing=closing,
-        narration_type=style,
+        narration_type=style, narrative_angle=part["narrative_angle"],
         scene_prompts=[prompts["scene_1_prompt"],prompts["scene_2_prompt"],prompts["scene_3_prompt"]]
     )
     return {
@@ -1176,6 +1167,7 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
         "hook":hook,"body":body,"closing":closing,"cta":cta,"full_text":full,
         "word_count":len(full.split()),"mode":mode,"narration_type":style,
         "tone":style,"perspective":style,"seamless_loop":False,
+        "narrative_angle":part["narrative_angle"],
         "target_duration_sec":{"micro":15.0,"deep":22.0,"story":38.0}[mode],
         "estimated_duration_sec":round(len(full.split())*60/125,1),
         "hook_badge_text":theme.get("hook_badge_text","FAITH FOR TODAY"),

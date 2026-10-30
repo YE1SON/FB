@@ -8,10 +8,14 @@ Una aplicación completa, ligera y de código abierto (sin costes obligatorios d
 ## Estudio editorial y seguimiento de publicaciones
 
 El flujo editorial organiza el catálogo existente en dos series, permite comparar
-tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Expone las cuatro voces Guy, Christopher, Brian y Andrew mediante Edge-TTS. Incluye revisión
+tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Expone únicamente Guy, Christopher y Brian mediante Edge-TTS. Incluye revisión
 de texto, una maqueta de los primeros tres segundos y un diario manual de resultados.
 
 Consulta [estructura, límites, pruebas y activación](docs/EDITORIAL_WORKFLOW.md).
+
+## Investigación y mejoras editoriales (octubre de 2026)
+
+El motor local ofrece cuatro narraciones (oración, reflexión, relato ilustrativo y consuelo), rota ganchos y estructuras, y desarrolla tres escenas cristianas relacionadas con la narración. Cuando la voz tiene marcas temporales, las transiciones de imagen se alinean con ellas. Consulta la [estrategia, limitaciones y experimentos](docs/REELS_CONTENT_STRATEGY_2026.md).
 
 ## 🚀 Despliegue y Ejecución
 
@@ -55,7 +59,7 @@ Los 26 temas están organizados en cinco pilares para facilitar la selección y 
 | Componente | Motor | Características |
 | :--- | :--- | :--- |
 | **Generador de Guiones** | Compositor local (`engine/narrative_composer.py`) | Categorizado en 5 pilares temáticos con ganchos, oraciones, CTAs y referencias bíblicas verificadas. |
-| **Voz en Inglés (TTS)** | **Edge-TTS** (Microsoft Neural Voices) | Voces solemnes y de dicción clara como `en-US-ChristopherNeural` (Voz de Jesús) y `en-US-GuyNeural`. |
+| **Voz en Inglés (TTS)** | **Edge-TTS** (Microsoft Neural Voices) | Tres voces seleccionables: `en-US-GuyNeural`, `en-US-ChristopherNeural` y `en-US-BrianNeural`. |
 | **Generador de Imágenes IA** | Motor Directo FLUX (`1080x1920`) | Generación en formato vertical 9:16 con iluminación cinematográfica y composición equilibrada. |
 | **Galería de Imágenes** | Galería Bundled (`assets/images/`) | Retratos cinematográficos verticales 9:16 con mirada compasiva. Permite subir imágenes propias con validación estricta de formato y tamaño. |
 | **Subtítulos Dinámicos** | Motor ASS (`engine/subtitles.py`) | Tipografía configurable (**Clean**, **Karaoke**, **Pop**, **Cinematic**), acotados a la duración exacta del audio y respetando la zona segura de Facebook. |

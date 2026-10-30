@@ -18,6 +18,7 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from engine.scripts import generate_script, get_themes_list, generate_image_prompt_for_script, generate_3scene_prompts_for_script, get_card_template_for_theme, get_daily_batch_schedule, VIRAL_THEMES
+from engine.scene_timing import compute_scene_breaks
 from engine.tts import synthesize_speech, get_available_voices, VOICES, LEGACY_VOICE_MAP, check_engine_availability
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, WORSHIP_TRACKS, get_audio_duration
@@ -692,6 +693,7 @@ async def api_render_video(req: RenderRequest):
         voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
         cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
         audio_dur = round(get_audio_duration(audio_file), 2)
+        scene_breaks = compute_scene_breaks(req.hook, req.body, req.cta, audio_dur, cues)
 
         # 2. Generate ASS subtitles & Embedded Particles
         margin_v = 400 if req.subtitle_size == "large" else 440
@@ -772,7 +774,8 @@ async def api_render_video(req: RenderRequest):
             seamless_loop=bool(req.seamless_loop) if req.seamless_loop is not None else False,
             master_lufs=bool(req.master_lufs) if req.master_lufs is not None else True,
             generate_trending_audio_version=bool(req.generate_trending_audio) if req.generate_trending_audio is not None else True,
-            target_duration=target_dur
+            target_duration=target_dur,
+            scene_breaks=scene_breaks
         )
 
     except HTTPException:
@@ -796,7 +799,8 @@ async def api_render_video(req: RenderRequest):
         "estimated_duration_sec": estimated_dur,
         "audio_duration_sec": audio_dur,
         "actual_duration_sec": render_result.get("actual_duration_sec"),
-        "duration_diff_sec": render_result.get("duration_diff_sec")
+        "duration_diff_sec": render_result.get("duration_diff_sec"),
+        "scene_breaks_sec": scene_breaks
     }
 
 

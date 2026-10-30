@@ -8,8 +8,7 @@ Una aplicación completa, ligera y de código abierto (sin costes obligatorios d
 ## Estudio editorial y seguimiento de publicaciones
 
 El flujo editorial organiza el catálogo existente en dos series, permite comparar
-tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Muestra
-dos voces principales y conserva el resto en opciones avanzadas. Incluye revisión
+tres aperturas y ofrece oración, reflexión bíblica y relato ilustrativo. Expone las cuatro voces Guy, Christopher, Brian y Andrew mediante Edge-TTS. Incluye revisión
 de texto, una maqueta de los primeros tres segundos y un diario manual de resultados.
 
 Consulta [estructura, límites, pruebas y activación](docs/EDITORIAL_WORKFLOW.md).
@@ -55,7 +54,7 @@ Los 26 temas están organizados en cinco pilares para facilitar la selección y 
 
 | Componente | Motor | Características |
 | :--- | :--- | :--- |
-| **Generador de Guiones** | Motor interno (`engine/scripts.py`) | Categorizado en 5 pilares temáticos con ganchos, oraciones, CTAs y referencias bíblicas verificadas. |
+| **Generador de Guiones** | Compositor local (`engine/narrative_composer.py`) | Categorizado en 5 pilares temáticos con ganchos, oraciones, CTAs y referencias bíblicas verificadas. |
 | **Voz en Inglés (TTS)** | **Edge-TTS** (Microsoft Neural Voices) | Voces solemnes y de dicción clara como `en-US-ChristopherNeural` (Voz de Jesús) y `en-US-GuyNeural`. |
 | **Generador de Imágenes IA** | Motor Directo FLUX (`1080x1920`) | Generación en formato vertical 9:16 con iluminación cinematográfica y composición equilibrada. |
 | **Galería de Imágenes** | Galería Bundled (`assets/images/`) | Retratos cinematográficos verticales 9:16 con mirada compasiva. Permite subir imágenes propias con validación estricta de formato y tamaño. |

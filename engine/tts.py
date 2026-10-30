@@ -10,7 +10,6 @@ from engine.audio import sanitize_and_trim_audio
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VOICES_DIR = os.path.join(BASE_DIR, "assets", "voices")
-KOKORO_DIR = os.path.join(BASE_DIR, "assets", "kokoro")
 
 # ─── Data Structure for Subtitle Cues ─────────────────────────────────────────
 
@@ -56,133 +55,35 @@ VOICES: Dict[str, Dict] = {
         "gender": "Hombre",
         "base_speed": 0.94,
     },
-    "jenny": {
-        "id": "jenny",
-        "engine": "edge",
-        "voice_name": "en-US-JennyNeural",
-        "name": "Jenny (Clara, Luminosa y Pacífica — Edge HD)",
-        "gender": "Mujer",
-        "base_speed": 0.94,
-    },
 
-    # ─── Kokoro-82M Neural Voices (Ultra-Natural Local 24kHz) ─────────────────
-    "adam": {
-        "id": "adam",
-        "engine": "kokoro",
-        "kokoro_voice": "am_adam",
-        "name": "Adam (Solemne, Profundo y Reverente — Kokoro Neural)",
-        "gender": "Hombre",
-        "base_speed": 0.90,
-    },
-    "michael": {
-        "id": "michael",
-        "engine": "kokoro",
-        "kokoro_voice": "am_michael",
-        "name": "Michael (Emocional, Cercano y Apasionado — Kokoro Neural)",
-        "gender": "Hombre",
-        "base_speed": 0.92,
-    },
-    "george": {
-        "id": "george",
-        "engine": "kokoro",
-        "kokoro_voice": "bm_george",
-        "name": "George (Elegante, Profético y Majestuoso — Kokoro Neural)",
-        "gender": "Hombre",
-        "base_speed": 0.88,
-    },
-    "sarah": {
-        "id": "sarah",
-        "engine": "kokoro",
-        "kokoro_voice": "af_sarah",
-        "name": "Sarah (Suave, Dulce y Reconfortante — Kokoro Neural)",
-        "gender": "Mujer",
-        "base_speed": 0.92,
-    },
-    "bella": {
-        "id": "bella",
-        "engine": "kokoro",
-        "kokoro_voice": "af_bella",
-        "name": "Bella (Tierna y Compasiva — Kokoro Neural)",
-        "gender": "Mujer",
-        "base_speed": 0.90,
-    },
-
-    # ─── Piper Local TTS (Offline Fallback) ───────────────────────────────────
-    "bryce": {
-        "id": "bryce",
-        "engine": "piper",
-        "model": "en_US-bryce-medium",
-        "name": "Bryce (Cálido y Directo — Piper Local)",
-        "gender": "Hombre",
-        "rate_factor": 0.90,
-    },
-    "ryan": {
-        "id": "ryan",
-        "engine": "piper",
-        "model": "en_US-ryan-high",
-        "name": "Ryan (Profundo y Resonante — Piper Local HD)",
-        "gender": "Hombre",
-        "rate_factor": 0.90,
-    }
 }
 
 LEGACY_VOICE_MAP = {
+    "en-US-GuyNeural": "guy",
     "en-US-ChristopherNeural": "christopher",
     "en-US-BrianNeural": "brian",
-    "en-US-GuyNeural": "guy",
-    "en-US-AndrewMultilingualNeural": "andrew",
-    "en-US-JennyNeural": "jenny",
-    "en_US-bryce-medium": "bryce",
-    "en_US-ryan-high": "ryan"
+    "en-US-AndrewMultilingualNeural": "andrew"
+
 }
 
 # Singletons
 _whisper_model = None
-_kokoro_model = None
 
 
 def check_engine_availability() -> Dict[str, bool]:
-    """Comprueba en tiempo de ejecución qué motores están verdaderamente disponibles."""
-    kokoro_ok = False
-    try:
-        from kokoro_onnx import Kokoro
-        m_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
-        v_path = os.path.join(KOKORO_DIR, "voices.bin")
-        import soundfile
-        kokoro_ok = os.path.exists(m_path) and os.path.exists(v_path)
-    except Exception:
-        kokoro_ok = False
-
-    edge_ok = False
+    """Registra los motores que se utilizan: Edge-TTS y Whisper."""
     try:
         import edge_tts
         edge_ok = True
-    except Exception:
+    except ImportError:
         edge_ok = False
-
-    piper_ok = False
-    try:
-        m_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx")
-        c_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx.json")
-        piper_ok = os.path.exists(m_path) and os.path.exists(c_path)
-    except Exception:
-        piper_ok = False
-
-    whisper_ok = False
     try:
         import faster_whisper
         whisper_ok = True
-    except Exception:
+    except ImportError:
         whisper_ok = False
-
-    return {
-        "kokoro": kokoro_ok,
-        "edge": edge_ok,
-        "edge_tts": edge_ok,
-        "piper": piper_ok,
-        "whisper": whisper_ok,
-        "faster_whisper": whisper_ok
-    }
+    return {"edge": edge_ok, "edge_tts": edge_ok, "whisper": whisper_ok,
+            "faster_whisper": whisper_ok, "kokoro": False, "piper": False}
 
 
 def _get_whisper():
@@ -198,24 +99,6 @@ def _get_whisper():
             _whisper_model = False
     return _whisper_model if _whisper_model is not False else None
 
-
-def _get_kokoro():
-    """Lazy load Kokoro-82M ONNX model singleton."""
-    global _kokoro_model
-    if _kokoro_model is None:
-        try:
-            from kokoro_onnx import Kokoro
-            m_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
-            v_path = os.path.join(KOKORO_DIR, "voices.bin")
-            if os.path.exists(m_path) and os.path.exists(v_path):
-                _kokoro_model = Kokoro(m_path, v_path)
-                print("[TTS Engine] Kokoro-82M inicializado con éxito.")
-            else:
-                _kokoro_model = False
-        except Exception as e:
-            print(f"[TTS Engine] Fallo al inicializar Kokoro: {e}")
-            _kokoro_model = False
-    return _kokoro_model if _kokoro_model is not False else None
 
 
 def _parse_rate(rate_str: str) -> float:
@@ -325,14 +208,7 @@ async def synthesize_speech(
     output_path: str,
     rate: str = "+0%"
 ) -> List[CueItem]:
-    """
-    Sintetiza la voz utilizando la mejor opción disponible en la jerarquía:
-    1. Edge-TTS (Online Neural HD en inglés estadounidense natural)
-    2. Kokoro-82M (Local Neural 24kHz)
-    3. Piper TTS (Local Offline Fallback)
-    Aplica compresión suave y ecualización con FFmpeg,
-    y alinea cada palabra al milisegundo exacto con faster-whisper.
-    """
+    """Sintetiza una de las cuatro voces Edge-TTS y alinea subtítulos."""
     clean_text = text.strip()
     if not clean_text:
         raise ValueError("El texto para síntesis de voz no puede estar vacío.")
@@ -342,7 +218,7 @@ async def synthesize_speech(
 
     # Si la voz no existe, asignar la primera voz válida recomendada
     if not voice_cfg:
-        voice_cfg = VOICES.get("guy", list(VOICES.values())[0])
+        voice_cfg = VOICES["guy"]
 
     engine_pref = voice_cfg.get("engine", "kokoro")
     user_rate = _parse_rate(rate)
@@ -351,93 +227,21 @@ async def synthesize_speech(
     if tmp_wav == output_path:
         tmp_wav = output_path + ".tmp.wav"
 
-    kokoro_inst = _get_kokoro()
-    engine_used = None
-
-    # ─── Intento 1: Kokoro si está solicitado y disponible ───────────────────
-    if engine_pref == "kokoro" and kokoro_inst:
-        try:
-            k_voice = voice_cfg.get("kokoro_voice", "am_adam")
-            base_speed = voice_cfg.get("base_speed", 0.90)
-            eff_speed = round(max(0.65, min(1.30, base_speed * user_rate)), 2)
-
-            def _run_kokoro():
-                import soundfile as sf
-                samples, sample_rate = kokoro_inst.create(
-                    clean_text, voice=k_voice, speed=eff_speed, lang="en-us"
-                )
-                sf.write(tmp_wav, samples, sample_rate)
-
-            await asyncio.to_thread(_run_kokoro)
-            if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
-                engine_used = "kokoro"
-        except Exception as e:
-            print(f"[TTS Fallback] Kokoro falló ({e}), intentando Edge-TTS...")
-
-    # ─── Intento 2: Edge-TTS (Excelente calidad neural sin costo) ─────────────
-    if not engine_used and (engine_pref == "edge" or engine_pref == "kokoro"):
-        try:
-            import edge_tts
-            v_name = voice_cfg.get("voice_name", "en-US-ChristopherNeural")
-            if engine_pref == "kokoro":
-                # Mapear voz masculina/femenina de Kokoro a Edge
-                v_name = "en-US-ChristopherNeural" if voice_cfg.get("gender") == "Hombre" else "en-US-JennyNeural"
-
-            rate_pct = int((user_rate - 1.0) * 100)
-            edge_rate_str = f"{rate_pct:+d}%"
-
-            communicate = edge_tts.Communicate(clean_text, v_name, rate=edge_rate_str)
-            await communicate.save(tmp_wav)
-            if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
-                engine_used = "edge_tts"
-        except Exception as e:
-            print(f"[TTS Fallback] Edge-TTS falló ({e}), intentando Piper local...")
-
-    # ─── Intento 3: Piper Local TTS (Offline Fallback) ────────────────────────
-    if not engine_used:
-        try:
-            model_name = voice_cfg.get("model", "en_US-bryce-medium")
-            model_path = os.path.join(VOICES_DIR, f"{model_name}.onnx")
-            config_path = os.path.join(VOICES_DIR, f"{model_name}.onnx.json")
-
-            if not os.path.exists(model_path):
-                # Probar cualquier modelo presente en assets/voices
-                models_present = [f for f in os.listdir(VOICES_DIR) if f.endswith(".onnx")] if os.path.exists(VOICES_DIR) else []
-                if models_present:
-                    model_path = os.path.join(VOICES_DIR, models_present[0])
-                    config_path = model_path + ".json"
-
-            if os.path.exists(model_path) and os.path.exists(config_path):
-                voice_factor = voice_cfg.get("rate_factor", 0.90)
-                eff_speed = max(0.65, min(1.30, user_rate * voice_factor))
-                length_scale = 1.0 / eff_speed
-
-                cmd = [
-                    sys.executable, "-m", "piper",
-                    "-m", model_path,
-                    "-c", config_path,
-                    "-f", tmp_wav,
-                    "--length-scale", str(round(length_scale, 3)),
-                    "--noise-scale", "0.667",
-                    "--noise-w-scale", "0.8"
-                ]
-
-                proc = await asyncio.create_subprocess_exec(
-                    *cmd,
-                    stdin=asyncio.subprocess.PIPE,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    cwd=BASE_DIR
-                )
-                await proc.communicate(input=clean_text.encode("utf-8"))
-                if proc.returncode == 0 and os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
-                    engine_used = "piper"
-        except Exception as e:
-            print(f"[TTS Fallback] Piper local falló: {e}")
-
-    # Si todo falló, generar error con diagnóstico claro
-    if not engine_used or not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 1000:
-        raise RuntimeError("No se pudo generar audio con ningún motor de voz (Kokoro, Edge-TTS ni Piper). Verifica la conexión a internet o los modelos locales.")
+    # Cuatro voces permitidas: exclusivamente Edge-TTS (Guy, Christopher,
+    # Brian y Andrew). No se cambia silenciosamente a una voz eliminada.
+    if engine_pref != "edge":
+        raise RuntimeError("Solo están habilitadas las voces Edge-TTS seleccionadas.")
+    try:
+        import edge_tts
+        v_name = voice_cfg["voice_name"]
+        rate_pct = int((user_rate - 1.0) * 100)
+        communicate = edge_tts.Communicate(clean_text, v_name, rate=f"{rate_pct:+d}%")
+        await communicate.save(tmp_wav)
+    except Exception as exc:
+        raise RuntimeError(f"No fue posible sintetizar la voz {voice_key} con Edge-TTS: {exc}") from exc
+    if not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 1000:
+        raise RuntimeError(f"Edge-TTS no produjo audio para la voz {voice_key}.")
+    engine_used = "edge_tts"
 
     print(f"[TTS Synthesized] Motor: {engine_used} | Voz: {voice_cfg['name']} | Velocidad: {user_rate:.2f}x")
 
@@ -453,7 +257,7 @@ async def synthesize_speech(
     # Extraer marcas de tiempo exactas por palabra con faster-whisper
     cues = _extract_whisper_word_cues(output_path)
 
-    # Si whisper no devolvió marcas, estimar según duración total del audio
+    # Si Whisper no devolvió marcas, usar segmentos aproximados
     if not cues:
         probe_cmd = [
             "ffprobe", "-v", "quiet",
@@ -471,38 +275,15 @@ async def synthesize_speech(
             dur = float(probe_out.decode().strip())
         except Exception:
             dur = 20.0
-        cues = _estimate_cues(clean_text, dur)
+        cues = _estimate_segment_cues(clean_text, dur)
 
     return cues
 
 
 def get_available_voices() -> List[Dict]:
-    """Devuelve solo las voces operativas según los motores disponibles en el sistema."""
-    avail = check_engine_availability()
-    result = []
-    for k, v in VOICES.items():
-        engine = v.get("engine", "kokoro")
-        if (engine == "kokoro" and avail["kokoro"]) or \
-           (engine == "edge" and avail["edge"]) or \
-           (engine == "piper" and avail["piper"]):
-            result.append({
-                "key": k,
-                "id": v["id"],
-                "name": v["name"],
-                "gender": v["gender"],
-                "engine": engine
-            })
-
-    # Si ningún motor específico fue detectado, devolver al menos Edge-TTS si está instalado
-    if not result:
-        for k, v in VOICES.items():
-            if v.get("engine") == "edge":
-                result.append({
-                    "key": k,
-                    "id": v["id"],
-                    "name": v["name"],
-                    "gender": v["gender"],
-                    "engine": "edge"
-                })
-
-    return result
+    """Expone únicamente las cuatro voces Edge-TTS aprobadas."""
+    return [
+        {"key": k, "id": v["id"], "name": v["name"],
+         "gender": v["gender"], "engine": "edge"}
+        for k, v in VOICES.items()
+    ]

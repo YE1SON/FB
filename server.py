@@ -99,6 +99,8 @@ class ScriptRequest(BaseModel):
     theme_key: Optional[str] = None
     custom_topic: Optional[str] = None
     mode: str = "deep"
+    narration_type: Literal["prayer", "reflection", "story", "comfort"] = "prayer"
+    include_cta: bool = True
     seamless_loop: Optional[bool] = False
     brief: Optional[EditorialBrief] = None
 
@@ -167,6 +169,10 @@ class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
     script_text: str = ""
     custom_topic: Optional[str] = None
+    narration_type: Literal["prayer", "reflection", "story", "comfort"] = "prayer"
+    script_hook: str = ""
+    script_body: str = ""
+    script_cta: str = ""
 
 class SaveKeysRequest(BaseModel):
     hf_token: Optional[str] = None
@@ -286,14 +292,15 @@ def list_themes():
 @app.post("/api/generate-script")
 @app.post("/studio/api/generate-script")
 def api_generate_script(req: ScriptRequest):
-    return generate_script(req.theme_key, req.custom_topic, mode=req.mode, seamless_loop=bool(req.seamless_loop),
+    return generate_script(req.theme_key, req.custom_topic, mode=req.mode, narration_type=req.narration_type,
+                           include_cta=req.include_cta, seamless_loop=False,
                            brief=req.brief.model_dump() if req.brief else None)
 
 @app.get("/api/editorial-config")
 @app.get("/studio/api/editorial-config")
 def editorial_config():
     from engine.editorial import SERIES
-    return {"series": SERIES, "primary_voices": ["guy", "christopher"]}
+    return {"series": SERIES, "primary_voices": ["guy", "christopher", "brian", "andrew"]}
 
 @app.post("/api/editorial-review")
 @app.post("/studio/api/editorial-review")
@@ -391,7 +398,10 @@ def api_export_results_json():
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")
 def api_generate_image_prompt(req: ImagePromptRequest):
-    prompts = generate_3scene_prompts_for_script(req.theme_key, req.script_text, req.custom_topic)
+    prompts = generate_3scene_prompts_for_script(
+        req.theme_key, req.script_text, req.custom_topic,
+        narration_type=req.narration_type, hook=req.script_hook,
+        body=req.script_body, cta=req.script_cta)
     return {
         "prompt": prompts["scene_1_prompt"],
         "scene_1_prompt": prompts["scene_1_prompt"],
@@ -417,7 +427,7 @@ def api_tts_status():
 @app.get("/studio/api/voices/preview/{voice_id}")
 async def api_voice_sample(voice_id: str):
     voice_key = LEGACY_VOICE_MAP.get(voice_id, voice_id)
-    voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
+    voice_info = VOICES.get(voice_key, VOICES["guy"])
     audio_id = f"sample_{voice_key}.mp3"
     audio_path = os.path.join(OUTPUTS_DIR, audio_id)
     sample_text = "The Lord is my shepherd, I shall not want. Peace and grace be with you."

@@ -1075,24 +1075,14 @@ THEME_3SCENE_CONFIGS = {
 }
 
 
-def generate_3scene_prompts_for_script(
-    theme_key: Optional[str] = None,
-    script_text: str = "",
-    custom_topic: Optional[str] = None
-) -> Dict[str, str]:
-    """
-    Genera 3 prompts de imagen cinematográficos y narrativos de alta fidelidad basados
-    en la narración real del guion, arcos emocionales auténticos y situaciones humanas concretas.
-    Evita repeticiones de imágenes genéricas y soporta coherencia multi-escena con modelo FLUX.2 Klein.
-    Garantiza ausencia estricta de texto, subtítulos o marcas de agua en la imagen generada.
-    """
+def generate_3scene_prompts_for_script(theme_key=None, script_text="", custom_topic=None,
+                                       narration_type="prayer", hook="", body="", cta=""):
+    """Prompts narrativos fieles al texto definitivo y a los símbolos cristianos."""
     from engine.narrative_prompts import generate_narrative_prompts_for_script
     return generate_narrative_prompts_for_script(
-        theme_key=theme_key,
-        script_text=script_text,
-        custom_topic=custom_topic
+        theme_key=theme_key, script_text=script_text, custom_topic=custom_topic,
+        narration_type=narration_type, hook=hook, body=body, cta=cta
     )
-
 
 def generate_seo_caption(
     theme_title: str,
@@ -1135,243 +1125,100 @@ def generate_seo_caption(
 
 # ─── Generador Interno por Plantillas con Control de Repeticiones ───────────
 
-def generate_internal_template_script(
-    theme_key: Optional[str] = None,
-    custom_topic: Optional[str] = None,
-    mode: str = "deep",
-    tone: Optional[str] = None,
-    seamless_loop: bool = False
-) -> Dict[str, Any]:
-    """Genera un guion interno con situaciones humanas concretas, evitando repeticiones recientes."""
-    history_mgr = get_history_manager()
-
-    # Si no se pasó theme_key, seleccionar uno rotando para no repetir los últimos 5
-    if not theme_key or theme_key not in VIRAL_THEMES:
-        recent_themes = history_mgr.get_recent_theme_keys(count=5)
-        available_keys = [k for k in VIRAL_THEMES.keys() if k not in recent_themes]
-        chosen_key = random.choice(available_keys) if available_keys else random.choice(list(VIRAL_THEMES.keys()))
-    else:
-        chosen_key = theme_key
-
-    theme = VIRAL_THEMES[chosen_key]
-    human_sit = theme.get("human_situation", "")
-    central_idea = theme.get("central_idea", "")
-
-    # 1. Gancho (Hook): Elegir uno que no haya sido utilizado recientemente
-    hook_candidates = theme.get("hooks", ["Before you close your eyes carrying that quiet worry tonight..."])
+def generate_internal_template_script(theme_key=None, custom_topic=None, mode="deep",
+                                      tone=None, seamless_loop=False, narration_type="prayer",
+                                      include_cta=True):
+    """Composer local con memoria, perspectiva seleccionada y CTA empático."""
+    from engine.narrative_composer import build_narration, NARRATION_TYPES, _pick_by_history
+    history = get_history_manager()
+    records = history.load_history()
+    if theme_key not in VIRAL_THEMES:
+        recent = history.get_recent_theme_keys(5)
+        pool = [k for k in VIRAL_THEMES if k not in recent] or list(VIRAL_THEMES)
+        theme_key = random.choice(pool)
+    theme = VIRAL_THEMES[theme_key]
+    aliases = {"scripture_reflection": "reflection", "story_lesson": "story",
+               "heart_comfort": "comfort"}
+    style = aliases.get(tone or narration_type, tone or narration_type)
+    if style not in NARRATION_TYPES:
+        style = "prayer"
+    mode = mode if mode in ("micro", "deep", "story") else "deep"
+    hooks = list(theme.get("hooks", []))
     if custom_topic and custom_topic.strip():
-        translated = _translate_topic(custom_topic)
-        hook_candidates = [
-            f"If your heart carries a quiet burden for {translated} today...",
-            f"Tonight, as you pray for {translated}, know that God hears you.",
-            f"When you are trusting God through {translated}, take heart.",
-            f"Before worry regarding {translated} steals your peace tonight..."
+        subject = _translate_topic(custom_topic).rstrip(".")
+        hooks += [
+            f"When you're carrying a private concern about {subject}...",
+            f"What does faith look like while facing {subject}?",
+            f"Some prayers begin with a worry about {subject}.",
+            f"There's a story behind the words {subject}.",
         ]
-
-    # Obtener el último gancho registrado para no repetirlo consecutivamente
-    recent_records = history_mgr.load_history()
-    last_hook = recent_records[-1].get("hook", "") if recent_records else ""
-
-    chosen_hook = None
-    for h in random.sample(hook_candidates, len(hook_candidates)):
-        is_sim, _ = history_mgr.is_similar_to_recent(h, threshold=0.70)
-        if not is_sim:
-            chosen_hook = h
-            break
-
-    # Si todos los candidatos están en el historial reciente, elegir uno diferente al último registrado
-    if not chosen_hook:
-        different_candidates = [h for h in hook_candidates if h.strip() != last_hook.strip()]
-        chosen_hook = random.choice(different_candidates) if different_candidates else random.choice(hook_candidates)
-
-    # 2. Perspectiva / Desarrollo (Body): Variedad real y anti-repetición
-    from engine.thematic_variations import get_candidate_bodies_for_theme
-    from engine.history import calculate_jaccard_similarity
-
-    perspectives = theme.get("perspectives", {})
-    available_perspectives = list(perspectives.keys())
-    chosen_perspective_key = tone if (tone in available_perspectives) else random.choice(available_perspectives or ["prayer"])
-
-    # Recoger candidatos de la variación temática
-    candidate_bodies = []
-    if tone and tone in perspectives and tone != "prayer":
-        candidate_bodies.append(perspectives[tone])
-    else:
-        candidate_bodies.extend(get_candidate_bodies_for_theme(chosen_key))
-        default_p = perspectives.get("prayer")
-        if default_p and default_p not in candidate_bodies:
-            candidate_bodies.append(default_p)
-        for p_key in ["heart_comfort", "scripture_reflection"]:
-            if p_key in perspectives and perspectives[p_key] not in candidate_bodies:
-                candidate_bodies.append(perspectives[p_key])
-
-    # Extraer cuerpos recientes del historial para evitar repeticiones
-    recent_bodies = [r.get("body_snippet", "") for r in recent_records[-15:] if r.get("body_snippet")]
-    last_body = recent_records[-1].get("body_snippet", "") if recent_records else ""
-
-    # Barajar candidatos
-    random.shuffle(candidate_bodies)
-
-    chosen_body = None
-    for cand in candidate_bodies:
-        is_dup = False
-        for past_b in recent_bodies:
-            if calculate_jaccard_similarity(cand, past_b) >= 0.40:
-                is_dup = True
-                break
-        if not is_dup:
-            chosen_body = cand
-            break
-
-    # Si todos coinciden o se han usado, elegir el más distante al último generado
-    if not chosen_body:
-        different = [c for c in candidate_bodies if c.strip() != last_body.strip()]
-        if different:
-            scored = sorted(different, key=lambda c: calculate_jaccard_similarity(c, last_body))
-            chosen_body = scored[0]
-        else:
-            chosen_body = random.choice(candidate_bodies) if candidate_bodies else perspectives.get("prayer", "Lord, cover our home in Your gentle peace.")
-
-    base_body = chosen_body
-
-    # Adaptar cuerpo según tema personalizado
-    if custom_topic and custom_topic.strip():
-        topic_phrase = _translate_topic(custom_topic)
-        personal_petitions = [
-            f"Specifically, Lord, we bring {topic_phrase} into Your loving hands, trusting Your unfailing care.",
-            f"Father, we especially place {topic_phrase} before You today, knowing that nothing is impossible with You.",
-            f"Lord Jesus, touch every circumstance regarding {topic_phrase}, granting wisdom, peace, and divine provision.",
-            f"In this moment, Lord, we surrender {topic_phrase} completely to You, resting in Your promise never to forsake us."
-        ]
-        chosen_petition = random.choice(personal_petitions)
-        body = f"{base_body} {chosen_petition}"
-    else:
-        body = base_body
-
-    # 3. Cierre (Closing): Rotación sin repetir el último
-    closings = theme.get("closings", ["May His peace guard your heart and mind tonight."])
-    last_closing = recent_records[-1].get("closing", "") if (recent_records and "closing" in recent_records[-1]) else ""
-    diff_closings = [c for c in closings if c.strip() != last_closing.strip()]
-    closing = random.choice(diff_closings) if diff_closings else random.choice(closings)
-
-    # 4. CTA Dinámico y Reintegrado: Rotación sin repetir el último
-    theme_ctas = theme.get("ctas", [])
-    universal_ctas = [
-        "Leave your first name below so we can keep you in our prayers tonight.",
-        "Drop your first name or a loved one's name in the comments for prayer.",
-        "Save this prayer for whenever your heart needs God's peace today.",
-        "Share this with someone who needs God's gentle comfort right now.",
-        "Type Amen if you receive this blessing in your heart tonight."
-    ]
-    all_ctas = (theme_ctas + universal_ctas) if theme_ctas else universal_ctas
-    last_cta = recent_records[-1].get("cta", "") if recent_records else ""
-    diff_ctas = [c for c in all_ctas if c.strip() != last_cta.strip()]
-    cta = random.choice(diff_ctas) if diff_ctas else random.choice(all_ctas)
-
-    # Looping is a render choice, never permission to append an unfinished sentence.
-
-    # Ajuste de duración según modo
-    if mode == "micro":
-        # Formato micro-oración conciso (~25-35 palabras)
-        sentences = [s.strip() for s in body.split(".") if s.strip()]
-        body_short = f"{sentences[0]}." if sentences else body
-        if len(body_short.split()) > 20:
-            body_short = " ".join(body_short.split()[:18]).rstrip(",;:- ") + "."
-        full_text = f"{chosen_hook} {body_short} {cta}".strip()
-        body_export = body_short
-    elif mode == "story":
-        # A distinct imagined illustration, not the same structure as deep.
-        body = "Imagine this everyday situation: " + human_sit.rstrip(".") + ". " + perspectives.get("heart_comfort", base_body)
-        full_text = f"{chosen_hook} {body} {closing} {cta}".strip()
-        body_export = f"{body} {closing}".strip()
-    else:  # deep (estándar 18-25s, ~50 palabras)
-        full_text = f"{chosen_hook} {body} {closing} {cta}".strip()
-        body_export = f"{body} {closing}".strip()
-
-    word_count = len(full_text.split())
-    # 2.15 palabras por segundo para locución natural y pausada
-    estimated_duration_sec = round(min(34.0, max(15.0, (word_count / 2.15) + 1.2)), 1)
-
-    scripture = BIBLICAL_CATALOGUE.get(chosen_key, theme.get("scripture", "Philippians 4:6 — Present your requests to God with thanksgiving."))
-    hashtags = theme.get("hashtags", ["#DailyPrayer", "#FaithInGod", "#ChristianLiving"])
-    seo_caption = generate_seo_caption(theme["title"], full_text, scripture, cta, hashtags)
-    prompts_3s = generate_3scene_prompts_for_script(chosen_key, full_text, custom_topic)
-
-    # Registrar en historial para rotación
-    history_mgr.record_script(
-        theme_key=chosen_key,
-        hook=chosen_hook,
-        body=body_export,
-        cta=cta,
-        scene_prompts=[prompts_3s["scene_1_prompt"], prompts_3s["scene_2_prompt"], prompts_3s["scene_3_prompt"]]
+    hook = _pick_by_history(hooks, [r.get("hook","") for r in records[-100:]], 0.5)
+    part = build_narration(theme_key, theme, style, mode, _translate_topic(custom_topic),
+                           records, include_cta=include_cta)
+    closing, cta = part["closing"], part["cta"]
+    body = " ".join(x for x in (part["body"],closing) if x)
+    full = " ".join(x for x in (hook,body,cta) if x)
+    verse = BIBLICAL_CATALOGUE.get(theme_key, theme.get("scripture",""))
+    tags = theme.get("hashtags", [])
+    prompts = generate_3scene_prompts_for_script(
+        theme_key, full, custom_topic, narration_type=style, hook=hook, body=body, cta=cta
     )
-
+    history.record_script(
+        theme_key=theme_key, hook=hook, body=body, cta=cta, closing=closing,
+        narration_type=style,
+        scene_prompts=[prompts["scene_1_prompt"],prompts["scene_2_prompt"],prompts["scene_3_prompt"]]
+    )
     return {
-        "theme_key": chosen_key,
-        "theme_title_es": theme["title"],
-        "thematic_pillar": theme.get("pillar", "spiritual_growth"),
-        "human_situation": human_sit,
-        "central_idea": central_idea,
-        "hook": chosen_hook,
-        "body": body_export,
-        "closing": closing,
-        "cta": cta,
-        "full_text": full_text,
-        "word_count": word_count,
-        "target_duration_sec": 22.0,
-        "estimated_duration_sec": estimated_duration_sec,
-        "mode": mode,
-        "seamless_loop": seamless_loop,
-        "tone": chosen_perspective_key,
-        "perspective": chosen_perspective_key,
-        "hook_badge_text": theme.get("hook_badge_text", "PRAYER OF FAITH"),
-        "micro_cta_text": cta,
-        "scripture": scripture,
-        "pinned_comment": f"May this prayer bring comfort: \"{closing}\" 🙏",
-        "seo_caption": seo_caption,
-        "hashtags": hashtags,
-        "scene_1_prompt": prompts_3s["scene_1_prompt"],
-        "scene_2_prompt": prompts_3s["scene_2_prompt"],
-        "scene_3_prompt": prompts_3s["scene_3_prompt"],
-        "image_prompt": prompts_3s["prompt"],
-        "provider_used": "template"
+        "theme_key":theme_key, "theme_title_es":theme["title"],
+        "thematic_pillar":theme.get("pillar",""),
+        "human_situation":theme.get("human_situation",""),
+        "central_idea":theme.get("central_idea",""),
+        "hook":hook,"body":body,"closing":closing,"cta":cta,"full_text":full,
+        "word_count":len(full.split()),"mode":mode,"narration_type":style,
+        "tone":style,"perspective":style,"seamless_loop":False,
+        "target_duration_sec":{"micro":15.0,"deep":22.0,"story":38.0}[mode],
+        "estimated_duration_sec":round(len(full.split())*60/125,1),
+        "hook_badge_text":theme.get("hook_badge_text","FAITH FOR TODAY"),
+        "micro_cta_text":"","scripture":verse,
+        "pinned_comment": cta or "What stayed with you from this reflection?",
+        "seo_caption":generate_seo_caption(theme["title"],full,verse,cta,tags),
+        "hashtags":tags,"scene_1_prompt":prompts["scene_1_prompt"],
+        "scene_2_prompt":prompts["scene_2_prompt"],
+        "scene_3_prompt":prompts["scene_3_prompt"],
+        "image_prompt":prompts["prompt"],"provider_used":"local editorial composer"
     }
-
 
 # ─── Fachada Pública Principal ──────────────────────────────────────────────
 
-def generate_script(
-    theme_key: Optional[str] = None,
-    custom_topic: Optional[str] = None,
-    mode: str = "deep",
-    tone: Optional[str] = None,
-    seamless_loop: bool = False,
-    brief: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
-    """Punto de entrada principal. Delega en el proveedor activo (Ollama / Template / Auto)."""
-    from engine.script_provider import get_script_provider
+def generate_script(theme_key=None, custom_topic=None, mode="deep", tone=None,
+                    seamless_loop=False, brief=None, narration_type="prayer",
+                    include_cta=True):
+    """Genera únicamente con el motor editorial local; no necesita servidor LLM."""
     from engine.editorial import FORMATS, english_title, clean_narration
-    provider = get_script_provider()
-    script_result = provider.generate(
-        theme_key=theme_key,
-        custom_topic=(brief.get("situation") or custom_topic) if brief else custom_topic,
-        mode=mode,
-        tone=FORMATS.get(brief.get("format")) if (brief and brief.get("format")) else tone,
-        seamless_loop=False,
-        audience=brief.get("audience", "Adult US audience") if brief else "Adult US audience"
+    brief = brief or {}
+    fmt = brief.get("format")
+    style = FORMATS.get(fmt,fmt) if fmt else (tone or narration_type)
+    if "include_cta" in brief:
+        include_cta = bool(brief["include_cta"])
+    result = generate_internal_template_script(
+        theme_key=theme_key, custom_topic=brief.get("situation") or custom_topic,
+        mode=mode, narration_type=style, include_cta=include_cta
     )
-    result = script_result.model_dump()
     result["body"] = clean_narration(result["body"])
-    result["cta"] = clean_narration(result.get("cta") or "")
-    if brief and not brief.get("include_cta", True):
-        result["cta"] = ""
-    result["full_text"] = " ".join(filter(None, [result["hook"], result["body"], result["cta"]]))
+    result["cta"] = clean_narration(result["cta"])
+    result["full_text"] = " ".join(filter(None,[result["hook"],result["body"],result["cta"]]))
     result["word_count"] = len(result["full_text"].split())
-    result["estimated_duration_sec"] = round(min(34.0, max(15.0, (result["word_count"] / 2.15) + 1.2)), 1)
+    result["estimated_duration_sec"] = round(result["word_count"]*60/125,1)
     result["english_title"] = english_title(result["theme_key"])
-    result["seo_caption"] = generate_seo_caption(result["english_title"], result["full_text"], result["scripture"], result["cta"], result["hashtags"])
+    result["seo_caption"] = generate_seo_caption(
+        result["english_title"],result["full_text"],result["scripture"],
+        result["cta"],result["hashtags"]
+    )
+    if brief.get("central_idea"):
+        result["central_idea"] = brief["central_idea"]
+    if brief.get("target_duration_sec"):
+        result["target_duration_sec"] = brief["target_duration_sec"]
     return result
-
 
 def generate_image_prompt_for_script(theme_key: Optional[str], script_text: str = "") -> str:
     """Retorna el prompt de la escena 1 para compatibilidad."""

@@ -17,7 +17,6 @@ from engine.scripts import (
     VIRAL_THEMES,
     get_daily_batch_schedule
 )
-from engine.script_provider import get_script_provider
 from engine.tts import synthesize_speech, get_available_voices, VOICES
 from engine.subtitles import generate_viral_ass, SUBTITLE_STYLES
 from engine.video import render_reel, get_audio_duration

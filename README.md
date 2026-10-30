@@ -17,6 +17,23 @@ Consulta [estructura, límites, pruebas y activación](docs/EDITORIAL_WORKFLOW.m
 
 El motor local ofrece cuatro narraciones (oración, reflexión, relato ilustrativo y consuelo), rota ganchos y estructuras, y desarrolla tres escenas cristianas relacionadas con la narración. Cuando la voz tiene marcas temporales, las transiciones de imagen se alinean con ellas. Consulta la [estrategia, limitaciones y experimentos](docs/REELS_CONTENT_STRATEGY_2026.md).
 
+## Confirmar que Oracle Cloud ejecuta la última versión
+
+La rama principal de GitHub y la página pública son **dos lugares distintos**: el servidor no se actualiza simplemente por fusionar un Pull Request.
+
+Desde una sesión SSH del servidor existente, entra a la carpeta del repositorio `FB` y ejecuta:
+
+```bash
+git switch main
+git fetch origin main
+git merge --ff-only origin/main
+bash scripts/deploy_oracle.sh
+```
+
+El script valida cambios locales, reutiliza el entorno Python del proyecto cuando existe, reinicia el servicio `jesus-reels` y verifica que el commit que responde en HTTP sea el mismo que `main`. No almacena claves SSH ni modifica Nginx. Si el servicio no inicia, consulta `sudo journalctl -u jesus-reels -n 80 --no-pager`.
+
+Tras actualizar: [abrir app](https://132-145-202-1.sslip.io) y [comprobar versión efectiva](https://132-145-202-1.sslip.io/api/version). Hasta ejecutar el despliegue en Oracle, **la URL puede seguir mostrando la versión anterior**.
+
 ## 🚀 Despliegue y Ejecución
 
 ### 1. En Servidor en la Nube (Oracle Cloud Always Free VPS)

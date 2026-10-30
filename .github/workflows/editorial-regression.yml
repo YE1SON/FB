@@ -18,8 +18,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt httpx
+      - name: Check deployment script syntax
+        run: bash -n scripts/deploy_oracle.sh
       - name: Check frontend JavaScript syntax
         run: node --check static/app.js
       - name: API, storytelling and voice-timing regression tests
         run: |
-          python -m unittest tests.test_local_editorial_engine tests.test_audience_storytelling_v2 tests.test_editorial_workflow tests.test_editorial_experimentation -v
+          python -m unittest tests.test_local_editorial_engine tests.test_audience_storytelling_v2 tests.test_editorial_workflow tests.test_editorial_experimentation tests.test_release_verification -v

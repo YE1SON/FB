@@ -329,9 +329,25 @@ def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent
             intro = f"If you're carrying a concern about {context}, you're not invisible."
         body = f"{intro} {body}"
     # Mantener una duración estimada comprensible y sin cortes a mitad de idea.
-    budgets = {"micro": 9, "deep": 29, "story": 60}
+    budgets = {"micro": 12, "deep": 29, "story": 60}
     budget = budgets.get(mode, 29)
-    body = _shorten_at_sentence(body, budget)
+    if mode == "micro":
+        # A true micro-reflection must be a grammatical complete thought.
+        # Prefer compact *full* sentences from the chosen thematic language.
+        compact = [
+            sentence for candidate in candidates for sentence in _sentences(candidate)
+            if 7 <= len(sentence.split()) <= 12
+            and not sentence.lower().startswith((
+                "scripture offers", "an honest question", "a biblical reminder",
+                "picture an ordinary", "imagine this", "consider this", "faith does not"
+            ))
+        ]
+        if compact:
+            body = _pick_by_history(compact, recent_bodies, 0.55)
+        else:
+            body = _shorten_at_sentence(body, budget)
+    else:
+        body = _shorten_at_sentence(body, budget)
     # Never publish an introduction without the substance of the reflection.
     # For example, "Scripture offers a quieter way to see this:" by itself
     # would be a hollow Reel. Fall back to a relevant, full theme-specific idea.
@@ -352,6 +368,9 @@ def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent
     closing = "" if mode == "micro" else _pick_by_history(closings, recent_closings, 0.50)
     ctas = CONTEXTUAL_CTAS.get(theme_key, [])
     recent_ctas = [r.get("cta", "") for r in recent_records[-85:]]
+    if mode == "micro" and ctas:
+        shortest = min(len(x.split()) for x in ctas)
+        ctas = [x for x in ctas if len(x.split()) <= shortest + 2]
     cta = _pick_by_history(ctas, recent_ctas, 0.55) if include_cta else ""
     return {"body": body, "closing": closing, "cta": cta,
             "narration_type": style, "narrative_angle": angle}

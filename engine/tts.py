@@ -10,7 +10,6 @@ from engine.audio import sanitize_and_trim_audio
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VOICES_DIR = os.path.join(BASE_DIR, "assets", "voices")
-KOKORO_DIR = os.path.join(BASE_DIR, "assets", "kokoro")
 
 # ─── Data Structure for Subtitle Cues ─────────────────────────────────────────
 
@@ -69,51 +68,22 @@ LEGACY_VOICE_MAP = {
 
 # Singletons
 _whisper_model = None
-_kokoro_model = None
 
 
 def check_engine_availability() -> Dict[str, bool]:
-    """Comprueba en tiempo de ejecución qué motores están verdaderamente disponibles."""
-    kokoro_ok = False
-    try:
-        from kokoro_onnx import Kokoro
-        m_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
-        v_path = os.path.join(KOKORO_DIR, "voices.bin")
-        import soundfile
-        kokoro_ok = os.path.exists(m_path) and os.path.exists(v_path)
-    except Exception:
-        kokoro_ok = False
-
-    edge_ok = False
+    """Registra los motores que se utilizan: Edge-TTS y Whisper."""
     try:
         import edge_tts
         edge_ok = True
-    except Exception:
+    except ImportError:
         edge_ok = False
-
-    piper_ok = False
-    try:
-        m_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx")
-        c_path = os.path.join(VOICES_DIR, "en_US-bryce-medium.onnx.json")
-        piper_ok = os.path.exists(m_path) and os.path.exists(c_path)
-    except Exception:
-        piper_ok = False
-
-    whisper_ok = False
     try:
         import faster_whisper
         whisper_ok = True
-    except Exception:
+    except ImportError:
         whisper_ok = False
-
-    return {
-        "kokoro": kokoro_ok,
-        "edge": edge_ok,
-        "edge_tts": edge_ok,
-        "piper": piper_ok,
-        "whisper": whisper_ok,
-        "faster_whisper": whisper_ok
-    }
+    return {"edge": edge_ok, "edge_tts": edge_ok, "whisper": whisper_ok,
+            "faster_whisper": whisper_ok, "kokoro": False, "piper": False}
 
 
 def _get_whisper():
@@ -129,24 +99,6 @@ def _get_whisper():
             _whisper_model = False
     return _whisper_model if _whisper_model is not False else None
 
-
-def _get_kokoro():
-    """Lazy load Kokoro-82M ONNX model singleton."""
-    global _kokoro_model
-    if _kokoro_model is None:
-        try:
-            from kokoro_onnx import Kokoro
-            m_path = os.path.join(KOKORO_DIR, "kokoro-v0_19.onnx")
-            v_path = os.path.join(KOKORO_DIR, "voices.bin")
-            if os.path.exists(m_path) and os.path.exists(v_path):
-                _kokoro_model = Kokoro(m_path, v_path)
-                print("[TTS Engine] Kokoro-82M inicializado con éxito.")
-            else:
-                _kokoro_model = False
-        except Exception as e:
-            print(f"[TTS Engine] Fallo al inicializar Kokoro: {e}")
-            _kokoro_model = False
-    return _kokoro_model if _kokoro_model is not False else None
 
 
 def _parse_rate(rate_str: str) -> float:
@@ -256,14 +208,7 @@ async def synthesize_speech(
     output_path: str,
     rate: str = "+0%"
 ) -> List[CueItem]:
-    """
-    Sintetiza la voz utilizando la mejor opción disponible en la jerarquía:
-    1. Edge-TTS (Online Neural HD en inglés estadounidense natural)
-    2. Kokoro-82M (Local Neural 24kHz)
-    3. Piper TTS (Local Offline Fallback)
-    Aplica compresión suave y ecualización con FFmpeg,
-    y alinea cada palabra al milisegundo exacto con faster-whisper.
-    """
+    """Sintetiza una de las cuatro voces Edge-TTS y alinea subtítulos."""
     clean_text = text.strip()
     if not clean_text:
         raise ValueError("El texto para síntesis de voz no puede estar vacío.")
@@ -336,32 +281,9 @@ async def synthesize_speech(
 
 
 def get_available_voices() -> List[Dict]:
-    """Devuelve solo las voces operativas según los motores disponibles en el sistema."""
-    avail = check_engine_availability()
-    result = []
-    for k, v in VOICES.items():
-        engine = v.get("engine", "kokoro")
-        if (engine == "kokoro" and avail["kokoro"]) or \
-           (engine == "edge" and avail["edge"]) or \
-           (engine == "piper" and avail["piper"]):
-            result.append({
-                "key": k,
-                "id": v["id"],
-                "name": v["name"],
-                "gender": v["gender"],
-                "engine": engine
-            })
-
-    # Si ningún motor específico fue detectado, devolver al menos Edge-TTS si está instalado
-    if not result:
-        for k, v in VOICES.items():
-            if v.get("engine") == "edge":
-                result.append({
-                    "key": k,
-                    "id": v["id"],
-                    "name": v["name"],
-                    "gender": v["gender"],
-                    "engine": "edge"
-                })
-
-    return result
+    """Expone únicamente las cuatro voces Edge-TTS aprobadas."""
+    return [
+        {"key": k, "id": v["id"], "name": v["name"],
+         "gender": v["gender"], "engine": "edge"}
+        for k, v in VOICES.items()
+    ]

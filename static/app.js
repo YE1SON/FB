@@ -2032,7 +2032,7 @@ function bootstrapJesusStudio() {
           hook: hook,
           body: body,
           cta: cta,
-          target_duration_sec: 22.0,
+          target_duration_sec: ({ micro: 15, deep: 22, story: 38 })[scriptDurationMode?.value || "deep"] || 22,
           duration_mode: scriptDurationMode?.value || "deep",
           voice_key: voiceSelect.value,
           rate: rateSelect.value,

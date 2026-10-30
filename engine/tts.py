@@ -47,22 +47,14 @@ VOICES: Dict[str, Dict] = {
         "gender": "Hombre",
         "base_speed": 0.94,
     },
-    "andrew": {
-        "id": "andrew",
-        "engine": "edge",
-        "voice_name": "en-US-AndrewMultilingualNeural",
-        "name": "Andrew (Dinámico y Conmovedor — Edge HD)",
-        "gender": "Hombre",
-        "base_speed": 0.94,
-    },
+
 
 }
 
 LEGACY_VOICE_MAP = {
     "en-US-GuyNeural": "guy",
     "en-US-ChristopherNeural": "christopher",
-    "en-US-BrianNeural": "brian",
-    "en-US-AndrewMultilingualNeural": "andrew"
+    "en-US-BrianNeural": "brian"
 
 }
 
@@ -208,7 +200,7 @@ async def synthesize_speech(
     output_path: str,
     rate: str = "+0%"
 ) -> List[CueItem]:
-    """Sintetiza una de las cuatro voces Edge-TTS y alinea subtítulos."""
+    """Sintetiza una de las tres voces Edge-TTS y alinea subtítulos."""
     clean_text = text.strip()
     if not clean_text:
         raise ValueError("El texto para síntesis de voz no puede estar vacío.")
@@ -227,8 +219,8 @@ async def synthesize_speech(
     if tmp_wav == output_path:
         tmp_wav = output_path + ".tmp.wav"
 
-    # Cuatro voces permitidas: exclusivamente Edge-TTS (Guy, Christopher,
-    # Brian y Andrew). No se cambia silenciosamente a una voz eliminada.
+    # Tres voces permitidas: exclusivamente Edge-TTS (Guy,
+    # Christopher y Brian). No se cambia silenciosamente a una voz eliminada.
     if engine_pref != "edge":
         raise RuntimeError("Solo están habilitadas las voces Edge-TTS seleccionadas.")
     try:
@@ -281,7 +273,7 @@ async def synthesize_speech(
 
 
 def get_available_voices() -> List[Dict]:
-    """Expone únicamente las cuatro voces Edge-TTS aprobadas."""
+    """Expone únicamente las tres voces Edge-TTS aprobadas."""
     return [
         {"key": k, "id": v["id"], "name": v["name"],
          "gender": v["gender"], "engine": "edge"}

@@ -1,4 +1,5 @@
 import re
+import random
 from typing import Dict, Optional, Tuple
 
 # Catálogo narrativo humano para las 26 temáticas:

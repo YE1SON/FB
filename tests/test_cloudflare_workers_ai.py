@@ -195,6 +195,59 @@ class CloudflareWorkersAITests(unittest.TestCase):
             )
         self.assertIn("Content moderation filter triggered", str(ctx.exception))
 
+    @patch("engine.image_gen.generate_pollinations")
+    @patch("engine.image_gen.requests.post")
+    def test_cloudflare_flagged_output_resilient_fallback(self, mock_post, mock_pollinations):
+        """
+        Verifica que ante un falso positivo del filtro de seguridad de Cloudflare ('Your output has been flagged'),
+        el motor active el respaldo automático en Pollinations FLUX para asegurar la continuidad del reel.
+        """
+        import base64
+        buf = BytesIO()
+        Image.new("RGB", (768, 1360), color=(180, 210, 240)).save(buf, format="JPEG")
+        fake_jpeg = buf.getvalue()
+
+        # Cloudflare responde con HTTP 400 y el mensaje de flag oficial
+        mock_resp = MagicMock()
+        mock_resp.status_code = 400
+        mock_resp.text = '{"errors": [{"code": 3030, "message": "AiError: Your output has been flagged. Please choose another prompt / input image combination (79171613-1c87-45b2-a59c-bc3d1313316a)"}]}'
+        mock_resp.json.return_value = {
+            "success": False,
+            "errors": [{"code": 3030, "message": "AiError: Your output has been flagged. Please choose another prompt / input image combination (79171613-1c87-45b2-a59c-bc3d1313316a)"}]
+        }
+        mock_post.return_value = mock_resp
+
+        # Pollinations genera la imagen de respaldo
+        mock_pollinations.return_value = fake_jpeg
+
+        result = generate_ai_scene_image(
+            prompt="A vulnerable scene in the bedroom touching the bedside",
+            provider="cloudflare_auto",
+            scene_num=1
+        )
+        self.assertEqual(result["status"], "success")
+        self.assertIn("Pollinations FLUX (Respaldo por filtro Cloudflare)", result["engine"])
+        self.assertTrue(os.path.exists(os.path.join(server.ASSETS_DIR, result["filename"])))
+
+        # Limpiar archivo temporal
+        try:
+            os.remove(os.path.join(server.ASSETS_DIR, result["filename"]))
+        except OSError:
+            pass
+
+    def test_prompt_sanitization_removes_moderation_triggers(self):
+        """Verifica que el sanitizador reemplace palabras de riesgo por términos fotográficos seguros."""
+        from engine.image_gen import sanitize_prompt_for_image_engine
+        raw = "intimate bedroom scene with vulnerability, touching the bedside, chest heavy with unworthiness"
+        clean = sanitize_prompt_for_image_engine(raw)
+        self.assertNotIn("intimate", clean.lower())
+        self.assertNotIn("bedroom", clean.lower())
+        self.assertNotIn("vulnerability", clean.lower())
+        self.assertNotIn("bedside", clean.lower())
+        self.assertNotIn("unworthiness", clean.lower())
+        self.assertIn("living room", clean.lower())
+        self.assertIn("text-free", clean.lower())
+
     def test_quota_exhaustion_raises_runtime_error(self):
         """Verifica que el generador rechace la llamada si se agotaron las 10,000 neuronas."""
         data = load_neurons_data()

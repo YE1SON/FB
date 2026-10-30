@@ -21,22 +21,22 @@ THEME_NARRATIVE_BLUEPRINTS = {
         "character": "an honest working adult",
         "setting": "a modest kitchen dining table late at night",
         "scene_1": "resting forehead in hand next to household budget papers and a cup of tea, carrying fatigue and concern, as Jesus Christ stands quietly beside them with compassionate eyes and loving divine comfort",
-        "scene_2": "pausing, placing hand over chest, eyes closed in deep meditative surrender and quiet prayer for family provision, as Jesus Christ places a comforting hand upon their shoulder and hands",
+        "scene_2": "pausing, hands folded in quiet prayer, eyes closed in deep meditative surrender and quiet prayer for family provision, as Jesus Christ places a comforting hand upon their shoulder and hands",
         "scene_3": "standing upright by the window in morning daylight, holding coffee, looking forward with calm strength and quiet assurance, as Jesus Christ stands beside them in bright warm light with a reassuring smile of divine blessing"
     },
     "medical_fear": {
         "character": "a compassionate adult",
-        "setting": "a peaceful, softly lit bedroom chair",
-        "scene_1": "holding medical appointment papers with subtle anxiety and contemplative human vulnerability, as Jesus Christ sits gently beside them, gazing with deep empathy and calming presence",
+        "setting": "a peaceful, softly lit living room armchair",
+        "scene_1": "holding medical appointment papers with subtle anxiety and contemplative reflection, as Jesus Christ sits gently beside them, gazing with deep empathy and calming presence",
         "scene_2": "hands gently clasped together in reverent silence, eyes closed in earnest faith and emotional peace, as Jesus Christ places a warm, healing hand of grace upon their shoulder",
         "scene_3": "warm morning sunlight washing over their face, a relaxed posture of deep comfort, relief and steadfast trust, as Jesus Christ stands beside them with a gentle smile of divine restoration"
     },
     "night_anxiety": {
         "character": "a weary adult",
-        "setting": "a dimly lit bedroom in the quiet hours of the night",
-        "scene_1": "sitting on the edge of the bed in soft lamp light, looking pensive as restless thoughts weigh on their mind, as Jesus Christ sits gently next to them with deep calm and loving empathy",
+        "setting": "a dimly lit living room in the quiet hours of the night",
+        "scene_1": "sitting in an armchair in soft lamp light, looking pensive as thoughts weigh on their mind, as Jesus Christ sits gently next to them with deep calm and loving empathy",
         "scene_2": "taking a slow, deep breath, eyes softly closed in quiet prayer, as Jesus Christ places a gentle, soothing hand upon their back, releasing tension and fear",
-        "scene_3": "resting head peacefully on the pillow under comfortable blankets, serene sleep in gentle moonlight, as Jesus Christ watches over them with tranquil protection and peace"
+        "scene_3": "resting peacefully in the armchair in serene calm and gentle moonlight, as Jesus Christ watches over them with tranquil protection and peace"
     },
     "lonely_widow": {
         "character": "an elderly woman with kind, weathered eyes",
@@ -68,9 +68,9 @@ THEME_NARRATIVE_BLUEPRINTS = {
     },
     "sick_grandchild": {
         "character": "a loving grandparent",
-        "setting": "a quiet bedside in a softly lit bedroom",
-        "scene_1": "watching over a resting child with tender concern and worry, as Jesus Christ stands at the bedside with overflowing mercy and divine tenderness",
-        "scene_2": "gently touching the child's hand while whispering a tearful prayer of faith, as Jesus Christ places His healing hand over the child's head and the grandparent's hand",
+        "setting": "a quiet armchair in a softly lit living room",
+        "scene_1": "watching over a resting child with tender concern and care, as Jesus Christ stands gently beside them with overflowing mercy and divine tenderness",
+        "scene_2": "gently holding the child's hand while whispering a heartfelt prayer of faith, as Jesus Christ places His healing hand over the child's head and the grandparent's hand",
         "scene_3": "holding the awake child's little hand with an expression of profound relief and thankful warmth in the soft morning light, as Jesus Christ stands beside them with a joyful smile of answered healing"
     },
     "job_breakthrough": {
@@ -83,7 +83,7 @@ THEME_NARRATIVE_BLUEPRINTS = {
     "addiction_chains": {
         "character": "a strong person on the journey of recovery",
         "setting": "a quiet porch or open room at twilight",
-        "scene_1": "sitting alone on a step at twilight with intense vulnerability and honest struggle visible in their face, as Jesus Christ stands firmly beside them with unconditional mercy and strength",
+        "scene_1": "sitting alone on a step at twilight with deep reflection and quiet perseverance visible in their face, as Jesus Christ stands firmly beside them with unconditional mercy and strength",
         "scene_2": "hands firmly clasped in courageous prayer, breaking through shame with genuine resolve, as Jesus Christ places strong, loving hands upon their shoulders, breaking the heavy weight",
         "scene_3": "standing upright facing the dawn breeze, eyes clear, posture of authentic freedom and dignified peace, as Jesus Christ stands beside them with an outstretched hand of enduring victory and freedom"
     },
@@ -103,10 +103,10 @@ THEME_NARRATIVE_BLUEPRINTS = {
     },
     "healing_depression": {
         "character": "a gentle adult fighting a quiet internal battle",
-        "setting": "a quiet, cozy corner of a bedroom",
-        "scene_1": "wrapped in a warm blanket, eyes carrying honest human weariness and vulnerability, as Jesus Christ kneels gently beside them, looking with tender compassion and no judgment",
-        "scene_2": "resting hands gently over their chest, taking an honest breath, finding solace in silent prayer, as Jesus Christ places a warm hand of life and comfort over their heart, breaking the darkness",
-        "scene_3": "soft morning sunlight touching their face, gentle emergence of hope and peaceful self-compassion, as Jesus Christ stands beside them smiling with renewing grace"
+        "setting": "a quiet, cozy corner of a living room",
+        "scene_1": "wrapped in a warm shawl, eyes carrying honest human weariness and deep reflection, as Jesus Christ kneels gently beside them, looking with tender compassion and no judgment",
+        "scene_2": "resting hands gently in prayer, taking an honest breath, finding solace in silent prayer, as Jesus Christ places a warm hand of life and comfort over their shoulder, bringing light into the shadows",
+        "scene_3": "soft morning sunlight illuminating their face, gentle emergence of hope and peaceful self-compassion, as Jesus Christ stands beside them smiling with renewing grace"
     },
     "family_protection": {
         "character": "a loving parent",
@@ -117,10 +117,10 @@ THEME_NARRATIVE_BLUEPRINTS = {
     },
     "restless_sleep": {
         "character": "an exhausted adult seeking sleep",
-        "setting": "a calm bedroom in the quiet late night",
-        "scene_1": "tossing restlessly in bed with weary eyes carrying the day's burdens, as Jesus Christ sits gently by the bedside with a tranquil, soothing presence",
-        "scene_2": "sitting up slowly, folding hands in quiet prayer of total surrender, as Jesus Christ places a gentle, cooling hand upon their forehead, calming every racing thought",
-        "scene_3": "resting peacefully with eyes softly closed in deep, restorative sleep, as Jesus Christ stands watchfully beside the bed under quiet moonbeams, granting divine rest"
+        "setting": "a calm living room in the quiet late night",
+        "scene_1": "sitting quietly in an armchair with weary eyes carrying the day's burdens, as Jesus Christ sits gently beside them with a tranquil, soothing presence",
+        "scene_2": "folding hands in quiet prayer of total surrender, as Jesus Christ extends a gentle hand of peace over them, calming every racing thought",
+        "scene_3": "resting peacefully with eyes softly closed in deep, restorative rest, as Jesus Christ stands watchfully beside them under quiet moonbeams, granting divine peace"
     },
     "gratitude_harvest": {
         "character": "a humble, thankful person",
@@ -161,7 +161,7 @@ THEME_NARRATIVE_BLUEPRINTS = {
         "character": "a grieving person mourning a loved one",
         "setting": "a softly lit living room chair with an empty chair nearby",
         "scene_1": "looking at an empty seat or cherished keepsake with quiet tears of heartbreak, as Jesus Christ sits gently beside them, comforting them with tears of divine empathy",
-        "scene_2": "bowing head with hands over heart, crying out in prayer for strength to endure the grief, as Jesus Christ wraps a warm, loving arm of comfort around their trembling shoulders",
+        "scene_2": "bowing head with hands over heart, praying earnestly for strength to endure the grief, as Jesus Christ wraps a warm, loving arm of comfort around their bowed shoulders",
         "scene_3": "looking up toward the gentle window light with soft peace and eternal hope, as Jesus Christ stands beside them, whispering eternal life and heavenly comfort"
     },
     "guidance_direction": {
@@ -188,7 +188,7 @@ THEME_NARRATIVE_BLUEPRINTS = {
     "divine_grace": {
         "character": "a person seeking God's mercy and forgiveness",
         "setting": "a humble domestic room in soft evening light",
-        "scene_1": "looking down at their hands with quiet humility and a sense of unworthiness, as Jesus Christ approaches with eyes radiant with unconditional love and forgiveness",
+        "scene_1": "looking down at their hands with quiet humility and sincere reverence, as Jesus Christ approaches with eyes radiant with unconditional love and forgiveness",
         "scene_2": "kneeling in prayer, confessing shortcomings with a broken and contrite heart, as Jesus Christ lifts their chin gently with loving grace, washing away all guilt",
         "scene_3": "standing upright in bright morning illumination, filled with dignity, joy, and peace, as Jesus Christ smiles warmly, clothing them in divine righteousness"
     }
@@ -197,7 +197,7 @@ THEME_NARRATIVE_BLUEPRINTS = {
 DEFAULT_BLUEPRINT = {
     "character": "a faithful, thoughtful adult",
     "setting": "a calm, authentic home setting",
-    "scene_1": "facing an honest life challenge with contemplative vulnerability, as Jesus Christ stands gently beside them with compassionate eyes and loving divine comfort",
+    "scene_1": "facing an honest life challenge with contemplative reverence, as Jesus Christ stands gently beside them with compassionate eyes and loving divine comfort",
     "scene_2": "closing eyes with clasped hands in earnest personal prayer, as Jesus Christ places a warm, comforting hand of peace upon their shoulder and hands",
     "scene_3": "experiencing a gentle dawn of renewed hope and peaceful joy, as Jesus Christ stands beside them raising a hand of divine blessing in the golden light"
 }
@@ -215,7 +215,7 @@ PHOTO_CUES = (
 # symbols. Prompt variation cannot guarantee provider output consistency.
 CAMERA_PLANS = (
     ("eye-level medium shot", "over-the-shoulder close shot", "gentle wide shot"),
-    ("intimate face-and-hands close-up", "eye-level medium shot", "quiet doorway composition"),
+    ("expressive face-and-hands close-up", "eye-level medium shot", "quiet doorway composition"),
     ("over-the-shoulder view", "hands-and-Bible close-up", "balanced three-quarter view"),
     ("cinematic wide establishing shot", "close portrait of prayer", "medium shot in natural window light"),
 )

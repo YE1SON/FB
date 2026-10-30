@@ -134,7 +134,31 @@ function bootstrapJesusStudio() {
   function showAiGenError(title, message) {
     if (!aiGenErrorBanner) return;
     if (aiGenErrorTitle) aiGenErrorTitle.textContent = title || "Error en la Generación con IA";
-    if (aiGenErrorMsg) aiGenErrorMsg.textContent = message || "Ocurrió un fallo en la generación.";
+    if (aiGenErrorMsg) {
+      aiGenErrorMsg.textContent = message || "Ocurrió un fallo en la generación.";
+      if (message && (message.toLowerCase().includes("flagged") || message.toLowerCase().includes("filtro de seguridad"))) {
+        const extraAction = document.createElement("div");
+        extraAction.className = "mt-6";
+        extraAction.innerHTML = `
+          <button type="button" class="btn btn-xs btn-primary" id="btnSwitchToPollinations" style="font-weight: 600; margin-top: 6px;">
+            ⚡ Cambiar a Pollinations FLUX y Reintentar
+          </button>
+        `;
+        aiGenErrorMsg.appendChild(extraAction);
+        const switchBtn = document.getElementById("btnSwitchToPollinations");
+        if (switchBtn) {
+          switchBtn.addEventListener("click", () => {
+            const provSelect = document.getElementById("aiImageProviderSelect");
+            if (provSelect) {
+              provSelect.value = "pollinations";
+              provSelect.dispatchEvent(new Event("change"));
+            }
+            hideAiGenError();
+            if (btnGenerate3ScenesAi) btnGenerate3ScenesAi.click();
+          });
+        }
+      }
+    }
     aiGenErrorBanner.style.display = "block";
   }
 
@@ -1291,6 +1315,35 @@ function bootstrapJesusStudio() {
     clean = clean.replace(/["“”]/g, "");
     clean = clean.replace(/\bOpen Holy Bible\b/gi, "closed Holy Bible on a wooden table");
     clean = clean.replace(/\bopen Bible\b/gi, "closed Bible");
+
+    // Suavizado preventivo contra falsos positivos de moderación (Cloudflare Workers AI / Flux)
+    const moderationRules = [
+      [/\bintimate\b/gi, "expressive and close"],
+      [/\bvulnerability\b/gi, "reverent contemplation"],
+      [/\bvulnerable\b/gi, "reflective"],
+      [/\bbedroom\b/gi, "living room"],
+      [/\bbedside\b/gi, "side table"],
+      [/\bin bed\b/gi, "in an armchair"],
+      [/\btossing restlessly in bed\b/gi, "sitting quietly in reflection"],
+      [/\bunworthiness\b/gi, "humility"],
+      [/\bunworthy\b/gi, "humble"],
+      [/\btrembling shoulders\b/gi, "bowed shoulders"],
+      [/\btrembling\b/gi, "gentle"],
+      [/\bcrying out\b/gi, "praying earnestly"],
+      [/\bgently touching\b/gi, "gently holding"],
+      [/\btouching\b/gi, "holding near"],
+      [/\bover (?:their|his|her) chest\b/gi, "in prayer over their heart"],
+      [/\bchest\b/gi, "heart"],
+      [/\bchains\b/gi, "burdens"],
+      [/\baddiction\b/gi, "hardship"],
+      [/\bbarefoot\b/gi, "standing"],
+      [/\bdarkness\b/gi, "shadows"],
+      [/\bheavy spiritual resistance\b/gi, "quiet perseverance in prayer"],
+      [/\bspiritual warfare\b/gi, "deep prayer of faith"]
+    ];
+    for (const [pattern, replacement] of moderationRules) {
+      clean = clean.replace(pattern, replacement);
+    }
     clean = clean.replace(/\s+/g, " ").trim();
     if (!clean.toLowerCase().includes("text-free") && !clean.toLowerCase().includes("no text")) {
       clean += ", completely text-free image, clean photographic composition without words, strictly no text, no letters, no typography, no subtitles, no captions, no watermark";

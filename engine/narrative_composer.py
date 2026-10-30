@@ -330,7 +330,23 @@ def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent
         body = f"{intro} {body}"
     # Mantener una duración estimada comprensible y sin cortes a mitad de idea.
     budgets = {"micro": 16, "deep": 29, "story": 60}
-    body = _shorten_at_sentence(body, budgets.get(mode, 29))
+    budget = budgets.get(mode, 29)
+    body = _shorten_at_sentence(body, budget)
+    # Never publish an introduction without the substance of the reflection.
+    # For example, "Scripture offers a quieter way to see this:" by itself
+    # would be a hollow Reel. Fall back to a relevant, full theme-specific idea.
+    if len(body.split()) < max(9, int(budget * 0.48)):
+        preferred = {
+            "reflection": "scripture_reflection",
+            "comfort": "heart_comfort",
+            "story": "heart_comfort",
+            "prayer": "prayer",
+        }[style]
+        core = theme.get("perspectives", {}).get(preferred, "")
+        if core:
+            alternative = _shorten_at_sentence(core, budget)
+            if len(alternative.split()) > len(body.split()):
+                body = alternative
     closings = theme.get("closings", [])
     recent_closings = [r.get("closing", "") for r in recent_records[-55:]]
     closing = "" if mode == "micro" else _pick_by_history(closings, recent_closings, 0.50)

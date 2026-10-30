@@ -329,7 +329,7 @@ def build_narration(theme_key, theme, narration_type, mode, custom_topic, recent
             intro = f"If you're carrying a concern about {context}, you're not invisible."
         body = f"{intro} {body}"
     # Mantener una duración estimada comprensible y sin cortes a mitad de idea.
-    budgets = {"micro": 16, "deep": 29, "story": 60}
+    budgets = {"micro": 9, "deep": 29, "story": 60}
     budget = budgets.get(mode, 29)
     body = _shorten_at_sentence(body, budget)
     # Never publish an introduction without the substance of the reflection.

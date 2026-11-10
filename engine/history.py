@@ -114,6 +114,11 @@ class ScriptHistoryManager:
 
         return False, None
 
+    def get_recent_scripts(self, limit: int = 25) -> List[Dict]:
+        """Retorna las últimas N narraciones generadas."""
+        records = self.load_history()
+        return records[-limit:] if records else []
+
     def get_recent_theme_keys(self, count: int = 5) -> List[str]:
         """Retorna las claves de temas utilizados en las últimas N generaciones."""
         records = self.load_history()

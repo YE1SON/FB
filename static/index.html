@@ -244,6 +244,25 @@
             </div>
           </div>
 
+          <!-- Selector de Motor Narrativo con IA Gratuita -->
+          <div class="form-row mt-12">
+            <div class="form-group col-7">
+              <label for="narrativeEngineSelect">🤖 Motor de Narración</label>
+              <select id="narrativeEngineSelect" class="form-control">
+                <option value="gemini" selected>✨ Google Gemini IA (Gratuito)</option>
+                <option value="groq">⚡ GroqCloud LLaMA (Gratuito)</option>
+                <option value="local">📖 Motor Local Editorial (Offline)</option>
+              </select>
+            </div>
+            <div class="form-group col-5">
+              <label>Estado del Motor</label>
+              <div id="narrativeEngineBadge" class="badge-status-display">
+                <span id="narrativeEngineDot" class="status-dot-green"></span>
+                <span id="narrativeEngineStatusText">Gemini Listo</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Selector de Tema y Duración -->
           <div class="form-row mt-12">
             <div class="form-group col-7">
@@ -262,6 +281,14 @@
             </div>
           </div>
 
+          <!-- Enfoque Específico y Humano del Tema Elegido -->
+          <div class="form-group mt-12">
+            <label for="themeFocusSelect">🎯 Enfoque Particular del Tema</label>
+            <select id="themeFocusSelect" class="form-control">
+              <!-- Inyectado dinámicamente según el tema seleccionado -->
+            </select>
+          </div>
+
           <div class="form-row mt-12">
             <div class="form-group col-7">
               <label for="narrationTypeSelect">Tipo de narración</label>
@@ -273,16 +300,16 @@
               </select>
             </div>
             <div class="form-group col-5">
-              <label for="includeNarratedCta">Invitación final</label>
+              <label for="includeNarratedCta">Invitación final (CTA)</label>
               <select id="includeNarratedCta" class="form-control">
-                <option value="yes" selected>Contextual</option>
+                <option value="yes" selected>Contextual (Recomendado)</option>
                 <option value="no">Sin CTA narrado</option>
               </select>
             </div>
           </div>
           <div class="form-group mt-8">
-            <label for="customTopic">Petición o enfoque específico (opcional, en inglés o español)</label>
-            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Por mi hijo que no me habla, descanso para esta noche...">
+            <label for="customTopic">Petición o situación personal adicional (opcional)</label>
+            <input type="text" id="customTopic" class="form-control" placeholder="Ej: Por mi hijo en la universidad, descanso para esta noche...">
           </div>
 
           <!-- Botón de Generación de Guion -->
@@ -299,7 +326,20 @@
           </div>
 
           <div class="provider-status-badge mb-12" id="scriptProviderStatus" style="display: none; font-size: 12px; padding: 7px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.10); border: 1px solid rgba(59, 130, 246, 0.30); color: #2563eb;" role="status">
-            📋 <strong>Motor:</strong> Plantilla temática estructurada con catálogo bíblico verificado.
+            📋 <strong>Motor:</strong> Generado con IA.
+          </div>
+
+          <!-- 3 Alternativas de Apertura Generadas en 1 Solicitud -->
+          <div id="hookAlternativesSection" class="hook-alternatives-card mt-12" style="display: none;">
+            <div class="flex-between align-center mb-6">
+              <label class="mb-0" style="font-size: 12px; font-weight: 700; color: var(--gold);">
+                🎣 3 Alternativas de Gancho Inicial (Haz clic para alternar sin regenerar):
+              </label>
+              <span class="text-xs text-muted">1 clic cambia la apertura</span>
+            </div>
+            <div class="hook-pills-grid" id="hookPillsGrid">
+              <!-- Botones de las 3 opciones -->
+            </div>
           </div>
 
           <!-- Cuadrícula Limpia de 3 Cajas del Guion: Gancho, Mensaje, Llamada a la Acción -->
@@ -338,7 +378,7 @@
           <!-- Botón de Sincronización con Escenas -->
           <div class="sync-prompts-bar mt-12">
             <button type="button" id="btnSyncScriptToImage" class="btn btn-gold-outline btn-block" style="font-weight: 700;">
-              🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion
+              🪄 Sincronizar: Crear Prompt para la Imagen de este Reel
             </button>
           </div>
 
@@ -494,9 +534,14 @@
               <button type="button" id="btnCloseAiKeys" class="btn btn-sm btn-outline">✕ Cerrar</button>
             </div>
             <div class="form-group mb-8">
-              <label>✨ Google AI Studio API Key (Para Google Imagen 3 — 100-500/día Gratis)</label>
+              <label>✨ Google AI Studio API Key (Para Redacción Gemini y Google Imagen 3 — Gratis)</label>
               <input type="password" id="geminiApiKeyInput" class="form-control" placeholder="Clave AIzaSy... (Obtén tu API key gratis en aistudio.google.com)">
-              <small class="text-muted" style="display: block; margin-top: 4px;">Cuota diaria gratuita: 100 a 500 imágenes por día sin costo ni tarjeta requerida.</small>
+              <small class="text-muted" style="display: block; margin-top: 4px;">Cuota gratuita: Generación ilimitada de guiones espirituales y cientos de imágenes.</small>
+            </div>
+            <div class="form-group mb-8">
+              <label>⚡ GroqCloud API Key (Para Redacción Ultrarrápida — Nivel Gratuito)</label>
+              <input type="password" id="groqApiKeyInput" class="form-control" placeholder="gsk_... (Obtén tu API key gratis en console.groq.com)">
+              <small class="text-muted" style="display: block; margin-top: 4px;">Cuota gratuita: LLaMA 3.3 70B y LLaMA 3.1 8B sin costo.</small>
             </div>
             <div class="form-group mb-8">
               <label>⚡ Cloudflare Account ID</label>
@@ -543,86 +588,51 @@
             </div>
           </div>
 
-          <!-- Botón de Asistente Externo y Variantes -->
-          <div class="flex-between mt-10">
-            <button type="button" id="btnCopyPromptForExternal" class="btn btn-sm btn-outline">
-              📋 Copiar Prompt para Bing / Recraft
-            </button>
-            <button type="button" id="btnRerollPrompt" class="btn btn-sm btn-outline">
-              🎲 Otras 3 Variantes de Escenas
-            </button>
+          <!-- Selector de Estilo Visual y Motor de IA -->
+          <div class="form-row mt-12 align-end">
+            <div class="form-group col-6 mb-0">
+              <label for="visualStyleSelect">🎨 Estilo Visual de la Imagen</label>
+              <select id="visualStyleSelect" class="form-control" style="font-weight: 600;">
+                <option value="auto" selected>✨ Auto (Analizar Tema y Mensaje)</option>
+                <option value="jesus">🕊️ Retrato Reverente de Jesús</option>
+                <option value="family">👨‍👩‍👧 Familia / Creyente en Oración</option>
+                <option value="bible">📖 Santa Biblia y Luz Cálida</option>
+                <option value="cross">✝️ Cruz al Amanecer</option>
+                <option value="landscape">🌅 Paisaje Celestial y Serenidad</option>
+              </select>
+            </div>
+            <div class="form-group col-6 mb-0">
+              <button type="button" id="btnToggleAiSettings" class="btn btn-outline btn-block" style="height: 42px;">
+                ⚙️ Tokens / Claves API
+              </button>
+            </div>
           </div>
 
-          <!-- Botón Principal: Generar 3 Escenas en 1 Clic -->
-          <button type="button" id="btnGenerate3ScenesAi" class="btn btn-primary-gradient btn-large btn-block mt-12">
-            🚀 GENERAR LAS 3 ESCENAS CON IA EN 1 CLIC (CREAR Y ASIGNAR)
+          <!-- Prompt Visual Único para Todo el Reel -->
+          <div class="single-prompt-card mt-12">
+            <div class="flex-between align-center mb-6">
+              <span class="scene-tag tag-gold">🖼️ Imagen Principal del Reel (Sostiene toda la narración)</span>
+              <div class="flex-gap-6 align-center">
+                <button type="button" id="btnSyncSinglePrompt" class="btn btn-xs btn-outline">🪄 Re-generar Prompt</button>
+                <button type="button" id="btnCopyPromptForExternal" class="btn btn-xs btn-outline">📋 Copiar</button>
+              </div>
+            </div>
+            <textarea id="singlePromptInput" rows="3" class="form-control text-sm" placeholder="Prompt visual único y cinematográfico para todo el Reel..."></textarea>
+            <small class="text-muted" style="display: block; margin-top: 4px;">Formato vertical 9:16 fotorrealista y digno, estrictamente sin letras ni textos superpuestos.</small>
+          </div>
+
+          <!-- Botón Principal: Generar Imagen Heroica con IA -->
+          <button type="button" id="btnGenerateSingleImageAi" class="btn btn-primary-gradient btn-large btn-block mt-12">
+            🎨 GENERAR IMAGEN CON IA (PARA TODO EL REEL)
           </button>
 
-          <!-- Barra de Progreso de Generación -->
-          <div id="batchGenProgressBox" class="progress-box mt-10" style="display: none;">
-            <div class="spinner"></div>
-            <div id="batchGenProgressText" class="progress-title">Generando Escena 1 de 3 (Apertura)...</div>
-            <div id="batchGenProgressSub" class="progress-sub">Creando toma con iluminación dorada e impacto visual...</div>
-          </div>
-
-          <!-- Opciones de Consistencia Multi-Escena -->
-          <div class="flex-between align-center mt-12 mb-6 p-8 rounded bg-card-sub border-main">
-            <label class="flex-gap-8 align-center mb-0 cursor-pointer">
-              <input type="checkbox" id="chkUseScene1Reference" checked>
-              <span class="text-sm"><strong>🔗 Coherencia Visual:</strong> Usar Escena 1 como referencia para Escenas 2 y 3 (mantiene personaje, ropa y ambiente)</span>
-            </label>
-          </div>
-
-          <!-- Prompts Editables de las 3 Escenas -->
-          <div class="scene-prompts-stack mt-8">
-            <div class="scene-prompt-box">
-              <div class="flex-between mb-4">
-                <span class="scene-tag tag-blue">🎬 Toma 1: Apertura (0.0s a 3.2s)</span>
-                <div class="flex-gap-6 align-center">
-                  <select id="scene1ModelSelect" class="form-control form-control-xs select-scene-model" title="Modelo de Escena 1">
-                    <option value="auto" selected>Auto (Klein 9B Hero)</option>
-                    <option value="klein_9b">Klein 9B</option>
-                    <option value="klein_4b">Klein 4B</option>
-                  </select>
-                  <button type="button" id="btnGenScene1Only" class="btn btn-xs btn-outline">🎨 Crear solo Toma 1</button>
-                </div>
-              </div>
-              <textarea id="scene1PromptInput" rows="2" class="form-control text-sm" placeholder="Prompt de la toma 1..."></textarea>
-            </div>
-
-            <div class="scene-prompt-box mt-8">
-              <div class="flex-between mb-4">
-                <span class="scene-tag tag-gold">✨ Toma 2: Intercesión (3.2s a 10s)</span>
-                <div class="flex-gap-6 align-center">
-                  <select id="scene2ModelSelect" class="form-control form-control-xs select-scene-model" title="Modelo de Escena 2">
-                    <option value="auto" selected>Auto (Klein 4B + Ref)</option>
-                    <option value="klein_4b">Klein 4B</option>
-                    <option value="klein_9b">Klein 9B</option>
-                  </select>
-                  <button type="button" id="btnGenScene2Only" class="btn btn-xs btn-outline">🎨 Crear solo Toma 2</button>
-                </div>
-              </div>
-              <textarea id="scene2PromptInput" rows="2" class="form-control text-sm" placeholder="Prompt de la toma 2..."></textarea>
-            </div>
-
-            <div class="scene-prompt-box mt-8">
-              <div class="flex-between mb-4">
-                <span class="scene-tag tag-green">🕊️ Toma 3: Victoria (10s al final)</span>
-                <div class="flex-gap-6 align-center">
-                  <select id="scene3ModelSelect" class="form-control form-control-xs select-scene-model" title="Modelo de Escena 3">
-                    <option value="auto" selected>Auto (Klein 4B + Ref)</option>
-                    <option value="klein_4b">Klein 4B</option>
-                    <option value="klein_9b">Klein 9B</option>
-                  </select>
-                  <button type="button" id="btnGenScene3Only" class="btn btn-xs btn-outline">🎨 Crear solo Toma 3</button>
-                </div>
-              </div>
-              <textarea id="scene3PromptInput" rows="2" class="form-control text-sm" placeholder="Prompt de la toma 3..."></textarea>
-            </div>
-          </div>
-
-          <!-- Input oculto para compatibilidad hacia atrás -->
+          <!-- Inputs ocultos para retrocompatibilidad total -->
+          <textarea id="scene1PromptInput" style="display: none;"></textarea>
+          <textarea id="scene2PromptInput" style="display: none;"></textarea>
+          <textarea id="scene3PromptInput" style="display: none;"></textarea>
           <textarea id="aiImagePrompt" style="display: none;"></textarea>
+          <button type="button" id="btnGenerate3ScenesAi" style="display: none;"></button>
+
 
           <!-- Selector de Modo de Fondo (Imágenes vs B-Roll) -->
           <div class="form-group mt-14">
@@ -1123,63 +1133,35 @@
             </div>
           </div>
 
-          <!-- Barra de Escenas Estilo Google Vids (Línea de Tiempo Horizontal con Transiciones) -->
+          <!-- Visual Heroico del Reel (1 Imagen que sostiene la narración con movimiento continuo) -->
           <div class="reel-timeline-shelf mt-10">
             <div class="timeline-header flex-between mb-6">
-              <span class="shelf-label">🎬 Escenas del Reel (Timeline Google Vids)</span>
-              <span class="text-xs text-muted" id="timelineActiveLabel">Escena 1 activa (0.0s – 3.2s)</span>
+              <span class="shelf-label">🖼️ Visual Único del Reel (1 Imagen Continua)</span>
+              <span class="text-xs text-muted" id="timelineActiveLabel">Cámara continua sin cortes</span>
             </div>
             
-            <div class="timeline-horizontal-track">
-              <!-- Escena 1 -->
-              <div class="timeline-scene-card active" id="previewThumbScene1" data-scene="1">
+            <div class="timeline-horizontal-track" style="justify-content: center;">
+              <!-- Imagen Heroica -->
+              <div class="timeline-scene-card active" id="previewThumbScene1" data-scene="1" style="flex: 1; max-width: 100%;">
                 <div class="scene-card-thumb">
-                  <img src="/assets/images/jesus_healing_miracle.jpg" alt="Escena 1" id="shelfImgScene1">
-                  <span class="scene-index-badge">1</span>
+                  <img src="/assets/images/jesus_healing_miracle.jpg" alt="Imagen Heroica" id="shelfImgScene1">
+                  <span class="scene-index-badge">HD</span>
                 </div>
                 <div class="scene-card-meta">
-                  <strong class="scene-card-title">1. Apertura</strong>
-                  <span class="scene-card-duration">0.0–3.2s</span>
-                </div>
-              </div>
-
-              <!-- Transición 1 -> 2 -->
-              <div class="timeline-transition-badge" id="transBadge1" title="Transición Escena 1 ➔ 2">
-                <span class="trans-icon">⤨</span>
-                <span class="trans-label" id="transLabel1">Disolver</span>
-              </div>
-
-              <!-- Escena 2 -->
-              <div class="timeline-scene-card" id="previewThumbScene2" data-scene="2">
-                <div class="scene-card-thumb">
-                  <img src="/assets/images/jesus_reaching_hand.jpg" alt="Escena 2" id="shelfImgScene2">
-                  <span class="scene-index-badge">2</span>
-                </div>
-                <div class="scene-card-meta">
-                  <strong class="scene-card-title">2. Intercesión</strong>
-                  <span class="scene-card-duration">3.2–10s</span>
-                </div>
-              </div>
-
-              <!-- Transición 2 -> 3 -->
-              <div class="timeline-transition-badge" id="transBadge2" title="Transición Escena 2 ➔ 3">
-                <span class="trans-icon">⤨</span>
-                <span class="trans-label" id="transLabel2">Disolver</span>
-              </div>
-
-              <!-- Escena 3 -->
-              <div class="timeline-scene-card" id="previewThumbScene3" data-scene="3">
-                <div class="scene-card-thumb">
-                  <img src="/assets/images/jesus_comforting_embrace.jpg" alt="Escena 3" id="shelfImgScene3">
-                  <span class="scene-index-badge">3</span>
-                </div>
-                <div class="scene-card-meta">
-                  <strong class="scene-card-title">3. Victoria</strong>
-                  <span class="scene-card-duration">10s–Fin</span>
+                  <strong class="scene-card-title" id="timelineHeroTitle">Imagen Principal Heroica</strong>
+                  <span class="scene-card-duration">Sostiene todo el video con movimiento de cámara</span>
                 </div>
               </div>
             </div>
+            <!-- Elementos ocultos para retrocompatibilidad total -->
+            <div style="display: none;">
+              <div id="previewThumbScene2"><img id="shelfImgScene2"></div>
+              <div id="previewThumbScene3"><img id="shelfImgScene3"></div>
+              <div id="transBadge1"></div>
+              <div id="transBadge2"></div>
+            </div>
           </div>
+
 
           <!-- Botón de Render Rápido en Panel Derecho -->
           <button type="button" id="btnRightRender" class="btn btn-warning-gradient btn-block btn-large mt-10">

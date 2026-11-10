@@ -36,7 +36,8 @@ def load_keys() -> Dict[str, str]:
         "aihorde_api_key": os.environ.get("AIHORDE_API_KEY", "0000000000"),
         "cf_account_id": os.environ.get("CF_ACCOUNT_ID", ""),
         "cf_api_token": os.environ.get("CF_API_TOKEN", ""),
-        "gemini_api_key": os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
+        "gemini_api_key": os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", "")),
+        "groq_api_key": os.environ.get("GROQ_API_KEY", "")
     }
     if os.path.exists(KEYS_FILE):
         try:
@@ -52,6 +53,8 @@ def load_keys() -> Dict[str, str]:
                     keys["cf_api_token"] = saved["cf_api_token"]
                 if saved.get("gemini_api_key"):
                     keys["gemini_api_key"] = saved["gemini_api_key"]
+                if saved.get("groq_api_key"):
+                    keys["groq_api_key"] = saved["groq_api_key"]
         except Exception as e:
             print(f"[ImageGen] Error al leer ai_keys.json: {e}")
     return keys
@@ -62,6 +65,7 @@ def save_keys(
     cf_account_id: Optional[str] = None,
     cf_api_token: Optional[str] = None,
     gemini_api_key: Optional[str] = None,
+    groq_api_key: Optional[str] = None,
     **kwargs
 ) -> Dict[str, str]:
     """Guarda claves en ai_keys.json."""
@@ -76,6 +80,8 @@ def save_keys(
         current["cf_api_token"] = cf_api_token.strip()
     if gemini_api_key is not None:
         current["gemini_api_key"] = gemini_api_key.strip()
+    if groq_api_key is not None:
+        current["groq_api_key"] = groq_api_key.strip()
 
     try:
         with open(KEYS_FILE, "w", encoding="utf-8") as f:
@@ -97,6 +103,21 @@ def get_providers_status() -> Dict:
     neurons_status = get_neurons_status()
 
     return {
+        "narrative_gemini": {
+            "name": "Google Gemini IA (Nivel Gratuito)",
+            "configured": bool(gem_key),
+            "status": "Listo para generar guiones" if gem_key else "Clave no configurada (aistudio.google.com)"
+        },
+        "narrative_groq": {
+            "name": "GroqCloud LLaMA (Nivel Gratuito)",
+            "configured": bool(keys.get("groq_api_key")),
+            "status": "Listo para generar guiones" if keys.get("groq_api_key") else "Clave no configurada (groq.com)"
+        },
+        "narrative_local": {
+            "name": "Motor Local Editorial (100% Offline)",
+            "configured": True,
+            "status": "Siempre Disponible"
+        },
         "google_imagen": {
             "name": "✨ Google Imagen 3 (Google AI Studio — 100-500/día Gratis)",
             "configured": bool(gem_key),

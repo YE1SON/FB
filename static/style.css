@@ -2504,3 +2504,70 @@ textarea.form-control {
 .cursor-pointer {
   cursor: pointer;
 }
+
+/* FaithSpark Redesign: 3 Hook Alternatives & Narrative Engine */
+.hook-alternatives-card {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.hook-pills-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-hook-pill {
+  background: var(--bg-card-sub);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.btn-hook-pill:hover {
+  border-color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.btn-hook-pill.active {
+  border-color: var(--accent-gold);
+  background: rgba(245, 158, 11, 0.20);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+  font-weight: 600;
+}
+
+.btn-hook-pill .pill-number {
+  background: var(--accent-gold);
+  color: #000;
+  font-weight: 800;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.badge-status-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  background: var(--bg-card-sub);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}

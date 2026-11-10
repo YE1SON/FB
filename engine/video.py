@@ -89,6 +89,92 @@ def _get_zoompan_expr(motion: str, tf: int, w: int, h: int, fps: int = 30) -> st
         return f"zoompan=z='1.0+(0.09*on/{tf})':d={tf}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}"
 
 
+def build_single_image_video_filter(
+    input_path: str,
+    w: int, h: int,
+    effect_type: str,
+    norm_ass: str,
+    duration: float,
+    camera_motion: str = "zoom_in",
+    fps: int = 30
+) -> str:
+    """
+    Construye el filter_complex de FFmpeg para UNA SOLA IMAGEN que sostiene todo el Reel:
+    - Movimiento de cámara suave y continuo (zoompan) a lo largo de toda la duración (sin cortes ni saltos).
+    - Atmósfera Viva (fluctuación de luz suave y grano sutil anti-estático).
+    - Etalonaje de color profesional o render limpio.
+    - Burn-in de subtítulos ASS sincronizados.
+    """
+    tf = max(int(duration * fps), 30)
+
+    if _is_video_file(input_path):
+        base = (
+            f"[0:v]loop=loop=-1:size=2:start=0,"
+            f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,fps={fps},"
+            f"trim=0:{duration:.2f},setpts=PTS-STARTPTS[motion]"
+        )
+    else:
+        motion_expr = _get_zoompan_expr(camera_motion, tf, w, h, fps)
+        if w == h:
+            base = (
+                f"[0:v]split=2[bg_raw][fg_raw];"
+                f"[bg_raw]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},gblur=sigma=22,eq=brightness=-0.12[bg];"
+                f"[fg_raw]scale={w}:{h}:force_original_aspect_ratio=decrease[fg];"
+                f"[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,{motion_expr}[motion]"
+            )
+        else:
+            base = (
+                f"[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1,"
+                f"{motion_expr}[motion]"
+            )
+
+    fx_parts = []
+    if effect_type == "living_gold":
+        fx_parts.append("eq=brightness='0.02*sin(2*PI*t/3.5)':contrast='1.16+0.03*cos(2*PI*t/4.5)':saturation=1.22")
+        fx_parts.append("noise=alls=10:allf=t")
+        fx_parts.append("colorchannelmixer=rr=1.05:gg=1.02:bb=0.95")
+        fx_parts.append("vignette=PI/3.6")
+    elif effect_type == "divine_rays":
+        fx_parts.append("eq=brightness='0.025*sin(2*PI*t/3.0)':contrast='1.20+0.04*sin(2*PI*t/4.0)':saturation=1.25")
+        fx_parts.append("colorbalance=rs=0.15:gs=0.08:bs=-0.10:rm=0.10:gm=0.05:bm=-0.06")
+        fx_parts.append("vignette=PI/4.0")
+    elif effect_type == "sacred_candle":
+        fx_parts.append("eq=brightness='0.018*sin(2*PI*t/2.0)+0.01*sin(2*PI*t/1.0)':contrast=1.15:saturation=1.18")
+        fx_parts.append("colorbalance=rs=0.14:gs=0.05:bs=-0.12")
+        fx_parts.append("vignette=PI/3.5")
+    elif effect_type == "angelic_shimmer":
+        fx_parts.append("eq=brightness='0.025*cos(2*PI*t/3.2)':contrast='1.18+0.03*sin(2*PI*t/2.8)':saturation=1.16")
+        fx_parts.append("colorbalance=rs=0.07:gs=0.08:bs=0.05")
+        fx_parts.append("vignette=PI/4.0")
+    elif effect_type == "cinematic_dust":
+        fx_parts.append("colorchannelmixer=rr=1.04:gg=1.02:bb=0.96")
+        fx_parts.append("vignette=PI/3.6")
+    elif effect_type == "divine_light":
+        fx_parts.append("eq=brightness=0.06:contrast=1.22:saturation=1.24")
+        fx_parts.append("colorbalance=rs=0.15:gs=0.07:bs=-0.10:rm=0.10:gm=0.05:bm=-0.06")
+        fx_parts.append("vignette=PI/4.0")
+    elif effect_type == "dramatic_grain":
+        fx_parts.append("noise=alls=28:allf=t+u")
+        fx_parts.append("eq=contrast=1.25:saturation=0.85")
+        fx_parts.append("vignette=PI/3.2")
+    elif effect_type == "celestial_glow":
+        fx_parts.append("eq=brightness=0.08:contrast=1.18:saturation=1.18")
+        fx_parts.append("colorbalance=rs=0.10:gs=0.08:bs=0.02")
+        fx_parts.append("vignette=PI/4.2")
+    elif effect_type == "golden_hour":
+        fx_parts.append("colorbalance=rs=0.20:gs=0.10:bs=-0.15:rh=0.15:gh=0.06:bh=-0.18")
+        fx_parts.append("eq=saturation=1.30:contrast=1.18")
+        fx_parts.append("vignette=PI/3.8")
+    elif effect_type == "holy_fire":
+        fx_parts.append("colorbalance=rh=0.10:gh=0.04:bh=-0.12:rm=0.04:gm=0.02:bm=-0.05")
+        fx_parts.append("eq=contrast=1.14:saturation=1.08:brightness=0.02")
+        fx_parts.append("vignette=PI/3.8")
+
+    fx_parts.append(f"ass='{norm_ass}'")
+    fx_chain = ",".join(fx_parts)
+    return f"{base};[motion]{fx_chain}[v]"
+
+
 def build_3scene_video_filter(
     inputs: list,
     w: int, h: int,
@@ -300,32 +386,53 @@ def render_reel(
     else:  # default 9:16 vertical
         w, h = 1080, 1920
 
-    # Resolver las 3 fuentes visuales
+    # Resolver fuentes visuales
     inp1 = image_path if (image_path and os.path.exists(image_path)) else None
-    inp2 = image_path_2 if (image_path_2 and os.path.exists(image_path_2)) else inp1
-    inp3 = image_path_3 if (image_path_3 and os.path.exists(image_path_3)) else inp1
+    inp2 = image_path_2 if (image_path_2 and os.path.exists(image_path_2)) else None
+    inp3 = image_path_3 if (image_path_3 and os.path.exists(image_path_3)) else None
 
     if not inp1:
         raise FileNotFoundError(f"Archivo de fondo principal no encontrado: {image_path}")
 
-    inputs = [inp1, inp2, inp3]
-
-    video_filter, offset1, offset2 = build_3scene_video_filter(
-        inputs=inputs,
-        w=w, h=h,
-        effect_type=effect_type,
-        norm_ass=norm_ass,
-        duration=duration,
-        camera_motion=camera_motion,
-        fps=fps,
-        transition_style=transition_style,
-        scene_breaks=scene_breaks
-    )
+    # Determinar si es modo Single Image (1 sola imagen que sostiene todo el Reel)
+    # o modo legado de 3 escenas (cuando se pasan explícitamente 3 imágenes distintas)
+    is_single_image = (not inp2 or inp2 == inp1) and (not inp3 or inp3 == inp1)
 
     cmd = ["ffmpeg", "-y", "-threads", "4"]
-    cmd.extend(["-i", inp1, "-i", inp2, "-i", inp3])
-    cmd.extend(["-i", audio_path])
-    audio_idx = 3
+
+    if is_single_image:
+        offset1 = round(duration * 0.33, 2)
+        offset2 = round(duration * 0.66, 2)
+        video_filter = build_single_image_video_filter(
+            input_path=inp1,
+            w=w, h=h,
+            effect_type=effect_type,
+            norm_ass=norm_ass,
+            duration=duration,
+            camera_motion=camera_motion,
+            fps=fps
+        )
+        cmd.extend(["-i", inp1])
+        cmd.extend(["-i", audio_path])
+        audio_idx = 1
+    else:
+        actual_inp2 = inp2 or inp1
+        actual_inp3 = inp3 or inp1
+        inputs = [inp1, actual_inp2, actual_inp3]
+        video_filter, offset1, offset2 = build_3scene_video_filter(
+            inputs=inputs,
+            w=w, h=h,
+            effect_type=effect_type,
+            norm_ass=norm_ass,
+            duration=duration,
+            camera_motion=camera_motion,
+            fps=fps,
+            transition_style=transition_style,
+            scene_breaks=scene_breaks
+        )
+        cmd.extend(["-i", inp1, "-i", actual_inp2, "-i", actual_inp3])
+        cmd.extend(["-i", audio_path])
+        audio_idx = 3
 
     # Configurar SFX si están activos y existen los archivos
     has_sfx = enable_sfx and os.path.exists(sfx_files.get("whoosh", ""))

@@ -40,7 +40,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="JesusReels Studio", version="4.1.0")
+app = FastAPI(title="JesusReels Studio", version="5.0.0")
 
 env_origins = os.environ.get("ALLOWED_ORIGINS", "").strip()
 if env_origins:
@@ -100,6 +100,8 @@ class EditorialBrief(BaseModel):
 class ScriptRequest(BaseModel):
     theme_key: Optional[str] = None
     custom_topic: Optional[str] = None
+    specific_focus: Optional[str] = None
+    narrative_engine: Literal["gemini", "groq", "local"] = "local"
     mode: str = "deep"
     narration_type: Literal["prayer", "reflection", "story", "comfort"] = "prayer"
     include_cta: bool = True
@@ -171,6 +173,8 @@ class ImagePromptRequest(BaseModel):
     theme_key: Optional[str] = None
     script_text: str = ""
     custom_topic: Optional[str] = None
+    specific_focus: Optional[str] = None
+    visual_style: Optional[str] = "auto"
     narration_type: Literal["prayer", "reflection", "story", "comfort"] = "prayer"
     script_hook: str = ""
     script_body: str = ""
@@ -182,6 +186,7 @@ class SaveKeysRequest(BaseModel):
     cf_account_id: Optional[str] = None
     cf_api_token: Optional[str] = None
     gemini_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
 
 class GenerateAiImageRequest(BaseModel):
     prompt: str
@@ -303,6 +308,10 @@ def api_version():
         "voices": sorted(VOICES),
         "narration_formats": ["prayer", "reflection", "story", "comfort"],
         "features": {
+            "single_image_reel": True,
+            "ai_narrative_engine": True,
+            "google_gemini_free": True,
+            "groqcloud_free": True,
             "local_script_generator": True,
             "contextual_calls_to_action": True,
             "christian_scene_prompts": True,
@@ -326,9 +335,25 @@ def list_themes():
 @app.post("/api/generate-script")
 @app.post("/studio/api/generate-script")
 def api_generate_script(req: ScriptRequest):
-    return generate_script(req.theme_key, req.custom_topic, mode=req.mode, narration_type=req.narration_type,
-                           include_cta=req.include_cta, seamless_loop=False,
-                           brief=req.brief.model_dump() if req.brief else None)
+    if req.narrative_engine in ("gemini", "groq"):
+        from engine.ai_narrative import generate_ai_narrative_script
+        keys = load_keys()
+        return generate_ai_narrative_script(
+            theme_key=req.theme_key or "morning_favor",
+            specific_focus=req.specific_focus,
+            custom_topic=req.custom_topic,
+            narration_type=req.narration_type,
+            mode=req.mode,
+            include_cta=req.include_cta,
+            engine_provider=req.narrative_engine,
+            gemini_api_key=keys.get("gemini_api_key"),
+            groq_api_key=keys.get("groq_api_key")
+        )
+    return generate_script(
+        req.theme_key, req.custom_topic or req.specific_focus, mode=req.mode, narration_type=req.narration_type,
+        include_cta=req.include_cta, seamless_loop=False,
+        brief=req.brief.model_dump() if req.brief else None
+    )
 
 @app.get("/api/editorial-config")
 @app.get("/studio/api/editorial-config")
@@ -432,13 +457,26 @@ def api_export_results_json():
 @app.post("/api/generate-image-prompt")
 @app.post("/studio/api/generate-image-prompt")
 def api_generate_image_prompt(req: ImagePromptRequest):
+    from engine.narrative_prompts import generate_single_image_prompt
+    single_p = generate_single_image_prompt(
+        theme_key=req.theme_key,
+        script_text=req.script_text,
+        specific_focus=req.specific_focus or req.custom_topic,
+        narration_type=req.narration_type,
+        visual_style=req.visual_style or "auto",
+        hook=req.script_hook,
+        body=req.script_body,
+        cta=req.script_cta
+    )
     prompts = generate_3scene_prompts_for_script(
         req.theme_key, req.script_text, req.custom_topic,
         narration_type=req.narration_type, hook=req.script_hook,
-        body=req.script_body, cta=req.script_cta)
+        body=req.script_body, cta=req.script_cta
+    )
     return {
-        "prompt": prompts["scene_1_prompt"],
-        "scene_1_prompt": prompts["scene_1_prompt"],
+        "prompt": single_p,
+        "single_prompt": single_p,
+        "scene_1_prompt": single_p,
         "scene_2_prompt": prompts["scene_2_prompt"],
         "scene_3_prompt": prompts["scene_3_prompt"]
     }
@@ -579,7 +617,8 @@ def api_save_image_keys(req: SaveKeysRequest):
         aihorde_api_key=req.aihorde_api_key,
         cf_account_id=req.cf_account_id,
         cf_api_token=req.cf_api_token,
-        gemini_api_key=req.gemini_api_key
+        gemini_api_key=req.gemini_api_key,
+        groq_api_key=req.groq_api_key
     )
     return {"status": "success", "providers": get_providers_status()}
 

@@ -603,15 +603,37 @@ function bootstrapJesusStudio() {
   }
 
   // 1. Cargar los 26 temas agrupados visualmente en sus cinco pilares.
+  let _loadedThemesData = [];
+
+  function updateThemeFocusOptions() {
+    const focusSelect = document.getElementById("themeFocusSelect");
+    if (!focusSelect) return;
+    const currentThemeKey = themeSelect?.value;
+    const currentTheme = _loadedThemesData.find(t => t.key === currentThemeKey);
+    const options = currentTheme?.focus_options || [];
+    if (options.length === 0) {
+      focusSelect.innerHTML = '<option value="">🕊️ Enfoque general reconfortante sobre este tema</option>';
+      return;
+    }
+    focusSelect.innerHTML = options.map((opt, idx) => 
+      `<option value="${escapeThemeOption(opt)}">${idx + 1}. ${escapeThemeOption(opt)}</option>`
+    ).join("");
+  }
+
+  if (themeSelect) {
+    themeSelect.addEventListener("change", updateThemeFocusOptions);
+  }
+
   async function loadThemes() {
     try {
       const [res, configResponse] = await Promise.all([fetch("/api/themes"), fetch("/api/editorial-config")]);
       if (!res.ok || !configResponse.ok) throw new Error("No se pudo cargar la configuración editorial.");
       const [themes, config] = await Promise.all([res.json(), configResponse.json()]);
+      _loadedThemesData = Array.isArray(themes) ? themes : [];
       const optionsHtml = buildGroupedThemeOptions(themes);
       if (themeSelect) themeSelect.innerHTML = optionsHtml;
       if (cardThemeSelect) cardThemeSelect.innerHTML = optionsHtml;
-      // EditorialStudio removed
+      updateThemeFocusOptions();
       updateProjectTitle();
       updateScriptDurationEstimate();
     } catch (e) {
@@ -825,15 +847,20 @@ function bootstrapJesusStudio() {
   // 4. Generar Guion y Sincronizar Prompt de Imagen Automáticamente
   async function triggerGenerateScript() {
     btnGenerateScript.disabled = true;
-    btnGenerateScript.textContent = "⏳ Generando guion...";
+    btnGenerateScript.textContent = "⏳ Generando guion con IA...";
     try {
       const durationMode = scriptDurationMode ? scriptDurationMode.value : "deep";
+      const chosenEngine = document.getElementById("narrativeEngineSelect")?.value || "gemini";
+      const chosenFocus = document.getElementById("themeFocusSelect")?.value || "";
+
       const res = await fetch("/api/generate-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme_key: themeSelect.value,
+          specific_focus: chosenFocus,
           custom_topic: customTopic ? customTopic.value : "",
+          narrative_engine: chosenEngine,
           mode: durationMode,
           narration_type: narrationTypeSelect?.value || "prayer",
           include_cta: includeNarratedCta?.value !== "no",
@@ -846,6 +873,30 @@ function bootstrapJesusStudio() {
       scriptBody.value = data.body || "";
       scriptCta.value = data.cta || "";
       updateScriptDurationEstimate();
+
+      // Renderizar 3 alternativas de apertura si están disponibles
+      const hookSection = document.getElementById("hookAlternativesSection");
+      const hookGrid = document.getElementById("hookPillsGrid");
+      if (hookSection && hookGrid && Array.isArray(data.hook_options) && data.hook_options.length > 0) {
+        hookSection.style.display = "block";
+        hookGrid.innerHTML = data.hook_options.map((opt, i) => `
+          <button type="button" class="btn-hook-pill ${opt === scriptHook.value ? 'active' : ''}" data-hook-index="${i}">
+            <span class="pill-number">Opción ${i + 1}</span>
+            <span class="pill-text">${escapeThemeOption(opt)}</span>
+          </button>
+        `).join("");
+
+        hookGrid.querySelectorAll(".btn-hook-pill").forEach((btn, idx) => {
+          btn.addEventListener("click", () => {
+            hookGrid.querySelectorAll(".btn-hook-pill").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            scriptHook.value = data.hook_options[idx];
+            updateScriptDurationEstimate();
+            updateOptimizedCaption(true);
+            updateCharCounters();
+          });
+        });
+      }
 
       const badge = data.hook_badge_text || data.hook_text;
       if (badge) {
@@ -871,13 +922,18 @@ function bootstrapJesusStudio() {
         scriptProviderBadge.style.background = "rgba(59, 130, 246, 0.10)";
         scriptProviderBadge.style.borderColor = "rgba(59, 130, 246, 0.30)";
         scriptProviderBadge.style.color = "#2563eb";
-        scriptProviderBadge.innerHTML = "📋 <strong>Motor:</strong> Compositor editorial local sin Ollama.";
+        const prov = data.provider_used || "Motor Local";
+        scriptProviderBadge.innerHTML = `📋 <strong>Motor Narrativo:</strong> ${prov}`;
+      }
+
+      const engStatusText = document.getElementById("narrativeEngineStatusText");
+      if (engStatusText) {
+        engStatusText.textContent = data.provider_used || "Listo";
       }
 
       if (data.seo_caption) {
         currentSeoCaption = data.seo_caption;
       }
-      // Actualizar automáticamente la descripción optimizada basada en el guion final
       updateOptimizedCaption(true);
 
       if (data.pinned_comment) {
@@ -887,13 +943,12 @@ function bootstrapJesusStudio() {
         }
       }
 
-      // Sincronizar automáticamente los prompts de las 3 escenas
-      if (data.scene_1_prompt && scene1PromptInput) scene1PromptInput.value = data.scene_1_prompt;
-      if (data.scene_2_prompt && scene2PromptInput) scene2PromptInput.value = data.scene_2_prompt;
-      if (data.scene_3_prompt && scene3PromptInput) scene3PromptInput.value = data.scene_3_prompt;
-      if (data.image_prompt) {
-        aiImagePrompt.value = data.image_prompt;
-      }
+      // Sincronizar automáticamente el prompt único para la imagen del Reel
+      const imgP = data.image_prompt || data.scene_1_prompt || "";
+      const singlePromptInput = document.getElementById("singlePromptInput");
+      if (singlePromptInput && imgP) singlePromptInput.value = imgP;
+      if (scene1PromptInput && imgP) scene1PromptInput.value = imgP;
+      if (aiImagePrompt && imgP) aiImagePrompt.value = imgP;
       promptsSourceSignature = currentScriptSignature();
 
       // Auto-adaptar estilo de la insignia superior según la temática
@@ -910,12 +965,11 @@ function bootstrapJesusStudio() {
       }
       updateCharCounters();
       updateProjectTitle();
-      // EditorialStudio setScript removed
     } catch (e) {
       alert("Error al generar guion: " + e.message);
     } finally {
       btnGenerateScript.disabled = false;
-      btnGenerateScript.textContent = "✨ Generar guion";
+      btnGenerateScript.textContent = "✨ GENERAR GUION (GANCHO + ORACIÓN + CTA)";
     }
   }
 
@@ -1240,6 +1294,7 @@ function bootstrapJesusStudio() {
       const cfAcc = cfAccountIdInput ? cfAccountIdInput.value.trim() : "";
       const cfTok = cfApiTokenInput ? cfApiTokenInput.value.trim() : "";
       const gemKey = geminiApiKeyInput ? geminiApiKeyInput.value.trim() : "";
+      const groqKey = document.getElementById("groqApiKeyInput")?.value.trim() || "";
 
       try {
         localStorage.setItem("aihorde_api_key", hordeKey);
@@ -1247,6 +1302,7 @@ function bootstrapJesusStudio() {
         if (cfAcc) localStorage.setItem("cf_account_id", cfAcc);
         if (cfTok) localStorage.setItem("cf_api_token", cfTok);
         if (gemKey) localStorage.setItem("gemini_api_key", gemKey);
+        if (groqKey) localStorage.setItem("groq_api_key", groqKey);
 
         const saveRes = await fetch("/api/save-image-keys", {
           method: "POST",
@@ -1256,7 +1312,8 @@ function bootstrapJesusStudio() {
             hf_token: hfTok,
             cf_account_id: cfAcc || undefined,
             cf_api_token: cfTok || undefined,
-            gemini_api_key: gemKey || undefined
+            gemini_api_key: gemKey || undefined,
+            groq_api_key: groqKey || undefined
           })
         });
 
@@ -1472,6 +1529,94 @@ function bootstrapJesusStudio() {
     loadNeuronsStatus();
     return { filename: savedFilename, url: savedUrl, usedPuter };
   }
+
+  // Generador de Imagen Única para todo el Reel (FaithSpark Daily Redesign)
+  async function generateSingleHeroImage() {
+    const singlePromptInput = document.getElementById("singlePromptInput");
+    const activePrompt = (singlePromptInput && singlePromptInput.value.trim()) ||
+      (scene1PromptInput && scene1PromptInput.value.trim()) ||
+      (aiImagePrompt && aiImagePrompt.value.trim()) || "";
+
+    if (!activePrompt) {
+      alert("Por favor genera o escribe un prompt antes de generar la imagen.");
+      return;
+    }
+
+    const btnGen = document.getElementById("btnGenerateSingleImageAi");
+    if (btnGen) {
+      btnGen.disabled = true;
+      btnGen.textContent = "⏳ Generando imagen con IA para el Reel...";
+    }
+    hideAiGenError();
+
+    try {
+      const res = await generateSingleScene(activePrompt, 1, "Imagen Principal");
+      if (res && res.filename) {
+        selectedImageName = res.filename;
+        selectedImageName2 = null;
+        selectedImageName3 = null;
+        await loadImages();
+      }
+    } catch (err) {
+      console.error("Error al generar imagen única:", err);
+    } finally {
+      if (btnGen) {
+        btnGen.disabled = false;
+        btnGen.textContent = "🎨 GENERAR IMAGEN CON IA (PARA TODO EL REEL)";
+      }
+    }
+  }
+
+  const btnGenSingleAi = document.getElementById("btnGenerateSingleImageAi");
+  if (btnGenSingleAi) {
+    btnGenSingleAi.addEventListener("click", generateSingleHeroImage);
+  }
+
+  // Sincronizar Prompt Único con Análisis de Tema y Guion
+  async function syncSinglePrompt() {
+    const themeKey = themeSelect?.value || "";
+    const fullScript = [scriptHook?.value, scriptBody?.value, scriptCta?.value].filter(Boolean).join(" ");
+    const visualStyle = document.getElementById("visualStyleSelect")?.value || "auto";
+    const focusAngle = document.getElementById("themeFocusSelect")?.value || "";
+    const customTop = customTopic ? customTopic.value : "";
+
+    const btnSync = document.getElementById("btnSyncSinglePrompt");
+    if (btnSync) btnSync.textContent = "⏳ Analizando...";
+
+    try {
+      const res = await fetch("/api/generate-image-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme_key: themeKey,
+          script_text: fullScript,
+          custom_topic: customTop,
+          specific_focus: focusAngle,
+          visual_style: visualStyle,
+          narration_type: narrationTypeSelect?.value || "prayer",
+          script_hook: scriptHook?.value || "",
+          script_body: scriptBody?.value || "",
+          script_cta: scriptCta?.value || ""
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const p = data.single_prompt || data.prompt || "";
+        const singlePromptInput = document.getElementById("singlePromptInput");
+        if (singlePromptInput && p) singlePromptInput.value = p;
+        if (scene1PromptInput && p) scene1PromptInput.value = p;
+        if (aiImagePrompt && p) aiImagePrompt.value = p;
+      }
+    } catch (err) {
+      console.error("Error al sincronizar prompt único:", err);
+    } finally {
+      if (btnSync) btnSync.textContent = "🪄 Re-generar Prompt";
+    }
+  }
+
+  document.getElementById("btnSyncSinglePrompt")?.addEventListener("click", syncSinglePrompt);
+  document.getElementById("btnSyncScriptToImage")?.addEventListener("click", syncSinglePrompt);
+  document.getElementById("visualStyleSelect")?.addEventListener("change", syncSinglePrompt);
 
   // 8b. Generador en 1 Clic de las 3 Escenas (Crear y Asignar con Coherencia Visual)
   async function generateAll3Scenes() {
@@ -3542,10 +3687,16 @@ function bootstrapJesusStudio() {
       if (geminiApiKeyInput && !geminiApiKeyInput.value) {
         geminiApiKeyInput.value = localStorage.getItem("gemini_api_key") || "";
       }
+      const groqApiKeyInput = document.getElementById("groqApiKeyInput");
+      if (groqApiKeyInput && !groqApiKeyInput.value) {
+        groqApiKeyInput.value = localStorage.getItem("groq_api_key") || "";
+      }
 
       const res = await fetch("/api/image-providers");
+      let provData = null;
       if (res.ok) {
         const data = await res.json();
+        provData = data;
         if (data.google_imagen) {
           updateGoogleImagenStatus(data.google_imagen.configured, data.google_imagen.key_masked);
           if (data.google_imagen.configured && geminiApiKeyInput && !geminiApiKeyInput.value) {
@@ -3564,6 +3715,31 @@ function bootstrapJesusStudio() {
           hfTokenInput.placeholder = `Configurado en servidor (${data.flux_schnell.token_masked})`;
         }
       }
+
+      // Actualizar indicador del motor narrativo
+      const narrativeStatusText = document.getElementById("narrativeEngineStatusText");
+      const narrativeDot = document.getElementById("narrativeEngineDot");
+      const engSelect = document.getElementById("narrativeEngineSelect");
+      if (engSelect && narrativeStatusText) {
+        const updateEngineBadge = () => {
+          const val = engSelect.value;
+          if (val === "gemini") {
+            const hasGem = !!(geminiApiKeyInput?.value || (provData?.google_imagen?.configured));
+            narrativeStatusText.textContent = hasGem ? "Gemini Listo (Gratuito)" : "Sin Clave (Usa Respaldo)";
+            if (narrativeDot) narrativeDot.className = hasGem ? "status-dot-green" : "status-dot-yellow";
+          } else if (val === "groq") {
+            const hasGroq = !!(groqApiKeyInput?.value || (provData?.narrative_groq?.configured));
+            narrativeStatusText.textContent = hasGroq ? "Groq Listo (Gratuito)" : "Sin Clave (Usa Respaldo)";
+            if (narrativeDot) narrativeDot.className = hasGroq ? "status-dot-green" : "status-dot-yellow";
+          } else {
+            narrativeStatusText.textContent = "Motor Local Activo";
+            if (narrativeDot) narrativeDot.className = "status-dot-green";
+          }
+        };
+        engSelect.addEventListener("change", updateEngineBadge);
+        updateEngineBadge();
+      }
+
       await loadNeuronsStatus();
     } catch (_) {}
     updateAiProviderUI();
@@ -3589,13 +3765,6 @@ function bootstrapJesusStudio() {
     setTimeout(updatePuterStatus, 1000);
     setTimeout(updatePuterStatus, 3000);
   }
-
-  init();
-}
-
-bootstrapJesusStudio();
-
-
 
   // ─── Google Vids Style Timeline: Transiciones y Sincronización ───
   const TRANSITION_PRESETS = [
@@ -3687,3 +3856,8 @@ bootstrapJesusStudio();
       }
     });
   }
+
+  init();
+}
+
+bootstrapJesusStudio();

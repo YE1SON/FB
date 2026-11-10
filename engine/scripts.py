@@ -1218,6 +1218,18 @@ def generate_script(theme_key=None, custom_topic=None, mode="deep", tone=None,
         result["central_idea"] = brief["central_idea"]
     if brief.get("target_duration_sec"):
         result["target_duration_sec"] = brief["target_duration_sec"]
+    # 3 Alternativas de apertura para selección en UI
+    theme_info = VIRAL_THEMES.get(result.get("theme_key", "morning_favor"), {})
+    theme_hooks = theme_info.get("hooks", [])
+    hook_opts = [result["hook"]]
+    for h in theme_hooks:
+        if h not in hook_opts:
+            hook_opts.append(h)
+        if len(hook_opts) >= 3:
+            break
+    while len(hook_opts) < 3:
+        hook_opts.append(f"A quiet prayer for today: {result['hook']}")
+    result["hook_options"] = hook_opts[:3]
     return result
 
 def generate_image_prompt_for_script(theme_key: Optional[str], script_text: str = "") -> str:
@@ -1226,14 +1238,203 @@ def generate_image_prompt_for_script(theme_key: Optional[str], script_text: str 
     return prompts["prompt"]
 
 
+# ─── 26 Temas: Opciones de Enfoque Específico y Humano ───────────────────────
+
+THEME_FOCUS_OPTIONS = {
+    "lost_child": [
+        "When an adult child stops answering calls or texts",
+        "Trusting God with a prodigal child who walked away from church",
+        "Late-night prayer for a grandchild in difficult or dangerous company",
+        "Releasing the guilt of wondering if you did enough as a mother or father",
+        "A prayer for silent tears shed over an empty bedroom"
+    ],
+    "family_protection": [
+        "Surrounding grandchildren with unseen angelic protection at school",
+        "Guarding your household from cold distance, anger, and division",
+        "A shield of safety over loved ones traveling on highways tonight",
+        "Protecting your home from outside spiritual or emotional turmoil",
+        "Covering three generations under God's quiet sheltering grace"
+    ],
+    "marriage_healing": [
+        "When words have turned sharp and silence fills the living room",
+        "Rebuilding trust, softness, and tenderness after deep hurt",
+        "Praying for a spouse who seems emotionally exhausted or distant",
+        "Remembering the sacred vows made years ago in younger days",
+        "Softening pride so forgiveness can enter the home tonight"
+    ],
+    "single_parent": [
+        "Carrying all the bills, chores, and bedtime routines alone",
+        "When fatigue makes you feel like you are failing your children",
+        "Asking God to be the unseen provider and protector in the house",
+        "Finding 10 minutes of quiet peace before the next day begins",
+        "Strength to stay patient when your own heart is running on empty"
+    ],
+    "elderly_parents": [
+        "Watching a parent grow fragile and forgetful with advancing age",
+        "Patience and compassion for the daily fatigue of caregiving",
+        "Honoring their dignity while making difficult medical decisions",
+        "Gratitude for the prayers they spoke over you when you were young",
+        "Peace in the quiet moments holding an elderly parent's hand"
+    ],
+    "sick_grandchild": [
+        "Standing beside a child's hospital bed or crib in tears",
+        "Whispering the name of Jesus over a child running a fever",
+        "Grandparent's intercession for gentle relief from sickness",
+        "Releasing terrifying medical what-ifs into God's gentle hands",
+        "Praying for quick recovery and joyful laughter to return"
+    ],
+    "morning_favor": [
+        "Opening your eyes with quiet gratitude before reaching for the phone",
+        "Asking God for wisdom in decisions and patience with people today",
+        "Declaring that yesterday's mistakes have no power over this morning",
+        "Walking into work or chores wrapped in divine calm and favor",
+        "Thanking God for fresh breath, clean air, and new morning mercies"
+    ],
+    "night_anxiety": [
+        "Staring at the bedroom ceiling at 2:00 AM unable to turn off worries",
+        "Handing over unpaid bills and next week's problems before sleeping",
+        "Quieting the racing heart with the gentle presence of Christ",
+        "Surrendering what you cannot control or fix tonight",
+        "Resting securely knowing God never sleeps or slumbers"
+    ],
+    "restless_sleep": [
+        "Breaking the cycle of insomnia and waking up exhausted",
+        "Releasing heavy emotional burdens carried during the day",
+        "Asking for peaceful dreams and uninterrupted deep rest",
+        "Trusting God to guard your body and mind through the midnight hours",
+        "Waking up refreshed, renewed, and restored by morning light"
+    ],
+    "unspoken_prayer": [
+        "A prayer too painful or private to say out loud to anyone",
+        "When the heart only has silent tears and heavy sighs before God",
+        "A burden carried in secrecy that only the Lord understands",
+        "Trusting the Holy Spirit to intercede when words fail completely",
+        "Finding comfort knowing Jesus already knows every hidden ache"
+    ],
+    "peace_in_storm": [
+        "When unexpected crisis hits from multiple sides at once",
+        "Remembering Jesus is in the boat even when waves splash high",
+        "Refusing to panic when circumstances seem out of control",
+        "Speaking peace to the storm inside your chest right now",
+        "An anchor of hope that holds fast in turbulent waters"
+    ],
+    "lonely_widow": [
+        "Sitting at a quiet kitchen table where someone used to sit",
+        "Navigating holidays, evenings, and silence in an empty house",
+        "Remembering that the Lord is the defender and husband to widows",
+        "Finding new purpose and companionship in a changed season of life",
+        "Comfort for the tender memories that still bring sudden tears"
+    ],
+    "grief_loss": [
+        "Surviving the early months after losing a beloved family member",
+        "When a familiar song or scent brings an overwhelming wave of grief",
+        "Honoring their memory while learning to breathe again one day at a time",
+        "Knowing that those who die in Christ are held safely in eternity",
+        "God's promise to draw near and hold those whose hearts are broken"
+    ],
+    "healing_depression": [
+        "When even getting out of bed feels like climbing a steep mountain",
+        "Living under a heavy gray cloud that nobody else can see",
+        "A gentle prayer for a spark of hope when numb to everything",
+        "Reminding yourself that God's love does not depend on your feelings",
+        "One small courageous step forward into grace and light today"
+    ],
+    "medical_fear": [
+        "Sitting in the doctor's waiting room anxiously awaiting test results",
+        "Facing an unexpected health diagnosis with quiet composure",
+        "Enduring chronic bodily pain without losing your faith or heart",
+        "Praying for skilled doctors and steady hands before a procedure",
+        "Resting in the Great Physician whose presence outlasts all fear"
+    ],
+    "zero_balance": [
+        "Looking at unpaid monthly bills with an empty bank account",
+        "Carrying the quiet shame and weight of financial hardship in secret",
+        "Trusting Jehovah-Jireh for next week's groceries and mortgage",
+        "Wisdom to steward small resources into steady recovery",
+        "Believing that God's provision arrives right on time, not too late"
+    ],
+    "job_breakthrough": [
+        "Sending resume after resume into silence without any replies",
+        "Courage and clarity when walking into an upcoming job interview",
+        "Restoring dignity and hope after sudden layoff or job loss",
+        "Trusting God to open a door that no human gatekeeper can shut",
+        "Wisdom to lead and excel with integrity in honest daily work"
+    ],
+    "addiction_chains": [
+        "Praying for a son, daughter, or spouse bound by chemical dependence",
+        "The quiet battle against secret habits, alcohol, or hidden vices",
+        "Breaking the cycle of relapse and shame with Christ's power",
+        "A prayer for humility to seek honest accountability and healing",
+        "Believing that true freedom is real when the Son sets you free"
+    ],
+    "court_legal": [
+        "Facing a stressful legal battle, custody fight, or formal lawsuit",
+        "When false accusations or unfair treatment threaten your peace",
+        "Asking the Righteous Judge to uncover truth and restore fairness",
+        "Releasing sleepless anxiety over court dates and attorney fees",
+        "Trusting God to vindicate and defend the humble in heart"
+    ],
+    "spiritual_warfare": [
+        "Putting on the full armor of God against discouragement and deceit",
+        "Breaking spiritual heaviness over your home and thoughts",
+        "Standing firm when the enemy whispers that your prayers are useless",
+        "Claiming the victory of Christ's cross over every shadow",
+        "Walking in authority, peaceful love, and sound-minded faith"
+    ],
+    "strength_weary": [
+        "When you have poured out everything for others and have nothing left",
+        "Caregiver burnout and the physical drain of long months of care",
+        "Exchanging your exhausted strength for God's supernatural power",
+        "Permission to rest without feeling guilty or unproductive",
+        "Renewing your wings to mount up like eagles in divine hope"
+    ],
+    "guidance_direction": [
+        "Standing at a major crossroad not knowing which way to turn",
+        "Asking God for a clear sign or quiet confirmation in your spirit",
+        "Moving forward when you can only see the very next step",
+        "Silencing the noise of human opinions to hear the Shepherd's voice",
+        "Trusting that God orders the steps of those who seek His heart"
+    ],
+    "gratitude_harvest": [
+        "Counting blessings that money cannot buy: health, family, faith",
+        "Thanking God for surviving seasons that once seemed impossible",
+        "A heart overflowing with praise for small everyday kindnesses",
+        "Recognizing God's faithful hand in the quiet, ordinary moments",
+        "Singing a song of thanksgiving before the breakthrough appears"
+    ],
+    "forgiving_past": [
+        "Releasing bitterness toward someone who never asked for forgiveness",
+        "Breaking the mental prison of replaying old words and betrayals",
+        "Cutting the invisible cords of resentment to reclaim your peace",
+        "Choosing to forgive so your own heart can heal and soften",
+        "Walking into freedom by the same mercy Christ showed to you"
+    ],
+    "business_blessing": [
+        "Consecrating your business, clients, and projects to the Lord",
+        "Asking for creative wisdom, honest transactions, and fair favor",
+        "Persevering through slow sales seasons or economic uncertainty",
+        "Blessing the hands of your employees and partners with prosperity",
+        "Remembering that God is the true partner and provider in all work"
+    ],
+    "divine_grace": [
+        "Approaching God's throne not in fear, but with bold confidence",
+        "Resting in the unmerited favor and boundless love of Christ",
+        "When feelings of inadequacy whisper that you are not good enough",
+        "Rejoicing that grace covers every past failure and current weakness",
+        "Living as a beloved child of God in radiant freedom and peace"
+    ]
+}
+
+
 def get_themes_list() -> List[Dict]:
-    """Retorna los 26 temas disponibles con su pilar temático."""
+    """Retorna los 26 temas disponibles con su pilar temático y opciones de enfoque específico."""
     return [
         {
             "key": k,
             "title": v["title"],
             "description": v["description"],
-            "pillar": v.get("pillar", "general")
+            "pillar": v.get("pillar", "general"),
+            "focus_options": THEME_FOCUS_OPTIONS.get(k, [])
         }
         for k, v in VIRAL_THEMES.items()
     ]

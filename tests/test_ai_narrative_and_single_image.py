@@ -22,15 +22,28 @@ class FaithSparkRedesignTests(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(server.app)
 
-    def test_all_26_themes_have_at_least_4_focus_options(self):
-        """Verifica que los 26 pilares temáticos tengan al menos 4 enfoques específicos y humanos."""
+    def test_all_26_themes_have_at_least_4_focus_options_in_spanish(self):
+        """Verifica que los 26 pilares temáticos tengan al menos 4 enfoques específicos redactados en español."""
         self.assertEqual(len(VIRAL_THEMES), 26)
+        spanish_indicators = ["de", "en", "el", "la", "un", "una", "y", "que", "para", "con", "por", "dios", "oración"]
         for theme_key in VIRAL_THEMES:
             focus_opts = THEME_FOCUS_OPTIONS.get(theme_key, [])
             self.assertGreaterEqual(
                 len(focus_opts), 4,
                 f"El tema {theme_key} debe tener al menos 4 enfoques específicos"
             )
+            # Verificar que las opciones contengan texto en español
+            combined = " ".join(focus_opts).lower()
+            has_spanish = any(f" {w} " in f" {combined} " for w in spanish_indicators)
+            self.assertTrue(
+                has_spanish,
+                f"Las opciones de enfoque para '{theme_key}' deben estar en español: {focus_opts[0]}"
+            )
+
+    def test_test_narrative_key_endpoint_validation(self):
+        """Verifica que /api/test-narrative-key valide la presencia de clave."""
+        resp = self.client.post("/api/test-narrative-key", json={"provider": "gemini", "api_key": ""})
+        self.assertEqual(resp.status_code, 400)
 
     def test_themes_list_endpoint_includes_focus_options(self):
         """Verifica que /api/themes retorne los 26 temas con sus listas de enfoques."""

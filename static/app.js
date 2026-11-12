@@ -437,45 +437,145 @@ function bootstrapJesusStudio() {
   }
   updateHookBadgeAppearance();
 
-  // Selector de Capas en la Vista Previa (Gancho vs Píldora - Desfasadas en tiempo)
-  if (btnPreviewShowHook) {
-    btnPreviewShowHook.addEventListener("click", () => {
-      btnPreviewShowHook.classList.add("active");
-      if (btnPreviewShowCta) btnPreviewShowCta.classList.remove("active");
-      if (stageHookBadge) {
-        stageHookBadge.style.display = (chkEnableHookBadge && chkEnableHookBadge.checked) ? "block" : "none";
-      }
-      if (stageMicroCtaBadge) {
-        stageMicroCtaBadge.style.display = "none";
+  // ─── Configuración Rápida de Claves IA en Etapa 1 ─────────────────────────
+  const btnToggleQuickKeys = document.getElementById("btnToggleQuickKeys");
+  const btnCloseQuickKeys = document.getElementById("btnCloseQuickKeys");
+  const aiKeysQuickBox = document.getElementById("aiKeysQuickBox");
+  const quickGeminiKey = document.getElementById("quickGeminiKey");
+  const quickGroqKey = document.getElementById("quickGroqKey");
+  const btnToggleShowGemini = document.getElementById("btnToggleShowGemini");
+  const btnToggleShowGroq = document.getElementById("btnToggleShowGroq");
+  const btnSaveQuickKeys = document.getElementById("btnSaveQuickKeys");
+  const btnTestQuickKeys = document.getElementById("btnTestQuickKeys");
+  const quickKeysStatusMsg = document.getElementById("quickKeysStatusMsg");
+  const narrativeEngineBadge = document.getElementById("narrativeEngineBadge");
+
+  const toggleQuickKeysBox = () => {
+    if (!aiKeysQuickBox) return;
+    const isShown = aiKeysQuickBox.style.display !== "none";
+    aiKeysQuickBox.style.display = isShown ? "none" : "block";
+    if (!isShown && quickGeminiKey) {
+      const savedGem = localStorage.getItem("gemini_api_key") || "";
+      if (savedGem && !quickGeminiKey.value) quickGeminiKey.value = savedGem;
+      const savedGroq = localStorage.getItem("groq_api_key") || "";
+      if (savedGroq && quickGroqKey && !quickGroqKey.value) quickGroqKey.value = savedGroq;
+    }
+  };
+
+  if (btnToggleQuickKeys) btnToggleQuickKeys.addEventListener("click", toggleQuickKeysBox);
+  if (btnCloseQuickKeys) btnCloseQuickKeys.addEventListener("click", () => {
+    if (aiKeysQuickBox) aiKeysQuickBox.style.display = "none";
+  });
+  if (narrativeEngineBadge) narrativeEngineBadge.addEventListener("click", toggleQuickKeysBox);
+
+  if (btnToggleShowGemini && quickGeminiKey) {
+    btnToggleShowGemini.addEventListener("click", () => {
+      quickGeminiKey.type = quickGeminiKey.type === "password" ? "text" : "password";
+    });
+  }
+  if (btnToggleShowGroq && quickGroqKey) {
+    btnToggleShowGroq.addEventListener("click", () => {
+      quickGroqKey.type = quickGroqKey.type === "password" ? "text" : "password";
+    });
+  }
+
+  if (btnSaveQuickKeys) {
+    btnSaveQuickKeys.addEventListener("click", async () => {
+      btnSaveQuickKeys.disabled = true;
+      btnSaveQuickKeys.textContent = "⏳ Guardando...";
+      try {
+        const gemVal = quickGeminiKey ? quickGeminiKey.value.trim() : "";
+        const groqVal = quickGroqKey ? quickGroqKey.value.trim() : "";
+        if (gemVal) localStorage.setItem("gemini_api_key", gemVal);
+        if (groqVal) localStorage.setItem("groq_api_key", groqVal);
+
+        const res = await fetch("/api/save-image-keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gemini_api_key: gemVal,
+            groq_api_key: groqVal
+          })
+        });
+        const d = await res.json();
+        if (res.ok) {
+          if (quickKeysStatusMsg) {
+            quickKeysStatusMsg.style.display = "block";
+            quickKeysStatusMsg.style.background = "#ecfdf5";
+            quickKeysStatusMsg.style.color = "#047857";
+            quickKeysStatusMsg.style.border = "1px solid #a7f3d0";
+            quickKeysStatusMsg.innerHTML = "✅ <strong>¡Claves guardadas exitosamente!</strong> El motor ya está conectado.";
+          }
+          await loadAiProviderKeys();
+        } else {
+          throw new Error(d.detail || "Error al guardar");
+        }
+      } catch (err) {
+        if (quickKeysStatusMsg) {
+          quickKeysStatusMsg.style.display = "block";
+          quickKeysStatusMsg.style.background = "#fef2f2";
+          quickKeysStatusMsg.style.color = "#b91c1c";
+          quickKeysStatusMsg.style.border = "1px solid #fecaca";
+          quickKeysStatusMsg.textContent = `❌ ${err.message}`;
+        }
+      } finally {
+        btnSaveQuickKeys.disabled = false;
+        btnSaveQuickKeys.textContent = "💾 Guardar Claves";
       }
     });
   }
 
-  if (btnPreviewShowCta) {
-    btnPreviewShowCta.addEventListener("click", () => {
-      btnPreviewShowCta.classList.add("active");
-      if (btnPreviewShowHook) btnPreviewShowHook.classList.remove("active");
-      if (stageMicroCtaBadge) {
-        stageMicroCtaBadge.style.display = (chkEnableMicroCta && chkEnableMicroCta.checked) ? "block" : "none";
-      }
-      if (stageHookBadge) {
-        stageHookBadge.style.display = "none";
-      }
-    });
-  }
+  if (btnTestQuickKeys) {
+    btnTestQuickKeys.addEventListener("click", async () => {
+      btnTestQuickKeys.disabled = true;
+      btnTestQuickKeys.textContent = "⏳ Verificando...";
+      const eng = document.getElementById("narrativeEngineSelect")?.value || "gemini";
+      const key = eng === "groq"
+        ? (quickGroqKey?.value.trim() || localStorage.getItem("groq_api_key") || "")
+        : (quickGeminiKey?.value.trim() || localStorage.getItem("gemini_api_key") || "");
 
-  if (chkEnableMicroCta) {
-    chkEnableMicroCta.addEventListener("change", () => {
-      if (stageMicroCtaBadge && btnPreviewShowCta && btnPreviewShowCta.classList.contains("active")) {
-        stageMicroCtaBadge.style.display = chkEnableMicroCta.checked ? "block" : "none";
+      if (!key) {
+        if (quickKeysStatusMsg) {
+          quickKeysStatusMsg.style.display = "block";
+          quickKeysStatusMsg.style.background = "#fffbeb";
+          quickKeysStatusMsg.style.color = "#b45309";
+          quickKeysStatusMsg.style.border = "1px solid #fde68a";
+          quickKeysStatusMsg.textContent = "⚠️ Ingresa una clave antes de probar la conexión.";
+        }
+        btnTestQuickKeys.disabled = false;
+        btnTestQuickKeys.textContent = "⚡ Probar Conexión";
+        return;
       }
-    });
-  }
 
-  if (microCtaInput) {
-    microCtaInput.addEventListener("input", () => {
-      if (stageMicroCtaBadge) {
-        stageMicroCtaBadge.textContent = microCtaInput.value.trim();
+      try {
+        const res = await fetch("/api/test-narrative-key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider: eng, api_key: key })
+        });
+        const d = await res.json();
+        if (res.ok && d.status === "ok") {
+          if (quickKeysStatusMsg) {
+            quickKeysStatusMsg.style.display = "block";
+            quickKeysStatusMsg.style.background = "#ecfdf5";
+            quickKeysStatusMsg.style.color = "#047857";
+            quickKeysStatusMsg.style.border = "1px solid #a7f3d0";
+            quickKeysStatusMsg.innerHTML = `✅ <strong>${d.message}</strong>`;
+          }
+        } else {
+          throw new Error(d.detail || "Fallo en la prueba de conexión");
+        }
+      } catch (err) {
+        if (quickKeysStatusMsg) {
+          quickKeysStatusMsg.style.display = "block";
+          quickKeysStatusMsg.style.background = "#fef2f2";
+          quickKeysStatusMsg.style.color = "#b91c1c";
+          quickKeysStatusMsg.style.border = "1px solid #fecaca";
+          quickKeysStatusMsg.textContent = `❌ ${err.message}`;
+        }
+      } finally {
+        btnTestQuickKeys.disabled = false;
+        btnTestQuickKeys.textContent = "⚡ Probar Conexión";
       }
     });
   }
@@ -507,13 +607,13 @@ function bootstrapJesusStudio() {
 
   if (chkEnableHookBadge) {
     chkEnableHookBadge.addEventListener("change", () => {
-      if (stageHookBadge && (!btnPreviewShowCta || !btnPreviewShowCta.classList.contains("active"))) {
+      if (stageHookBadge) {
         stageHookBadge.style.display = chkEnableHookBadge.checked ? "block" : "none";
       }
     });
   }
 
-  // Sincronización del Selector de Formato Inicial (Píldoras 9:16 / 1:1 / 16:9)
+  // Sincronización del Selector de Formato Inicial (Píldoras 9:16 / 1:1)
   if (formatPillGroup) {
     const pills = formatPillGroup.querySelectorAll(".btn-format-pill");
     pills.forEach(pill => {
@@ -2141,17 +2241,19 @@ function bootstrapJesusStudio() {
     cameraMotionSelect.addEventListener("change", updateCameraMotionPreview);
   }
 
-  // ─── Live Preview: Aspect Ratio & Smart Fitting ───────────────────────────
-  function updateAspectRatioPreview() {
+  // ─── Live Preview: Aspect Ratio & Smart Fitting (Exclusivo 9:16 y 1:1) ──────
+  function updateAspectRatioPreview(targetRatio) {
     const aspectSelect = document.getElementById("aspectRatioSelect");
     const phoneMockup = document.querySelector(".phone-mockup");
     const phoneScreen = document.querySelector(".phone-screen");
     const badgeRatio = document.querySelector(".badge-ratio");
     const stageBlurBg = document.getElementById("stageBlurBg");
     const stageImg = document.getElementById("stageSelectedImage");
-    if (!aspectSelect) return;
 
-    const val = aspectSelect.value;
+    const val = targetRatio || (aspectSelect ? aspectSelect.value : "9:16");
+    if (aspectSelect && aspectSelect.value !== val) {
+      aspectSelect.value = val;
+    }
     if (badgeRatio) badgeRatio.textContent = val;
 
     if (stageBlurBg && selectedImageName) {
@@ -2161,18 +2263,29 @@ function bootstrapJesusStudio() {
       stageBlurBg.style.backgroundImage = `url('${activeBg}')`;
     }
 
-    if (val === "9:16") {
-      if (phoneMockup) phoneMockup.style.maxWidth = "320px";
-      if (phoneScreen) phoneScreen.style.aspectRatio = "9 / 16";
+    if (val === "1:1") {
+      if (phoneMockup) {
+        phoneMockup.style.maxWidth = "310px";
+        phoneMockup.style.aspectRatio = "1 / 1";
+        phoneMockup.classList.add("ratio-1-1");
+      }
+      if (phoneScreen) {
+        phoneScreen.style.aspectRatio = "1 / 1";
+        phoneScreen.classList.add("ratio-1-1");
+      }
       if (stageImg) stageImg.style.objectFit = "cover";
-    } else if (val === "1:1") {
-      if (phoneMockup) phoneMockup.style.maxWidth = "360px";
-      if (phoneScreen) phoneScreen.style.aspectRatio = "1 / 1";
-      if (stageImg) stageImg.style.objectFit = "contain";
-    } else if (val === "16:9") {
-      if (phoneMockup) phoneMockup.style.maxWidth = "440px";
-      if (phoneScreen) phoneScreen.style.aspectRatio = "16 / 9";
-      if (stageImg) stageImg.style.objectFit = "contain";
+    } else {
+      // Por defecto 9:16 Vertical Reel
+      if (phoneMockup) {
+        phoneMockup.style.maxWidth = "270px";
+        phoneMockup.style.aspectRatio = "9 / 16";
+        phoneMockup.classList.remove("ratio-1-1");
+      }
+      if (phoneScreen) {
+        phoneScreen.style.aspectRatio = "9 / 16";
+        phoneScreen.classList.remove("ratio-1-1");
+      }
+      if (stageImg) stageImg.style.objectFit = "cover";
     }
 
     setTimeout(initParticles, 150);
@@ -3716,6 +3829,24 @@ function bootstrapJesusStudio() {
         }
       }
 
+      // Sincronizar inputs de claves rápidas en Etapa 1
+      const qGem = document.getElementById("quickGeminiKey");
+      const qGroq = document.getElementById("quickGroqKey");
+      if (qGem) {
+        const savedGem = localStorage.getItem("gemini_api_key");
+        if (savedGem) qGem.value = savedGem;
+        else if (data.google_imagen && data.google_imagen.configured) {
+          qGem.placeholder = `Configurado en servidor (${data.google_imagen.key_masked || "Activo"})`;
+        }
+      }
+      if (qGroq) {
+        const savedGroq = localStorage.getItem("groq_api_key");
+        if (savedGroq) qGroq.value = savedGroq;
+        else if (data.narrative_groq && data.narrative_groq.configured) {
+          qGroq.placeholder = "Configurado en servidor (Activo)";
+        }
+      }
+
       // Actualizar indicador del motor narrativo
       const narrativeStatusText = document.getElementById("narrativeEngineStatusText");
       const narrativeDot = document.getElementById("narrativeEngineDot");
@@ -3723,13 +3854,17 @@ function bootstrapJesusStudio() {
       if (engSelect && narrativeStatusText) {
         const updateEngineBadge = () => {
           const val = engSelect.value;
+          const localGem = localStorage.getItem("gemini_api_key") || (qGem ? qGem.value.trim() : "");
+          const hasGem = !!(localGem || provData?.narrative_gemini?.configured || provData?.google_imagen?.configured);
+
+          const localGroq = localStorage.getItem("groq_api_key") || (qGroq ? qGroq.value.trim() : "");
+          const hasGroq = !!(localGroq || provData?.narrative_groq?.configured);
+
           if (val === "gemini") {
-            const hasGem = !!(geminiApiKeyInput?.value || (provData?.google_imagen?.configured));
-            narrativeStatusText.textContent = hasGem ? "Gemini Listo (Gratuito)" : "Sin Clave (Usa Respaldo)";
+            narrativeStatusText.textContent = hasGem ? "Gemini Listo (Gratuito)" : "Sin Clave (Clic para configurar)";
             if (narrativeDot) narrativeDot.className = hasGem ? "status-dot-green" : "status-dot-yellow";
           } else if (val === "groq") {
-            const hasGroq = !!(groqApiKeyInput?.value || (provData?.narrative_groq?.configured));
-            narrativeStatusText.textContent = hasGroq ? "Groq Listo (Gratuito)" : "Sin Clave (Usa Respaldo)";
+            narrativeStatusText.textContent = hasGroq ? "Groq Listo (Gratuito)" : "Sin Clave (Clic para configurar)";
             if (narrativeDot) narrativeDot.className = hasGroq ? "status-dot-green" : "status-dot-yellow";
           } else {
             narrativeStatusText.textContent = "Motor Local Activo";

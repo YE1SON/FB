@@ -188,6 +188,10 @@ class SaveKeysRequest(BaseModel):
     gemini_api_key: Optional[str] = None
     groq_api_key: Optional[str] = None
 
+class TestNarrativeKeyRequest(BaseModel):
+    provider: Literal["gemini", "groq"] = "gemini"
+    api_key: str
+
 class GenerateAiImageRequest(BaseModel):
     prompt: str
     aspect_ratio: str = "9:16"
@@ -621,6 +625,66 @@ def api_save_image_keys(req: SaveKeysRequest):
         groq_api_key=req.groq_api_key
     )
     return {"status": "success", "providers": get_providers_status()}
+
+@app.post("/api/test-narrative-key")
+@app.post("/studio/api/test-narrative-key")
+def api_test_narrative_key(req: TestNarrativeKeyRequest):
+    key = (req.api_key or "").strip()
+    if not key:
+        raise HTTPException(status_code=400, detail="Debe ingresar una clave de API.")
+
+    if req.provider == "gemini":
+        from engine.ai_narrative import GEMINI_MODELS
+        import requests
+        last_err = None
+        for model in GEMINI_MODELS:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+            payload = {
+                "contents": [{"parts": [{"text": "Say peace in one word."}]}],
+                "generationConfig": {"maxOutputTokens": 10}
+            }
+            try:
+                r = requests.post(url, json=payload, timeout=12)
+                if r.status_code == 200:
+                    return {"status": "ok", "provider": "Google Gemini", "model": model, "message": f"Conexión exitosa con Google Gemini ({model})"}
+                elif r.status_code == 429:
+                    last_err = f"Cuota temporal excedida (429) en {model}"
+                    continue
+                elif r.status_code == 503:
+                    last_err = f"Alta demanda (503) en {model}"
+                    continue
+                else:
+                    last_err = f"HTTP {r.status_code}: {r.text[:120]}"
+            except Exception as e:
+                last_err = str(e)
+        raise HTTPException(status_code=400, detail=f"Fallo al conectar con Gemini: {last_err}")
+
+    elif req.provider == "groq":
+        from engine.ai_narrative import GROQ_MODELS
+        import requests
+        headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        last_err = None
+        for model in GROQ_MODELS:
+            url = "https://api.groq.com/openai/v1/chat/completions"
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": "Say peace"}],
+                "max_tokens": 10
+            }
+            try:
+                r = requests.post(url, headers=headers, json=payload, timeout=12)
+                if r.status_code == 200:
+                    return {"status": "ok", "provider": "GroqCloud", "model": model, "message": f"Conexión exitosa con GroqCloud ({model})"}
+                elif r.status_code == 429:
+                    last_err = f"Cuota excedida (429) en {model}"
+                    continue
+                else:
+                    last_err = f"HTTP {r.status_code}: {r.text[:120]}"
+            except Exception as e:
+                last_err = str(e)
+        raise HTTPException(status_code=400, detail=f"Fallo al conectar con GroqCloud: {last_err}")
+
+    raise HTTPException(status_code=400, detail="Proveedor no reconocido.")
 
 @app.post("/api/generate-ai-image")
 @app.post("/studio/api/generate-ai-image")

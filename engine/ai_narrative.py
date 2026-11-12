@@ -17,13 +17,12 @@ from engine.scripts import BIBLICAL_CATALOGUE, THEMATIC_PILLARS, generate_script
 
 # ─── Modelos Gratuitos Disponibles ───────────────────────────────────────────
 GEMINI_MODELS = [
+    "gemini-3.1-flash-lite",
     "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite-preview",
     "gemini-3.6-flash",
     "gemini-3.5-flash",
-    "gemini-3.8-flash",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash"
+    "gemini-3.8-flash"
 ]
 
 GROQ_MODELS = [
@@ -93,7 +92,7 @@ def _build_user_prompt(
 
 Theme: {theme_title}
 Underlying Human Need: {human_situation}
-Specific Focus/Angle: {specific_focus or 'General comforting reflection on this theme'}
+Specific Focus/Angle: {specific_focus or 'General comforting reflection on this theme'} (NOTE: The angle or situation may be provided in Spanish, but you must write the entire devotional script strictly in natural, contemporary, dignified American English addressing this exact human reality with deep empathy)
 Custom Situation from User: {custom_topic or 'None provided'}
 Narration Style: {narration_type.upper()} ({style_guide})
 Target Word Count for Body: {target['words_min']} to {target['words_max']} words.
@@ -122,7 +121,7 @@ def call_gemini_api(
     api_key: str,
     user_prompt: str,
     system_prompt: str = SYSTEM_NARRATIVE_PROMPT,
-    timeout: int = 15
+    timeout: int = 25
 ) -> Dict[str, Any]:
     """Llama a Google Gemini API utilizando modelos del nivel gratuito."""
     if not api_key:
@@ -144,7 +143,7 @@ def call_gemini_api(
             "generationConfig": {
                 "responseMimeType": "application/json",
                 "temperature": 0.7,
-                "maxOutputTokens": 1500
+                "maxOutputTokens": 2500
             }
         }
         try:
@@ -163,17 +162,28 @@ def call_gemini_api(
                         except Exception:
                             # Reintento con limpieza de caracteres de control
                             cleaned_json = re.sub(r"[\x00-\x1f]+", " ", json_str)
-                            parsed = json.loads(cleaned_json)
+                            try:
+                                parsed = json.loads(cleaned_json)
+                            except Exception:
+                                # Fallback básico con regex si el JSON vino cortado
+                                parsed = _parse_loose_json(json_str)
                         parsed["provider_used"] = f"Google Gemini ({model})"
                         return parsed
             elif resp.status_code == 429:
                 print(f"[Gemini API] Cuota excedida (429) en {model}. Intentando siguiente modelo...")
                 last_err = f"Cuota gratuita excedida (HTTP 429) en {model}"
                 continue
+            elif resp.status_code == 503:
+                print(f"[Gemini API] Alta demanda temporal (503) en {model}. Intentando siguiente modelo...")
+                last_err = f"Alta demanda temporal (HTTP 503) en {model}"
+                continue
             else:
                 err_text = resp.text[:180]
                 print(f"[Gemini API] Error {resp.status_code} en {model}: {err_text}")
                 last_err = f"HTTP {resp.status_code}: {err_text}"
+        except requests.exceptions.Timeout:
+            print(f"[Gemini API] Tiempo de espera agotado ({timeout}s) en {model}. Intentando siguiente modelo...")
+            last_err = f"Tiempo de espera agotado en {model}"
         except Exception as e:
             print(f"[Gemini API] Excepción al llamar a {model}: {e}")
             last_err = str(e)
@@ -239,6 +249,24 @@ def call_groq_api(
 
 
 # ─── 3. Extractor Auxiliar de JSON ───────────────────────────────────────────
+
+def _parse_loose_json(text: str) -> Dict[str, Any]:
+    """Extrae campos del JSON con expresiones regulares si el JSON está truncado o malformado."""
+    result: Dict[str, Any] = {}
+    for field in ["title", "hook", "body", "devotional_body", "cta", "call_to_action", "scripture", "visual_prompt"]:
+        m = re.search(rf'"{field}"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"', text, re.IGNORECASE)
+        if m:
+            val = m.group(1).encode('utf-8').decode('unicode_escape', errors='ignore')
+            result[field] = val
+    # Extraer hook_options si existen
+    options_m = re.search(r'"hook_options"\s*:\s*\[(.*?)\]', text, re.DOTALL | re.IGNORECASE)
+    if options_m:
+        raw_opts = options_m.group(1)
+        opts = [o.strip(' "\'\r\n') for o in re.findall(r'"([^"\\]*(?:\\.[^"\\]*)*)"', raw_opts) if o.strip()]
+        if opts:
+            result["hook_options"] = opts
+    return result
+
 
 def _extract_json_string(text: str) -> str:
     """Limpia bloques de código markdown y extrae el JSON válido."""
@@ -364,18 +392,52 @@ def generate_ai_narrative_script(
         else:
             provider_used = "Motor Local Editorial (Catálogo canónico)"
 
-    # Normalizar campos obtenidos
-    hook = str(parsed_result.get("hook", "")).strip()
+    # Normalizar campos obtenidos con soporte para sinónimos del modelo
+    hook = str(
+        parsed_result.get("hook") or
+        parsed_result.get("opening_hook") or
+        parsed_result.get("opening") or
+        (parsed_result.get("hook_options") and parsed_result["hook_options"][0]) or
+        ""
+    ).strip()
+
     hook_options = parsed_result.get("hook_options", [])
     if not isinstance(hook_options, list) or len(hook_options) < 3:
         hook_options = [hook, f"If your heart needed a quiet reminder today: {hook}", f"A gentle prayer for tonight: {hook}"][:3]
     else:
         hook_options = [str(h).strip() for h in hook_options[:3]]
 
-    body = str(parsed_result.get("body", "")).strip()
-    cta = str(parsed_result.get("cta", "")).strip() if include_cta else ""
-    scripture = str(parsed_result.get("scripture", verse_candidate)).strip()
-    title = str(parsed_result.get("title", theme_title)).strip()
+    body = str(
+        parsed_result.get("body") or
+        parsed_result.get("devotional_body") or
+        parsed_result.get("prayer") or
+        parsed_result.get("prayer_text") or
+        parsed_result.get("message") or
+        parsed_result.get("content") or
+        ""
+    ).strip()
+
+    cta = ""
+    if include_cta:
+        cta = str(
+            parsed_result.get("cta") or
+            parsed_result.get("call_to_action") or
+            parsed_result.get("cta_text") or
+            ""
+        ).strip()
+
+    scripture = str(
+        parsed_result.get("scripture") or
+        parsed_result.get("scripture_reference") or
+        parsed_result.get("bible_verse") or
+        verse_candidate
+    ).strip()
+
+    title = str(
+        parsed_result.get("title") or
+        parsed_result.get("topic") or
+        theme_title
+    ).strip()
 
     # Construir texto completo para locución
     full_text_parts = [hook, body]

@@ -738,8 +738,7 @@ html, body {
 /* Mockup del Teléfono Móvil */
 .phone-mockup {
   width: 100%;
-  max-width: clamp(190px, 20vw, 240px);
-  max-height: clamp(220px, 38vh, 340px);
+  max-width: 270px;
   aspect-ratio: 9 / 16;
   margin: 0 auto;
   border-radius: 20px;
@@ -749,14 +748,26 @@ html, body {
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
   position: relative;
   flex-shrink: 0;
+  transition: max-width 0.25s ease, aspect-ratio 0.25s ease;
+}
+
+.phone-mockup.ratio-1-1 {
+  max-width: 310px;
+  aspect-ratio: 1 / 1;
 }
 
 .phone-screen {
   position: relative;
   width: 100%;
   height: 100%;
+  aspect-ratio: 9 / 16;
   background: #000;
   overflow: hidden;
+  transition: aspect-ratio 0.25s ease;
+}
+
+.phone-screen.ratio-1-1 {
+  aspect-ratio: 1 / 1;
 }
 
 .stage-placeholder {
@@ -1211,7 +1222,8 @@ html, body {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000;
   z-index: 20;
 }
 

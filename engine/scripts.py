@@ -1242,186 +1242,186 @@ def generate_image_prompt_for_script(theme_key: Optional[str], script_text: str 
 
 THEME_FOCUS_OPTIONS = {
     "lost_child": [
-        "When an adult child stops answering calls or texts",
-        "Trusting God with a prodigal child who walked away from church",
-        "Late-night prayer for a grandchild in difficult or dangerous company",
-        "Releasing the guilt of wondering if you did enough as a mother or father",
-        "A prayer for silent tears shed over an empty bedroom"
+        "1. Cuando un hijo adulto deja de contestar llamadas o mensajes",
+        "2. Confiar a Dios un hijo que se alejó de la fe y del hogar",
+        "3. Oración nocturna por un nieto en malas compañías o peligro",
+        "4. Liberar la culpa de dudar si hiciste suficiente como madre o padre",
+        "5. Lágrimas silenciosas ante una habitación vacía y la promesa de su regreso"
     ],
     "family_protection": [
-        "Surrounding grandchildren with unseen angelic protection at school",
-        "Guarding your household from cold distance, anger, and division",
-        "A shield of safety over loved ones traveling on highways tonight",
-        "Protecting your home from outside spiritual or emotional turmoil",
-        "Covering three generations under God's quiet sheltering grace"
+        "1. Cubrir a los nietos con protección celestial en la escuela",
+        "2. Guardar el hogar de la frialdad, las discusiones y la distancia",
+        "3. Escudo de seguridad para seres queridos que viajan de noche",
+        "4. Proteger la casa de angustias y tormentas emocionales externas",
+        "5. Tres generaciones bajo la paz y el amparo de Dios"
     ],
     "marriage_healing": [
-        "When words have turned sharp and silence fills the living room",
-        "Rebuilding trust, softness, and tenderness after deep hurt",
-        "Praying for a spouse who seems emotionally exhausted or distant",
-        "Remembering the sacred vows made years ago in younger days",
-        "Softening pride so forgiveness can enter the home tonight"
+        "1. Cuando las palabras hirientes y el silencio llenan la casa",
+        "2. Reconstruir la confianza, la ternura y el afecto tras una herida",
+        "3. Orar por un cónyuge abrumado, distante o agotado",
+        "4. Recordar las promesas sagradas hechas en los días de juventud",
+        "5. Desarmar el orgullo para que el perdón entre al matrimonio hoy"
     ],
     "single_parent": [
-        "Carrying all the bills, chores, and bedtime routines alone",
-        "When fatigue makes you feel like you are failing your children",
-        "Asking God to be the unseen provider and protector in the house",
-        "Finding 10 minutes of quiet peace before the next day begins",
-        "Strength to stay patient when your own heart is running on empty"
+        "1. Llevar solo todas las cuentas, tareas y noches sin descanso",
+        "2. Cuando el cansancio te hace sentir que les estás fallando a tus hijos",
+        "3. Pedir a Dios que sea el sostén y protector invisible de tu casa",
+        "4. Diez minutos de paz en silencio antes de que comience el nuevo día",
+        "5. Fuerzas para ser paciente cuando tu corazón ya no da más"
     ],
     "elderly_parents": [
-        "Watching a parent grow fragile and forgetful with advancing age",
-        "Patience and compassion for the daily fatigue of caregiving",
-        "Honoring their dignity while making difficult medical decisions",
-        "Gratitude for the prayers they spoke over you when you were young",
-        "Peace in the quiet moments holding an elderly parent's hand"
+        "1. Ver a un padre o madre envejecer y volverse frágil o dependiente",
+        "2. Paciencia y amor ante el desgaste diario de cuidar a un mayor",
+        "3. Honrar su dignidad en medio de decisiones médicas difíciles",
+        "4. Gratitud por las oraciones que ellos hicieron por ti en tu niñez",
+        "5. Paz en los momentos silenciosos al tomar la mano de un anciano"
     ],
     "sick_grandchild": [
-        "Standing beside a child's hospital bed or crib in tears",
-        "Whispering the name of Jesus over a child running a fever",
-        "Grandparent's intercession for gentle relief from sickness",
-        "Releasing terrifying medical what-ifs into God's gentle hands",
-        "Praying for quick recovery and joyful laughter to return"
+        "1. Junto a la cama de un pequeño orando con el corazón en un hilo",
+        "2. Susurrar el nombre de Jesús sobre un niño con fiebre o dolor",
+        "3. Oración de los abuelos pidiendo alivio y sanidad completa",
+        "4. Entregar a Dios los temores y diagnósticos médicos difíciles",
+        "5. Confiar en que volverán las risas, el juego y la salud"
     ],
     "morning_favor": [
-        "Opening your eyes with quiet gratitude before reaching for the phone",
-        "Asking God for wisdom in decisions and patience with people today",
-        "Declaring that yesterday's mistakes have no power over this morning",
-        "Walking into work or chores wrapped in divine calm and favor",
-        "Thanking God for fresh breath, clean air, and new morning mercies"
+        "1. Despertar con gratitud silenciosa antes de mirar las preocupaciones",
+        "2. Pedir sabiduría en decisiones y paciencia con las personas hoy",
+        "3. Declarar que los errores de ayer no tienen poder sobre esta mañana",
+        "4. Comenzar el día envuelto en serenidad, enfoque y favor de Dios",
+        "5. Agradecer por el aire que respiras y las nuevas misericordias de hoy"
     ],
     "night_anxiety": [
-        "Staring at the bedroom ceiling at 2:00 AM unable to turn off worries",
-        "Handing over unpaid bills and next week's problems before sleeping",
-        "Quieting the racing heart with the gentle presence of Christ",
-        "Surrendering what you cannot control or fix tonight",
-        "Resting securely knowing God never sleeps or slumbers"
+        "1. Mirar el techo a las 2:00 AM sin poder apagar los pensamientos",
+        "2. Soltar las cuentas por pagar y los problemas antes de dormir",
+        "3. Calmar las palpitaciones del pecho con la presencia de Dios",
+        "4. Rendir aquello que esta noche no puedes resolver ni controlar",
+        "5. Dormir en paz sabiendo que Dios jamás duerme ni se cansa"
     ],
     "restless_sleep": [
-        "Breaking the cycle of insomnia and waking up exhausted",
-        "Releasing heavy emotional burdens carried during the day",
-        "Asking for peaceful dreams and uninterrupted deep rest",
-        "Trusting God to guard your body and mind through the midnight hours",
-        "Waking up refreshed, renewed, and restored by morning light"
+        "1. Romper el ciclo de insomnio y despertar con cansancio",
+        "2. Liberar las cargas emocionales pesadas acumuladas durante el día",
+        "3. Pedir sueños apacibles y un descanso profundo sin interrupciones",
+        "4. Confiar en que Dios guardará tu cuerpo y mente durante la madrugada",
+        "5. Despertar renovado, fortalecido y restaurado con la luz del nuevo día"
     ],
     "unspoken_prayer": [
-        "A prayer too painful or private to say out loud to anyone",
-        "When the heart only has silent tears and heavy sighs before God",
-        "A burden carried in secrecy that only the Lord understands",
-        "Trusting the Holy Spirit to intercede when words fail completely",
-        "Finding comfort knowing Jesus already knows every hidden ache"
+        "1. Una petición tan dolorosa o íntima que no puedes contar a nadie",
+        "2. Cuando solo quedan lágrimas silenciosas y suspiros ante Dios",
+        "3. Una carga que llevas en secreto y solo el Señor comprende",
+        "4. Confiar en que el Espíritu Santo intercede cuando faltan las palabras",
+        "5. El consuelo de saber que Jesús conoce cada dolor que callas"
     ],
     "peace_in_storm": [
-        "When unexpected crisis hits from multiple sides at once",
-        "Remembering Jesus is in the boat even when waves splash high",
-        "Refusing to panic when circumstances seem out of control",
-        "Speaking peace to the storm inside your chest right now",
-        "An anchor of hope that holds fast in turbulent waters"
+        "1. Cuando los problemas golpean por varios lados al mismo tiempo",
+        "2. Recordar que Jesús está en la barca aunque las olas golpeen fuerte",
+        "3. Negarse al pánico cuando todo parece salirse de control",
+        "4. Hablarle paz a la tormenta que tienes dentro del pecho ahora mismo",
+        "5. Un ancla de esperanza firme en medio de aguas turbulentas"
     ],
     "lonely_widow": [
-        "Sitting at a quiet kitchen table where someone used to sit",
-        "Navigating holidays, evenings, and silence in an empty house",
-        "Remembering that the Lord is the defender and husband to widows",
-        "Finding new purpose and companionship in a changed season of life",
-        "Comfort for the tender memories that still bring sudden tears"
+        "1. Sentarse ante una mesa donde antes se compartían risas y café",
+        "2. Afrontar las tardes silenciosas y los recuerdos en una casa vacía",
+        "3. Recordar que Dios es defensor y consuelo fiel de los solitarios",
+        "4. Encontrar un nuevo propósito y compañía en esta etapa de la vida",
+        "5. Paz para los recuerdos entrañables que aún provocan lágrimas"
     ],
     "grief_loss": [
-        "Surviving the early months after losing a beloved family member",
-        "When a familiar song or scent brings an overwhelming wave of grief",
-        "Honoring their memory while learning to breathe again one day at a time",
-        "Knowing that those who die in Christ are held safely in eternity",
-        "God's promise to draw near and hold those whose hearts are broken"
+        "1. Sobrellevar los primeros meses tras la partida de un ser querido",
+        "2. Cuando una fecha o un recuerdo trae una ola repentina de dolor",
+        "3. Honrar su memoria mientras aprendes a respirar un día a la vez",
+        "4. La certeza de que quienes descansan en Dios están en paz eterna",
+        "5. La promesa de Dios de abrazar y sanar a los quebrantados de corazón"
     ],
     "healing_depression": [
-        "When even getting out of bed feels like climbing a steep mountain",
-        "Living under a heavy gray cloud that nobody else can see",
-        "A gentle prayer for a spark of hope when numb to everything",
-        "Reminding yourself that God's love does not depend on your feelings",
-        "One small courageous step forward into grace and light today"
+        "1. Cuando hasta levantarse de la cama parece una montaña imposible",
+        "2. Caminar bajo una nube gris y pesada que nadie más puede ver",
+        "3. Una pequeña chispa de esperanza para el alma cuando todo se siente apagado",
+        "4. Recordarte que el amor de Dios no depende de cómo te sientas hoy",
+        "5. Dar un pequeño paso valiente hacia la luz y el consuelo de Dios"
     ],
     "medical_fear": [
-        "Sitting in the doctor's waiting room anxiously awaiting test results",
-        "Facing an unexpected health diagnosis with quiet composure",
-        "Enduring chronic bodily pain without losing your faith or heart",
-        "Praying for skilled doctors and steady hands before a procedure",
-        "Resting in the Great Physician whose presence outlasts all fear"
+        "1. En la sala de espera del médico esperando ansiosamente resultados",
+        "2. Afrontar un diagnóstico inesperado con serenidad y fe",
+        "3. Soportar dolor físico constante sin perder la paz ni el corazón",
+        "4. Orar por los médicos y cirujanos antes de un procedimiento",
+        "5. Descansar en las manos del Médico de médicos que nunca falla"
     ],
     "zero_balance": [
-        "Looking at unpaid monthly bills with an empty bank account",
-        "Carrying the quiet shame and weight of financial hardship in secret",
-        "Trusting Jehovah-Jireh for next week's groceries and mortgage",
-        "Wisdom to steward small resources into steady recovery",
-        "Believing that God's provision arrives right on time, not too late"
+        "1. Mirar las cuentas vencidas con la cuenta bancaria en cero",
+        "2. Llevar la vergüenza y el peso de las dificultades económicas en silencio",
+        "3. Confiar en Dios como proveedor para los alimentos y el techo de tu hogar",
+        "4. Sabiduría para administrar cada recurso y salir adelante con dignidad",
+        "5. Creer que la provisión y el milagro llegarán en el momento oportuno"
     ],
     "job_breakthrough": [
-        "Sending resume after resume into silence without any replies",
-        "Courage and clarity when walking into an upcoming job interview",
-        "Restoring dignity and hope after sudden layoff or job loss",
-        "Trusting God to open a door that no human gatekeeper can shut",
-        "Wisdom to lead and excel with integrity in honest daily work"
+        "1. Enviar solicitudes de empleo sin recibir respuesta tras meses de espera",
+        "2. Pedir serenidad y claridad para una entrevista de trabajo decisiva",
+        "3. Recuperar la dignidad y el ánimo tras un despido o pérdida de empleo",
+        "4. Confiar en que Dios abrirá puertas de trabajo que nadie podrá cerrar",
+        "5. Sabiduría para prosperar con honestidad y rectitud en tu labor diaria"
     ],
     "addiction_chains": [
-        "Praying for a son, daughter, or spouse bound by chemical dependence",
-        "The quiet battle against secret habits, alcohol, or hidden vices",
-        "Breaking the cycle of relapse and shame with Christ's power",
-        "A prayer for humility to seek honest accountability and healing",
-        "Believing that true freedom is real when the Son sets you free"
+        "1. Orar por un hijo, pareja o familiar atrapado en dependencias o alcohol",
+        "2. La lucha silenciosa contra hábitos ocultos que roban la paz",
+        "3. Romper el ciclo de recaídas y culpa con la fuerza de la fe",
+        "4. Humildad para buscar ayuda honesta, reconciliación y sanidad",
+        "5. Creer que la verdadera libertad es posible y que las cadenas se rompen"
     ],
     "court_legal": [
-        "Facing a stressful legal battle, custody fight, or formal lawsuit",
-        "When false accusations or unfair treatment threaten your peace",
-        "Asking the Righteous Judge to uncover truth and restore fairness",
-        "Releasing sleepless anxiety over court dates and attorney fees",
-        "Trusting God to vindicate and defend the humble in heart"
+        "1. Afrontar un juicio agotador, disputa de custodia o trámite legal difícil",
+        "2. Cuando acusaciones injustas o malentendidos amenazan tu tranquilidad",
+        "3. Pedir al Justo Juez que la verdad y la justicia salgan a la luz",
+        "4. Soltar la angustia de las audiencias, plazos y honorarios de abogados",
+        "5. Confiar en que Dios defiende al de corazón sincero y humilde"
     ],
     "spiritual_warfare": [
-        "Putting on the full armor of God against discouragement and deceit",
-        "Breaking spiritual heaviness over your home and thoughts",
-        "Standing firm when the enemy whispers that your prayers are useless",
-        "Claiming the victory of Christ's cross over every shadow",
-        "Walking in authority, peaceful love, and sound-minded faith"
+        "1. Vestir la armadura de la fe contra el desánimo y los pensamientos oscuros",
+        "2. Romper la pesadez y traer paz espiritual sobre tu casa y familia",
+        "3. Mantenerte firme cuando el desánimo te dice que orar no sirve de nada",
+        "4. Aferrarte a la victoria de la Cruz sobre toda sombra y temor",
+        "5. Caminar con autoridad, serenidad y mente clara en la verdad de Dios"
     ],
     "strength_weary": [
-        "When you have poured out everything for others and have nothing left",
-        "Caregiver burnout and the physical drain of long months of care",
-        "Exchanging your exhausted strength for God's supernatural power",
-        "Permission to rest without feeling guilty or unproductive",
-        "Renewing your wings to mount up like eagles in divine hope"
+        "1. Cuando lo has dado todo por los demás y sientes que no te queda nada",
+        "2. Agotamiento físico y emocional por cuidar a otros durante meses",
+        "3. Cambiar tus fuerzas gastadas por las fuerzas renovadas que Dios da",
+        "4. Permiso para descansar sin sentirte culpable ni improductivo",
+        "5. Renovar las alas para levantarte como las águilas con nueva esperanza"
     ],
     "guidance_direction": [
-        "Standing at a major crossroad not knowing which way to turn",
-        "Asking God for a clear sign or quiet confirmation in your spirit",
-        "Moving forward when you can only see the very next step",
-        "Silencing the noise of human opinions to hear the Shepherd's voice",
-        "Trusting that God orders the steps of those who seek His heart"
+        "1. Frente a una encrucijada importante sin saber qué camino tomar",
+        "2. Pedir a Dios una señal clara o una confirmación de paz en el espíritu",
+        "3. Avanzar con fe cuando solo puedes ver el siguiente paso inmediato",
+        "4. Apagar el ruido de tantas opiniones para escuchar la voz del Señor",
+        "5. Confiar en que Dios guía los pasos de quien busca Su voluntad"
     ],
     "gratitude_harvest": [
-        "Counting blessings that money cannot buy: health, family, faith",
-        "Thanking God for surviving seasons that once seemed impossible",
-        "A heart overflowing with praise for small everyday kindnesses",
-        "Recognizing God's faithful hand in the quiet, ordinary moments",
-        "Singing a song of thanksgiving before the breakthrough appears"
+        "1. Agradecer por bendiciones que el dinero no compra: salud, familia y fe",
+        "2. Dar gracias por haber sobrevivido etapas que parecían imposibles",
+        "3. Un corazón lleno de gratitud por las pequeñas bondades de cada día",
+        "4. Reconocer la mano fiel de Dios en los momentos sencillos y cotidianos",
+        "5. Elevar una alabanza de victoria antes de ver la respuesta final"
     ],
     "forgiving_past": [
-        "Releasing bitterness toward someone who never asked for forgiveness",
-        "Breaking the mental prison of replaying old words and betrayals",
-        "Cutting the invisible cords of resentment to reclaim your peace",
-        "Choosing to forgive so your own heart can heal and soften",
-        "Walking into freedom by the same mercy Christ showed to you"
+        "1. Soltar el resentimiento hacia quien nunca te pidió perdón",
+        "2. Romper la prisión mental de revivir viejas palabras y traiciones",
+        "3. Cortar los lazos del rencor para recuperar tu paz interior",
+        "4. Decidir perdonar para que tu propio corazón sane y vuelva a latir ligero",
+        "5. Caminar en libertad con la misma misericordia que Dios tuvo contigo"
     ],
     "business_blessing": [
-        "Consecrating your business, clients, and projects to the Lord",
-        "Asking for creative wisdom, honest transactions, and fair favor",
-        "Persevering through slow sales seasons or economic uncertainty",
-        "Blessing the hands of your employees and partners with prosperity",
-        "Remembering that God is the true partner and provider in all work"
+        "1. Consagrar tu negocio, clientes y proyectos en las manos de Dios",
+        "2. Pedir creatividad, tratos honestos y buen favor en tus actividades",
+        "3. Perseverar con ánimo en temporadas de ventas bajas o incertidumbre",
+        "4. Bendecir el trabajo de tus colaboradores y prosperar con propósito",
+        "5. Recordar que Dios es el verdadero socio y sustentador de tu esfuerzo"
     ],
     "divine_grace": [
-        "Approaching God's throne not in fear, but with bold confidence",
-        "Resting in the unmerited favor and boundless love of Christ",
-        "When feelings of inadequacy whisper that you are not good enough",
-        "Rejoicing that grace covers every past failure and current weakness",
-        "Living as a beloved child of God in radiant freedom and peace"
+        "1. Acercarte a Dios sin temor ni vergüenza, con sincera confianza",
+        "2. Descansar en Su amor incondicional y Su gracia inagotable",
+        "3. Cuando sientes que no eres suficiente o que has fallado demasiado",
+        "4. Alegrarte porque Su perdón cubre todo tropiezo y debilidad pasada",
+        "5. Vivir como un hijo amado de Dios en completa paz y libertad"
     ]
 }
 

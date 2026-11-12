@@ -237,10 +237,6 @@
                 <span class="pill-ratio">1:1</span>
                 <span class="pill-label">⏹️ Post Cuadrado Facebook</span>
               </button>
-              <button type="button" class="btn-format-pill" data-ratio="16:9">
-                <span class="pill-ratio">16:9</span>
-                <span class="pill-label">🖥️ Horizontal YouTube / TV</span>
-              </button>
             </div>
           </div>
 
@@ -256,10 +252,59 @@
             </div>
             <div class="form-group col-5">
               <label>Estado del Motor</label>
-              <div id="narrativeEngineBadge" class="badge-status-display">
+              <div id="narrativeEngineBadge" class="badge-status-display" style="cursor: pointer;" title="Clic para configurar claves de IA">
                 <span id="narrativeEngineDot" class="status-dot-green"></span>
                 <span id="narrativeEngineStatusText">Gemini Listo</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Botón y Panel Rápido de Configuración de Claves IA -->
+          <div class="mt-6">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <button type="button" id="btnToggleQuickKeys" class="btn btn-outline btn-sm" style="font-size: 11.5px; padding: 4px 10px; font-weight: 600;">
+                🔑 Configurar Claves IA (Gemini / Groq)
+              </button>
+              <span id="aiKeyQuickHint" style="font-size: 11px; color: #64748b;">Nivel 100% Gratuito</span>
+            </div>
+
+            <div id="aiKeysQuickBox" class="mt-8" style="display: none; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; font-size: 12.5px; color: #1e293b;">🔑 Conectar Claves Gratuitas de IA</span>
+                <button type="button" id="btnCloseQuickKeys" style="background: none; border: none; font-size: 16px; cursor: pointer; color: #64748b;">✕</button>
+              </div>
+              <p style="font-size: 11px; color: #475569; margin-bottom: 8px;">
+                Las claves se guardan en tu servidor y navegador. Ambas opciones tienen niveles 100% gratuitos sin cobros.
+              </p>
+              <div class="form-group mb-6">
+                <label for="quickGeminiKey" style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">
+                  <span>Google AI Studio API Key (Gemini):</span>
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: #2563eb; text-decoration: underline;">Obtener gratis aquí</a>
+                </label>
+                <div style="display: flex; gap: 4px;">
+                  <input type="password" id="quickGeminiKey" class="form-control" placeholder="Pega tu clave de Google AI Studio..." style="font-size: 11.5px; height: 34px;">
+                  <button type="button" id="btnToggleShowGemini" class="btn btn-outline btn-sm" style="padding: 0 8px; height: 34px;">👁️</button>
+                </div>
+              </div>
+              <div class="form-group mb-8">
+                <label for="quickGroqKey" style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">
+                  <span>GroqCloud API Key (LLaMA):</span>
+                  <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color: #2563eb; text-decoration: underline;">Obtener gratis aquí</a>
+                </label>
+                <div style="display: flex; gap: 4px;">
+                  <input type="password" id="quickGroqKey" class="form-control" placeholder="gsk_..." style="font-size: 11.5px; height: 34px;">
+                  <button type="button" id="btnToggleShowGroq" class="btn btn-outline btn-sm" style="padding: 0 8px; height: 34px;">👁️</button>
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button type="button" id="btnSaveQuickKeys" class="btn btn-primary btn-sm" style="flex: 1; font-weight: 600;">
+                  💾 Guardar Claves
+                </button>
+                <button type="button" id="btnTestQuickKeys" class="btn btn-outline btn-sm" style="font-size: 11px;">
+                  ⚡ Probar Conexión
+                </button>
+              </div>
+              <div id="quickKeysStatusMsg" style="display: none; font-size: 11px; margin-top: 6px; padding: 5px 8px; border-radius: 4px;"></div>
             </div>
           </div>
 
@@ -782,8 +827,7 @@
               <label for="aspectRatioSelect">Formato de Video</label>
               <select id="aspectRatioSelect" class="form-control">
                 <option value="9:16" selected>📱 9:16 (Reels/Shorts)</option>
-                <option value="1:1">⬛ 1:1 (Post Cuadrado)</option>
-                <option value="16:9">📺 16:9 (YouTube/TV)</option>
+                <option value="1:1">⬛ 1:1 (Post Cuadrado Facebook)</option>
               </select>
             </div>
             <div class="form-group col-6">
@@ -1076,16 +1120,6 @@
             </div>
           </div>
 
-          <!-- Selector de Capas Superiores Desfasadas (Nunca se superponen) -->
-          <div class="preview-badge-switcher mb-6">
-            <button type="button" class="btn-badge-toggle active" id="btnPreviewShowHook">
-              🎣 Gancho Visual (0.0s – 3.5s)
-            </button>
-            <button type="button" class="btn-badge-toggle" id="btnPreviewShowCta">
-              💬 Píldora de Comentario (4.5s – 9.5s)
-            </button>
-          </div>
-
           <!-- Mockup del Teléfono Móvil -->
           <div class="phone-mockup">
             <div class="phone-screen">
@@ -1095,13 +1129,6 @@
                 <div class="stage-blur-bg" id="stageBlurBg"></div>
                 <img id="stageSelectedImage" src="/assets/images/jesus_healing_miracle.jpg" alt="Escena Bíblica">
                 <canvas id="fxCanvas" class="visual-effect-canvas"></canvas>
-
-                
-
-                <!-- Píldora de Micro-CTA Superior — 4.5s a 9.5s (Desfasada, nunca simultánea) -->
-                <div id="stageMicroCtaBadge" class="stage-micro-cta-badge" style="display: none;">
-                  💬 Leave their first name below
-                </div>
 
                 <!-- Capa de Subtítulos en Vivo -->
                 <div class="stage-overlay" id="stageOverlay">

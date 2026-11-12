@@ -7,6 +7,7 @@ import io
 import random
 import urllib.request
 import urllib.parse
+import json
 from PIL import Image
 from typing import Optional, List, Literal, Dict
 from pydantic import BaseModel, Field, HttpUrl

@@ -1117,103 +1117,123 @@ html, body {
 }
 
 /* Animaciones de Subtítulos y Palabras Activas (Limpias y Sin Parpadeos) */
+/* Animaciones de Subtítulos y Palabras Activas (Loop Continuo y Dinámico para Vista Previa) */
 .anim-pop .highlight, .live-subtitle-preview.anim-pop .highlight {
-  animation: subWordPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.75));
+  animation: subWordPopLoop 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
+  display: inline-block;
+  color: #ffd700;
 }
-@keyframes subWordPop {
-  0% { transform: scale(0.92); opacity: 0.8; }
-  100% { transform: scale(1.08); opacity: 1; }
+@keyframes subWordPopLoop {
+  0%, 25% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.3)); }
+  45%, 75% { transform: scale(1.18); filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.95)) drop-shadow(0 2px 4px #000); }
+  90%, 100% { transform: scale(1); }
 }
 
 .anim-glow .highlight, .live-subtitle-preview.anim-glow .highlight {
-  animation: subWordGlow 0.3s ease-out forwards;
-  text-shadow: 0 0 14px rgba(255, 215, 0, 0.9), 0 2px 4px #000;
+  animation: subWordGlowLoop 1.5s ease-in-out infinite alternate;
+  display: inline-block;
+  color: #ffd700;
 }
-@keyframes subWordGlow {
-  0% { filter: brightness(0.9); }
-  100% { filter: brightness(1.2); }
+@keyframes subWordGlowLoop {
+  0% { filter: brightness(0.95); text-shadow: 0 0 4px rgba(255, 215, 0, 0.4); }
+  50%, 100% { filter: brightness(1.35); text-shadow: 0 0 16px rgba(255, 215, 0, 1), 0 0 24px rgba(255, 215, 0, 0.8); }
 }
 
 .anim-bounce .highlight, .live-subtitle-preview.anim-bounce .highlight {
-  animation: subWordBounce 0.25s ease-out forwards;
+  animation: subWordBounceLoop 1.2s ease-in-out infinite;
+  display: inline-block;
 }
-@keyframes subWordBounce {
-  0% { transform: translateY(3px); }
-  100% { transform: translateY(0); }
+@keyframes subWordBounceLoop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px) scale(1.05); }
+  60% { transform: translateY(1px); }
 }
 
 .anim-fade .highlight, .live-subtitle-preview.anim-fade .highlight {
-  animation: subWordFade 0.2s ease-out forwards;
+  animation: subWordFadeLoop 1.5s ease-in-out infinite alternate;
+  display: inline-block;
 }
-@keyframes subWordFade {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
+@keyframes subWordFadeLoop {
+  0%, 15% { opacity: 0.35; transform: translateY(2px); }
+  60%, 100% { opacity: 1; transform: translateY(0); }
 }
 
+.anim-scale_slow .highlight, .live-subtitle-preview.anim-scale_slow .highlight,
 .anim-scale .highlight, .live-subtitle-preview.anim-scale .highlight {
-  animation: subWordScale 0.25s ease-out forwards;
+  animation: subWordScaleLoop 2.2s ease-in-out infinite alternate;
+  display: inline-block;
 }
-@keyframes subWordScale {
-  0% { transform: scale(0.95); }
-  100% { transform: scale(1.06); }
+@keyframes subWordScaleLoop {
+  0% { transform: scale(0.98); }
+  100% { transform: scale(1.14); }
+}
+
+.anim-none .highlight, .live-subtitle-preview.anim-none .highlight {
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* Animaciones de Cámara en Vivo (#stageSelectedImage) */
-#stageSelectedImage.camera-zoom_in {
-  animation: camZoomIn 6s ease-in-out infinite alternate;
+.camera-zoom_in #stageSelectedImage, #stageSelectedImage.camera-zoom_in {
+  animation: camZoomIn 4.5s ease-in-out infinite alternate;
 }
 @keyframes camZoomIn {
   0% { transform: scale(1); }
-  100% { transform: scale(1.18); }
+  100% { transform: scale(1.22); }
 }
 
-#stageSelectedImage.camera-zoom_out {
-  animation: camZoomOut 6s ease-in-out infinite alternate;
+.camera-zoom_out #stageSelectedImage, #stageSelectedImage.camera-zoom_out {
+  animation: camZoomOut 4.5s ease-in-out infinite alternate;
 }
 @keyframes camZoomOut {
-  0% { transform: scale(1.18); }
+  0% { transform: scale(1.22); }
   100% { transform: scale(1); }
 }
 
-#stageSelectedImage.camera-pan_up {
-  animation: camPanUp 6s ease-in-out infinite alternate;
+.camera-pan_up #stageSelectedImage, #stageSelectedImage.camera-pan_up {
+  animation: camPanUp 4.5s ease-in-out infinite alternate;
 }
 @keyframes camPanUp {
-  0% { transform: scale(1.15) translateY(4%); }
-  100% { transform: scale(1.15) translateY(-4%); }
+  0% { transform: scale(1.18) translateY(5%); }
+  100% { transform: scale(1.18) translateY(-5%); }
 }
 
-#stageSelectedImage.camera-pan_down {
-  animation: camPanDown 6s ease-in-out infinite alternate;
+.camera-pan_down #stageSelectedImage, #stageSelectedImage.camera-pan_down {
+  animation: camPanDown 4.5s ease-in-out infinite alternate;
 }
 @keyframes camPanDown {
-  0% { transform: scale(1.15) translateY(-4%); }
-  100% { transform: scale(1.15) translateY(4%); }
+  0% { transform: scale(1.18) translateY(-5%); }
+  100% { transform: scale(1.18) translateY(5%); }
 }
 
-#stageSelectedImage.camera-pan_left {
-  animation: camPanLeft 6s ease-in-out infinite alternate;
+.camera-pan_left #stageSelectedImage, #stageSelectedImage.camera-pan_left {
+  animation: camPanLeft 4.5s ease-in-out infinite alternate;
 }
 @keyframes camPanLeft {
-  0% { transform: scale(1.15) translateX(4%); }
-  100% { transform: scale(1.15) translateX(-4%); }
+  0% { transform: scale(1.18) translateX(5%); }
+  100% { transform: scale(1.18) translateX(-5%); }
 }
 
-#stageSelectedImage.camera-pan_right {
-  animation: camPanRight 6s ease-in-out infinite alternate;
+.camera-pan_right #stageSelectedImage, #stageSelectedImage.camera-pan_right {
+  animation: camPanRight 4.5s ease-in-out infinite alternate;
 }
 @keyframes camPanRight {
-  0% { transform: scale(1.15) translateX(-4%); }
-  100% { transform: scale(1.15) translateX(4%); }
+  0% { transform: scale(1.18) translateX(-5%); }
+  100% { transform: scale(1.18) translateX(5%); }
 }
 
-#stageSelectedImage.camera-zoom_in_pan_up {
-  animation: camZoomInPanUp 6s ease-in-out infinite alternate;
+.camera-zoom_in_pan_up #stageSelectedImage, #stageSelectedImage.camera-zoom_in_pan_up {
+  animation: camZoomInPanUp 4.5s ease-in-out infinite alternate;
 }
 @keyframes camZoomInPanUp {
-  0% { transform: scale(1.05) translateY(3%); }
-  100% { transform: scale(1.22) translateY(-3%); }
+  0% { transform: scale(1.05) translateY(4%); }
+  100% { transform: scale(1.25) translateY(-4%); }
+}
+
+.camera-none #stageSelectedImage, #stageSelectedImage.camera-none {
+  animation: none !important;
+  transform: scale(1) !important;
 }
 
 /* Reproductor de Video Final */
@@ -2582,4 +2602,137 @@ textarea.form-control {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
+}
+
+/* ─── Biblioteca de Videos Recientes (5 Videos Max con Nombres Claros) ─── */
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(18, 24, 38, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 12px;
+}
+
+.recent-item:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.recent-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.recent-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-item-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.recent-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-item-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge-tag {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.badge-tag.theme {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-tag.ratio {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-tag.duration {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.recent-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-play-recent {
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-play-recent:hover {
+  background: #2563eb;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.btn-dl-recent {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  text-decoration: none;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-dl-recent:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
 }

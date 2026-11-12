@@ -1887,11 +1887,16 @@ function bootstrapJesusStudio() {
     } else if (style === "pop") {
       liveSubPreview.innerHTML = `<span style="font-family: 'Anton', Impact, sans-serif; letter-spacing: 1px; color: #ffffff; text-shadow: 0 3px 8px rgba(0,0,0,0.9);">${textPrimary}<span class="highlight" style="color: #ffff00; font-size: 1.12em; display: inline-block; transform: scale(1.12); text-shadow: 0 0 14px rgba(255,255,0,0.8);">${textActive}</span></span>`;
     } else if (style === "cinematic") {
-      liveSubPreview.innerHTML = `<span style="font-family: 'Cinzel', Georgia, serif; font-weight: 700; letter-spacing: 1.5px; color: #f4f4f4; text-shadow: 0 2px 10px rgba(0,0,0,0.9);">${textPrimary}<span style="color: #ffc030; text-shadow: 0 0 10px rgba(255,192,48,0.5);">${textActive}</span></span>`;
+      liveSubPreview.innerHTML = `<span style="font-family: 'Cinzel', Georgia, serif; font-weight: 700; letter-spacing: 1.5px; color: #f4f4f4; text-shadow: 0 2px 10px rgba(0,0,0,0.9);">${textPrimary}<span class="highlight" style="color: #ffc030; text-shadow: 0 0 10px rgba(255,192,48,0.5);">${textActive}</span></span>`;
     } else if (style === "clean") {
-      liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; background: rgba(10, 14, 26, 0.88); color: #ffffff; padding: 6px 14px; border-radius: 6px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.6);">${textPrimary}${textActive}</span>`;
+      // Estilo Clean: Caja oscura minimalista con tipografía Montserrat Bold de alto contraste y soporte de palabra activa
+      liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; font-weight: 800; background: rgba(10, 14, 26, 0.92); color: #ffffff; padding: 8px 18px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.7); display: inline-block; letter-spacing: 0.5px;">${textPrimary}<span class="highlight" style="color: #ffd700;">${textActive}</span></span>`;
     } else {
       liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; font-weight: 800; color: #ffffff;">${textPrimary}<span class="highlight" style="color: #ffd700;">${textActive}</span></span>`;
+    }
+
+    if (typeof updateSubtitleAnimation === "function") {
+      updateSubtitleAnimation();
     }
   }
 
@@ -2210,12 +2215,15 @@ function bootstrapJesusStudio() {
 
   function updateSubtitleAnimation() {
     const anim = subtitleAnimationSelect ? subtitleAnimationSelect.value : "pop";
+    const animClasses = ["anim-pop", "anim-glow", "anim-fade", "anim-scale_slow", "anim-bounce", "anim-none"];
     if (stagePlaceholder) {
-      stagePlaceholder.classList.remove("anim-pop", "anim-glow", "anim-fade", "anim-scale_slow", "anim-none");
+      stagePlaceholder.classList.remove(...animClasses);
       stagePlaceholder.classList.add(`anim-${anim}`);
     }
     if (liveSubPreview) {
-      liveSubPreview.classList.remove("anim-pop", "anim-glow", "anim-fade", "anim-scale_slow", "anim-none");
+      liveSubPreview.classList.remove(...animClasses);
+      // Trigger reflow para reiniciar la animación CSS visiblemente en la palabra activa
+      void liveSubPreview.offsetWidth;
       liveSubPreview.classList.add(`anim-${anim}`);
     }
   }
@@ -2230,12 +2238,23 @@ function bootstrapJesusStudio() {
   // ─── Live Preview: Camera Motion ──────────────────────────────────────────
   const cameraMotionSelect = document.getElementById("cameraMotionSelect");
   function updateCameraMotionPreview() {
-    if (!stagePlaceholder || !cameraMotionSelect) return;
-    stagePlaceholder.classList.remove(
+    if (!cameraMotionSelect) return;
+    const motion = cameraMotionSelect.value;
+    const stageImg = document.getElementById("stageSelectedImage");
+    const classes = [
       "camera-none", "camera-zoom_in", "camera-zoom_out",
       "camera-pan_up", "camera-pan_down", "camera-pan_right", "camera-pan_left", "camera-zoom_in_pan_up"
-    );
-    stagePlaceholder.classList.add(`camera-${cameraMotionSelect.value}`);
+    ];
+    if (stagePlaceholder) {
+      stagePlaceholder.classList.remove(...classes);
+      stagePlaceholder.classList.add(`camera-${motion}`);
+    }
+    if (stageImg) {
+      stageImg.classList.remove(...classes);
+      // Trigger reflow para reiniciar la animación de movimiento de cámara inmediatamente
+      void stageImg.offsetWidth;
+      stageImg.classList.add(`camera-${motion}`);
+    }
   }
   if (cameraMotionSelect) {
     cameraMotionSelect.addEventListener("change", updateCameraMotionPreview);
@@ -3142,30 +3161,58 @@ function bootstrapJesusStudio() {
     });
   }
 
-  // 12. Cargar Biblioteca de Videos Recientes
+  // 12. Cargar Biblioteca de Videos Recientes (Máximo 5 con Nombres de Referencia)
   async function loadRecentOutputs() {
     try {
       const res = await fetch("/api/outputs");
       const outputs = await res.json();
-      if (outputs.length === 0) {
-        recentList.innerHTML = `<p class="text-muted">Aún no hay videos generados.</p>`;
+      if (!outputs || outputs.length === 0) {
+        recentList.innerHTML = `<p class="text-muted" style="padding: 12px 0;">Aún no hay videos generados. ¡Crea el primero!</p>`;
         return;
       }
-      recentList.innerHTML = outputs.map(item => `
-        <div class="recent-item" data-url="${item.url}">
-          <span>📹 ${item.filename}</span>
-          <a href="${item.url}" target="_blank">Reproducir ↗</a>
-        </div>
-      `).join("");
+      recentList.innerHTML = outputs.map(item => {
+        const titleText = item.title || item.filename;
+        const themeText = item.theme_title || "Mensaje de Fe";
+        const ratioBadge = item.aspect_ratio || "9:16";
+        const durationText = item.duration_sec ? `${Math.round(item.duration_sec)}s` : "";
+        return `
+          <div class="recent-item" data-url="${item.url}" data-filename="${item.filename}" data-title="${titleText}">
+            <div class="recent-item-main">
+              <div class="recent-item-title">
+                <span class="recent-item-icon">🎬</span>
+                <span class="recent-item-name" title="${titleText}">${titleText}</span>
+              </div>
+              <div class="recent-item-badges">
+                <span class="badge-tag theme">${themeText}</span>
+                <span class="badge-tag ratio">${ratioBadge}</span>
+                ${durationText ? `<span class="badge-tag duration">⏱️ ${durationText}</span>` : ""}
+              </div>
+            </div>
+            <div class="recent-item-actions">
+              <button type="button" class="btn-play-recent" title="Ver en el reproductor">▶ Ver</button>
+              <a href="${item.url}" download="${item.filename}" class="btn-dl-recent" title="Descargar video" target="_blank">⬇ Descargar</a>
+            </div>
+          </div>
+        `;
+      }).join("");
 
       document.querySelectorAll(".recent-item").forEach(item => {
-        item.addEventListener("click", () => {
+        const playBtn = item.querySelector(".btn-play-recent");
+        const triggerPlay = () => {
           finalVideoPlayer.src = item.dataset.url;
           btnDownloadVideo.href = item.dataset.url;
-          btnDownloadVideo.download = item.querySelector("span").textContent.replace("📹 ", "");
+          btnDownloadVideo.download = item.dataset.filename;
           videoActions.style.display = "block";
           showVideoView();
-        });
+          finalVideoPlayer.play().catch(() => {});
+        };
+        if (playBtn) {
+          playBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            triggerPlay();
+          });
+        }
+        item.addEventListener("click", triggerPlay);
       });
     } catch (e) {
       console.error("Error al cargar historial:", e);

@@ -10,6 +10,7 @@ outputs/*.jpg
 outputs/cards/*
 outputs/test_run/*
 outputs/script_history.json
+outputs/reels_metadata.json
 !outputs/.gitkeep
 !outputs/cards/.gitkeep
 

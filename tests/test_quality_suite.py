@@ -150,7 +150,7 @@ class QualitySuiteTest(unittest.TestCase):
         with open(res_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn("Style: MainSub,Montserrat,70", content)
+        self.assertIn("Style: MainSub,Montserrat,", content)
         self.assertIn("MarginV", content)
         self.assertIn("Dialogue: 2,", content)
 

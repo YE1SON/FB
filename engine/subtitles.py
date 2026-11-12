@@ -70,14 +70,14 @@ SUBTITLE_STYLES: Dict[str, Dict] = {
         "name": "🏷️ CLEAN PROFESSIONAL (Cartela Discreta y Alta Legibilidad)",
         "font": "Montserrat",
         "primary": "&H00FFFFFF&",    # Blanco limpio
-        "highlight": "&H0080FFFF&",  # Amarillo suave
+        "highlight": "&H0080FFFF&",  # Amarillo / Cian suave
         "outline": "&H00000000&",
-        "outline_width": 2,
+        "outline_width": 12,         # Cartela con padding real que coincide con la vista previa
         "shadow_width": 0,
-        "fontsize": 70,
-        "border_style": 3,           # Fondo de caja opaca redondeada
-        "back_color": "&HA00E1520&",  # Slate oscuro translúcido
-        "bold": 0,
+        "fontsize": 78,
+        "border_style": 3,           # Fondo de caja opaca elegante
+        "back_color": "&HD00A0E1A&",  # Slate oscuro elegante idéntico a la vista previa
+        "bold": -1,                  # Bold visible en todos los sistemas
         "all_caps": False
     }
 }
@@ -224,6 +224,7 @@ def generate_viral_ass(
     output_path: str,
     style_key: str = "clean",
     margin_v: int = 440,
+    subtitle_size: str = "normal",
     hook_text: str = "",
     micro_cta_text: str = "",
     hook_badge_style: str = "gold_cinematic",
@@ -266,6 +267,12 @@ def generate_viral_ass(
     border_style = style_cfg.get("border_style", 1)
     back_color = style_cfg.get("back_color", "&H80000000&")
     bold = style_cfg.get("bold", -1)
+
+    # Ajuste por tamaño de subtítulo seleccionado
+    if subtitle_size == "large":
+        fontsize = int(fontsize * 1.25)
+    elif subtitle_size == "small":
+        fontsize = int(fontsize * 0.85)
 
     # Decidir si forzar mayúsculas
     use_caps = all_caps if (all_caps is not None) else style_cfg.get("all_caps", False)
@@ -432,14 +439,36 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             line_text = " ".join(formatted_words)
             events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{{\\fad(90,70)}}{line_text}")
 
-        # ─── MODO 4: CLEAN (Cartela limpia, legible, moderna con fade sutil) ───
+        # ─── MODO 4: CLEAN (Cartela limpia, legible, moderna con fade sutil o resalte activo) ───
         else:
-            s_time = format_ass_time(chunk_start)
-            e_time = format_ass_time(chunk_end)
+            if animation_type in ["pop", "glow"]:
+                for active_idx, active_cue in enumerate(chunk):
+                    w_start = min(max(0.0, float(active_cue.start_sec)), timeline_end_sec)
+                    raw_word_end = max(float(active_cue.end_sec), w_start + 0.20)
+                    w_end = min(raw_word_end, timeline_end_sec)
+                    if w_end <= w_start:
+                        continue
 
-            words_txt = [(w.text.upper() if use_caps else w.text) for w in chunk]
-            line_text = " ".join(words_txt)
-            events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{{\\fad(70,50)}}{line_text}")
+                    s_time = format_ass_time(w_start)
+                    e_time = format_ass_time(w_end)
+
+                    formatted_words = []
+                    for idx, item in enumerate(chunk):
+                        txt = item.text.upper() if use_caps else item.text
+                        if idx == active_idx:
+                            formatted_words.append(f"{{\\c{c_high}}}{txt}{{\\c{c_prim}}}")
+                        else:
+                            formatted_words.append(txt)
+
+                    line_text = " ".join(formatted_words)
+                    events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{line_text}")
+            else:
+                s_time = format_ass_time(chunk_start)
+                e_time = format_ass_time(chunk_end)
+
+                words_txt = [(w.text.upper() if use_caps else w.text) for w in chunk]
+                line_text = " ".join(words_txt)
+                events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{{\\fad(70,50)}}{line_text}")
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:

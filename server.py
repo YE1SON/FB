@@ -8,7 +8,7 @@ import random
 import urllib.request
 import urllib.parse
 from PIL import Image
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Dict
 from pydantic import BaseModel, Field, HttpUrl
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.staticfiles import StaticFiles
@@ -846,6 +846,7 @@ async def api_render_video(req: RenderRequest):
             cues, ass_file,
             style_key=req.subtitle_style,
             margin_v=margin_v,
+            subtitle_size=req.subtitle_size,
             hook_text=req.hook_text,
             micro_cta_text=req.micro_cta_text or "",
             hook_badge_style=req.hook_badge_style or "gold_luxury",
@@ -925,6 +926,22 @@ async def api_render_video(req: RenderRequest):
     trending_filename = os.path.basename(render_result.get("trending_audio_video", output_video))
     trending_url = f"/outputs/{trending_filename}"
 
+    # Guardar metadatos descriptivos y podar la biblioteca a máx 5 videos
+    from engine.scripts import VIRAL_THEMES
+    theme_obj = VIRAL_THEMES.get(req.theme_key, {})
+    theme_name = theme_obj.get("title", "Reel Devocional")
+    hook_clean = req.hook.strip()
+    reel_title = (hook_clean[:48] + "...") if len(hook_clean) > 48 else (hook_clean or theme_name)
+
+    _save_reel_metadata(
+        filename=f"reel_{session_id}.mp4",
+        title=reel_title,
+        theme_title=theme_name,
+        aspect_ratio=req.aspect_ratio,
+        duration_sec=render_result.get("actual_duration_sec") or audio_dur
+    )
+    _prune_outputs(max_keep=5)
+
     return {
         "status": "success",
         "video_url": f"/outputs/reel_{session_id}.mp4",
@@ -953,17 +970,101 @@ def _resolve_image(image_name: str) -> str:
     return image_file
 
 
-# ─── Outputs ────────────────────────────────────────────────────────────────
+# ─── Outputs & Pruning (Máximo 5 videos guardados) ───────────────────────────
+
+REELS_METADATA_FILE = os.path.join(OUTPUTS_DIR, "reels_metadata.json")
+
+def _prune_outputs(max_keep: int = 5) -> List[Dict]:
+    """Mantiene como máximo los 5 videos más recientes y elimina los anteriores junto a sus archivos temporales."""
+    if not os.path.exists(OUTPUTS_DIR):
+        return []
+
+    from datetime import datetime
+    mp4_files = [f for f in os.listdir(OUTPUTS_DIR) if f.lower().endswith(".mp4")]
+    mp4_files.sort(key=lambda f: os.path.getmtime(os.path.join(OUTPUTS_DIR, f)), reverse=True)
+
+    # Eliminar videos más allá del 5to
+    to_delete = mp4_files[max_keep:]
+    for f in to_delete:
+        fp = os.path.join(OUTPUTS_DIR, f)
+        try:
+            os.remove(fp)
+        except OSError:
+            pass
+        base_id = f.replace("reel_", "").replace(".mp4", "").replace("_trending_audio", "")
+        for ext in ["_audio.mp3", "_subs.ass"]:
+            cand = os.path.join(OUTPUTS_DIR, f"{base_id}{ext}")
+            if os.path.exists(cand):
+                try:
+                    os.remove(cand)
+                except OSError:
+                    pass
+
+    # Metadatos de referencia
+    metadata = {}
+    if os.path.exists(REELS_METADATA_FILE):
+        try:
+            with open(REELS_METADATA_FILE, "r", encoding="utf-8") as mf:
+                metadata = json.load(mf)
+        except Exception:
+            metadata = {}
+
+    kept_files = mp4_files[:max_keep]
+    cleaned_meta = {k: v for k, v in metadata.items() if k in kept_files}
+    try:
+        with open(REELS_METADATA_FILE, "w", encoding="utf-8") as mf:
+            json.dump(cleaned_meta, mf, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+    results = []
+    for f in kept_files:
+        meta = cleaned_meta.get(f, {})
+        mtime = os.path.getmtime(os.path.join(OUTPUTS_DIR, f))
+        created_str = datetime.fromtimestamp(mtime).strftime("%d/%b %H:%M")
+        title = meta.get("title") or f"Reel {f.replace('reel_', '').replace('.mp4', '')}"
+        theme_title = meta.get("theme_title") or ""
+        ratio = meta.get("aspect_ratio") or "9:16"
+        dur = meta.get("duration_sec")
+        results.append({
+            "filename": f,
+            "url": f"/outputs/{f}",
+            "title": title,
+            "theme_title": theme_title,
+            "aspect_ratio": ratio,
+            "duration_sec": dur,
+            "created_at": meta.get("created_at") or created_str
+        })
+    return results
+
+def _save_reel_metadata(filename: str, title: str, theme_title: str, aspect_ratio: str, duration_sec: float):
+    from datetime import datetime
+    metadata = {}
+    if os.path.exists(REELS_METADATA_FILE):
+        try:
+            with open(REELS_METADATA_FILE, "r", encoding="utf-8") as mf:
+                metadata = json.load(mf)
+        except Exception:
+            metadata = {}
+
+    metadata[filename] = {
+        "title": title,
+        "theme_title": theme_title,
+        "aspect_ratio": aspect_ratio,
+        "duration_sec": round(duration_sec, 1) if duration_sec else None,
+        "created_at": datetime.now().strftime("%d/%b %H:%M")
+    }
+    try:
+        with open(REELS_METADATA_FILE, "w", encoding="utf-8") as mf:
+            json.dump(metadata, mf, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
 
 @app.get("/api/outputs")
 @app.get("/studio/api/outputs")
 def list_outputs():
-    files = [
-        f for f in os.listdir(OUTPUTS_DIR)
-        if f.lower().endswith(".mp4")
-    ]
-    files.sort(key=lambda f: os.path.getmtime(os.path.join(OUTPUTS_DIR, f)), reverse=True)
-    return [{"filename": f, "url": f"/outputs/{f}"} for f in files]
+    return _prune_outputs(max_keep=5)
 
 
 # ─── Daily Batch Schedule & Respectful Community Reflections ────────────────

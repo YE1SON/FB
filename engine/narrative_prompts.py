@@ -351,74 +351,72 @@ def generate_single_image_prompt(
     Genera un prompt visual ÚNICO, fotorrealista y cinematográfico (9:16)
     para sostener todo el Reel cristiano con máxima dignidad espiritual.
     
-    Analiza:
-    - Tema y necesidad humana del guion.
-    - Enfoque visual seleccionado (auto, jesus, family, bible, cross, landscape).
-    - Cero texto dentro de la imagen.
+    Reglas inviolables:
+    - Se adapta con precisión al tema del Reel y a la necesidad humana específica (cero imágenes genéricas de atardeceres).
+    - Incluye a Jesús / Dios de forma respetuosa, consoladora y reverente, acompañando la oración y el momento humano.
+    - Respeta el formato vertical 9:16 sin ningún tipo de texto superpuesto en la imagen.
     """
-    text_corpus = f"{script_text} {specific_focus or ''} {hook} {body}".lower()
-    style = (visual_style or "auto").lower().strip()
+    key = (theme_key or "lost_child").strip().lower()
+    blueprint = THEME_NARRATIVE_BLUEPRINTS.get(key, DEFAULT_BLUEPRINT)
+    
+    char = blueprint.get("character", "a devout believer")
+    setting = blueprint.get("setting", "a warm domestic room filled with gentle natural light")
+    action_1 = blueprint.get("scene_1", "seated quietly with folded hands in heartfelt prayer")
+    action_2 = blueprint.get("scene_2", "eyes closed in deep devotional prayer, seeking God's peace")
 
-    if style == "auto":
-        if any(w in text_corpus for w in ("bible", "scripture", "verse", "word of god", "proverbs", "psalm")):
-            style = "bible"
-        elif any(w in text_corpus for w in ("cross", "calvary", "grace", "salvation", "redeem")):
-            style = "cross"
-        elif any(w in text_corpus for w in ("family", "child", "children", "son", "daughter", "marriage", "parents", "home", "grandchild")):
-            style = "family"
-        elif any(w in text_corpus for w in ("peace", "storm", "morning", "sunrise", "stillness", "lake", "nature")):
-            style = "landscape"
-        else:
-            style = "jesus"
+    # Extraer matiz de enfoque específico si está presente
+    focus_hint = ""
+    if specific_focus and len(specific_focus.strip()) > 3:
+        # Limpiar números de lista tipo '1. '
+        cleaned_focus = re.sub(r'^\d+[\.\)]\s*', '', specific_focus.strip())
+        focus_hint = f", in an intimate devotional setting reflecting: {cleaned_focus}"
 
-    base_cues = (
-        "cinematic 35mm vertical 9:16 photograph, natural lighting, authentic skin and material textures, "
-        "shallow depth of field, pure photographic composition, completely text-free, "
-        "strictly no text, no letters, no typography, no subtitles, no captions, no watermark, no logos, photorealistic"
+    # Extracto del gancho u oración para enriquecer el ambiente
+    script_hint = ""
+    if hook and len(hook.strip()) > 5:
+        script_hint = f", capturing the emotional heart of: {hook[:120].strip()}"
+    elif script_text and len(script_text.strip()) > 10:
+        first_sentence = re.split(r'[.!?]', script_text.strip())[0]
+        if first_sentence:
+            script_hint = f", atmosphere of: {first_sentence[:120].strip()}"
+
+    base_quality_cues = (
+        "cinematic 35mm vertical 9:16 photograph, soft natural lighting, authentic skin textures and natural cloth folds, "
+        "shallow depth of field, dignified sacred atmosphere, masterwork composition, "
+        "completely text-free, strictly no text, no words, no letters, no typography, no subtitles, no captions, no watermark, no logos, photorealistic 8k"
     )
+
+    style = (visual_style or "auto").lower().strip()
 
     if style == "jesus":
         prompt = (
-            "Cinematic portrait, eye-level medium close-up, vertical 9:16. "
-            "Reverent, dignified depiction of Jesus Christ with compassionate eyes, peaceful expression, "
-            "and a warm, gentle presence. Soft golden hour light streaming from the side, illuminating authentic linen garments. "
-            "Warm domestic room or peaceful dawn background with gentle blur. "
-            f"{base_cues}"
+            "Cinematic eye-level medium portrait, vertical 9:16. "
+            "Reverent, deeply compassionate portrayal of Jesus Christ with gentle, loving eyes and a warm, comforting presence. "
+            f"He is in {setting}, offering divine peace and solace to the viewer. Soft warm golden light gently illuminating His authentic linen robe. "
+            f"A sacred atmosphere of eternal hope, unconditional grace, and divine mercy. {base_quality_cues}"
         )
     elif style == "family":
         prompt = (
-            "Cinematic candid photograph, vertical 9:16. "
-            "A devout Christian family or parent seated in a warm living room with heads bowed and hands gently folded in heartfelt, quiet prayer. "
-            "Warm lamplight and morning sunbeams filling the room with deep peace, honest human emotion, and mutual love. "
-            "A simple rustic wooden cross sits quietly on a shelf in the soft background. "
-            f"{base_cues}"
+            "Cinematic candid portrait, vertical 9:16. "
+            f"A devout Christian family and parents seated in {setting}, heads bowed with folded hands in quiet, united prayer. "
+            "Jesus Christ stands reverently beside them, with a warm divine light radiating around Him, placing His hands of protection and peace over the family. "
+            f"Authentic human love, gentle lamplight, and sacred unity{focus_hint}. {base_quality_cues}"
         )
     elif style == "bible":
         prompt = (
-            "Cinematic close-up still-life photograph, vertical 9:16. "
-            "A beautiful Holy Bible resting on a rustic wooden table beside a glowing candle and soft morning window light. "
-            "Warm golden highlights, rich wood grain texture, peaceful sacred atmosphere of meditation and quiet devotion. "
-            f"{base_cues}"
-        )
-    elif style == "cross":
-        prompt = (
-            "Cinematic wide shot, vertical 9:16. "
-            "A majestic rustic wooden Christian cross on a peaceful hill at sunrise, with warm golden rays breaking through soft morning clouds and gentle mist. "
-            "Atmosphere of quiet victory, enduring faith, and sacred hope. "
-            f"{base_cues}"
-        )
-    elif style == "landscape":
-        prompt = (
-            "Cinematic landscape photograph, vertical 9:16. "
-            "A tranquil sunrise over calm waters and gentle misty hills, golden light touching the horizon in profound stillness and peace. "
-            "Atmosphere of new morning mercies, quiet rest, and divine comfort. "
-            f"{base_cues}"
+            "Cinematic close-up still life photograph, vertical 9:16. "
+            f"A worn Holy Bible resting on a rustic wooden table in {setting}, alongside a softly glowing candle and morning window light. "
+            "In the gentle blurred background, Jesus Christ is softly visible in warm luminous grace, watching over in sacred peace. "
+            f"Atmosphere of deep spiritual contemplation, faith, and comfort{script_hint}. {base_quality_cues}"
         )
     else:
+        # Modo AUTO y Devocional Real: Conexión directa y fiel con el tema elegido
         prompt = (
-            "Cinematic devotional photograph, vertical 9:16. "
-            "Reverent portrayal of Jesus Christ offering peace and comfort in a warm, sunlit room, gentle compassionate gaze. "
-            f"{base_cues}"
+            f"Cinematic portrait, medium shot, vertical 9:16. "
+            f"In {setting}, {char} {action_2}{focus_hint}{script_hint}. "
+            f"Jesus Christ is reverently present beside them, with compassionate loving eyes and a gentle comforting touch upon the person's shoulder, "
+            f"radiating serene warmth, divine reassurance, and miraculous peace. "
+            f"A modest rustic wooden cross in the warm background subtly anchors the Christian sanctuary. {base_quality_cues}"
         )
 
     return prompt

@@ -798,43 +798,10 @@ function bootstrapJesusStudio() {
     }
   }
 
-  // 2c. Verificar estado de B-Roll (Pexels / Pixabay / Local)
-  async function loadBrollStatus() {
-    try {
-      const res = await fetch("/api/broll-status");
-      const status = await res.json();
-      if (brollApiStatus) {
-        if (status.available) {
-          const provs = [];
-          if (status.pexels_configured) provs.push("Pexels HD");
-          if (status.pixabay_configured) provs.push("Pixabay");
-          if (status.cached_clips > 0) provs.push(`${status.cached_clips} en caché`);
-          if (status.local_library_clips > 0) provs.push(`${status.local_library_clips} locales`);
-          brollApiStatus.textContent = `✅ B-Roll Activo (${provs.join(" + ") || "Biblioteca Local"})`;
-          brollApiStatus.style.color = "#2ecc71";
-        } else {
-          brollApiStatus.textContent = "⚠️ Sin API Keys (Usa Biblioteca Local / Respaldo Cinemático)";
-          brollApiStatus.style.color = "#f59e0b";
-        }
-      }
-    } catch (e) {
-      if (brollApiStatus) {
-        brollApiStatus.textContent = "⚠️ Motor B-Roll en modo respaldo.";
-      }
-    }
-  }
-
-  // 2d. Toggle entre modo B-Roll y modo Imagen
+  // 2c & 2d: Modo visual único basado en imagen fija cinematográfica + movimiento de cámara
+  async function loadBrollStatus() {}
   function toggleVideoMode() {
-    if (!videoModeSelect) return;
-    const mode = videoModeSelect.value;
-    if (mode === "broll") {
-      if (brollInfo) brollInfo.style.display = "block";
-      if (imageGallerySection) imageGallerySection.style.display = "none";
-    } else {
-      if (brollInfo) brollInfo.style.display = "none";
-      if (imageGallerySection) imageGallerySection.style.display = "block";
-    }
+    if (imageGallerySection) imageGallerySection.style.display = "block";
   }
 
   // 3. Cargar Imágenes y Escenas Bíblicas
@@ -969,20 +936,26 @@ function bootstrapJesusStudio() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : `HTTP ${res.status}`);
-      scriptHook.value = data.hook || "";
-      scriptBody.value = data.body || "";
-      scriptCta.value = data.cta || "";
+      scriptHook.value = data.hook_es || data.hook || "";
+      scriptBody.value = data.body_es || data.body || "";
+      scriptCta.value = data.cta_es || data.cta || "";
+      scriptHook.dataset.en = data.hook || "";
+      scriptBody.dataset.en = data.body || "";
+      scriptCta.dataset.en = data.cta || "";
       updateScriptDurationEstimate();
 
-      // Renderizar 3 alternativas de apertura si están disponibles
+      // Renderizar 3 alternativas de apertura en español para que el creador las entienda
       const hookSection = document.getElementById("hookAlternativesSection");
       const hookGrid = document.getElementById("hookPillsGrid");
-      if (hookSection && hookGrid && Array.isArray(data.hook_options) && data.hook_options.length > 0) {
+      const hookOptsEn = data.hook_options || [];
+      const hookOptsEs = data.hook_options_es || data.hook_options || [];
+
+      if (hookSection && hookGrid && Array.isArray(hookOptsEs) && hookOptsEs.length > 0) {
         hookSection.style.display = "block";
-        hookGrid.innerHTML = data.hook_options.map((opt, i) => `
-          <button type="button" class="btn-hook-pill ${opt === scriptHook.value ? 'active' : ''}" data-hook-index="${i}">
+        hookGrid.innerHTML = hookOptsEs.map((optEs, i) => `
+          <button type="button" class="btn-hook-pill ${optEs === scriptHook.value ? 'active' : ''}" data-hook-index="${i}">
             <span class="pill-number">Opción ${i + 1}</span>
-            <span class="pill-text">${escapeThemeOption(opt)}</span>
+            <span class="pill-text">${escapeThemeOption(optEs)}</span>
           </button>
         `).join("");
 
@@ -990,7 +963,8 @@ function bootstrapJesusStudio() {
           btn.addEventListener("click", () => {
             hookGrid.querySelectorAll(".btn-hook-pill").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
-            scriptHook.value = data.hook_options[idx];
+            scriptHook.value = hookOptsEs[idx] || "";
+            scriptHook.dataset.en = hookOptsEn[idx] || hookOptsEs[idx] || "";
             updateScriptDurationEstimate();
             updateOptimizedCaption(true);
             updateCharCounters();
@@ -1144,15 +1118,18 @@ function bootstrapJesusStudio() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || `Error HTTP ${res.status}`);
-      if (data.prompt) aiImagePrompt.value = data.prompt;
-      if (data.scene_1_prompt && scene1PromptInput) scene1PromptInput.value = data.scene_1_prompt;
+      const singlePromptInput = document.getElementById("singlePromptInput");
+      const p = data.single_prompt || data.prompt || data.scene_1_prompt || "";
+      if (singlePromptInput && p) singlePromptInput.value = p;
+      if (aiImagePrompt && p) aiImagePrompt.value = p;
+      if (scene1PromptInput && p) scene1PromptInput.value = p;
       if (data.scene_2_prompt && scene2PromptInput) scene2PromptInput.value = data.scene_2_prompt;
       if (data.scene_3_prompt && scene3PromptInput) scene3PromptInput.value = data.scene_3_prompt;
       promptsSourceSignature = currentScriptSignature();
 
-      btnSyncScriptToImage.textContent = "✅ ¡3 Escenas Sincronizadas con la Oración!";
+      btnSyncScriptToImage.textContent = "✅ ¡Prompt Sincronizado con la Oración y Jesús!";
       setTimeout(() => {
-        btnSyncScriptToImage.textContent = "🪄 Sincronizar: Crear Prompts de las 3 Escenas para este Guion";
+        btnSyncScriptToImage.textContent = "🪄 Sincronizar: Crear Prompt para la Imagen de este Reel";
         btnSyncScriptToImage.disabled = false;
       }, 2500);
 
@@ -1170,7 +1147,7 @@ function bootstrapJesusStudio() {
 
   // 6. Preescucha de Audio
   async function triggerAudioPreview() {
-    let previewText = `${scriptHook.value} ${scriptBody.value}`.trim();
+    let previewText = `${scriptHook.dataset.en || scriptHook.value} ${scriptBody.dataset.en || scriptBody.value}`.trim();
     if (!previewText) {
       previewText = "The Lord is your shepherd and your shield today. Grace and peace be over your home.";
     }
@@ -1882,7 +1859,16 @@ function bootstrapJesusStudio() {
     const textPrimary = isAllCaps ? "GOD IS " : "God is ";
     const textActive = isAllCaps ? "WITH YOU" : "with you";
 
-    if (style === "karaoke") {
+    if (style === "hormozi") {
+      // Estilo 1: Hormozi Viral (Ultra-Impacto Mayúsculas con Borde Negro Grueso y Neón Amarillo)
+      liveSubPreview.innerHTML = `<span style="font-family: 'Anton', Impact, sans-serif; font-size: 1.15em; letter-spacing: 1.5px; color: #ffffff; text-shadow: 0 0 5px #000, 0 3px 0 #000, 0 -3px 0 #000, 3px 0 0 #000, -3px 0 0 #000, 3px 3px 8px rgba(0,0,0,0.95);">${textPrimary.toUpperCase()}<span class="highlight" style="color: #ffff00; display: inline-block; transform: scale(1.15); text-shadow: 0 0 6px #000, 0 3px 0 #000, 0 -3px 0 #000, 3px 0 0 #000, -3px 0 0 #000, 0 0 16px rgba(255,255,0,0.85);">${textActive.toUpperCase()}</span></span>`;
+    } else if (style === "editorial_luxury") {
+      // Estilo 2: Editorial Luxury (Serif Devocional Marfil con Oro Champán y Caja de Cristal Translúcida)
+      liveSubPreview.innerHTML = `<span style="font-family: 'Cinzel', 'Playfair Display', Georgia, serif; font-weight: 700; background: rgba(16, 22, 34, 0.88); backdrop-filter: blur(8px); border: 1px solid rgba(255, 229, 128, 0.3); color: #f5f5fa; padding: 8px 22px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.65); display: inline-block; letter-spacing: 2px;">${textPrimary}<span class="highlight" style="color: #ffe580; text-shadow: 0 0 14px rgba(255,229,128,0.8);">${textActive}</span></span>`;
+    } else if (style === "neon_celestial") {
+      // Estilo 3: Neon Celestial (Halo Azul Celestial con Resplandor Oro)
+      liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; font-weight: 900; letter-spacing: 1px; color: #ffffff; text-shadow: 0 0 10px rgba(0, 180, 255, 0.9), 0 0 20px rgba(0, 140, 255, 0.7), 0 2px 4px #000;">${textPrimary}<span class="highlight" style="color: #ffe500; display: inline-block; transform: scale(1.12); text-shadow: 0 0 14px rgba(255, 230, 0, 1), 0 0 25px rgba(255, 200, 0, 0.85), 0 2px 4px #000;">${textActive}</span></span>`;
+    } else if (style === "karaoke") {
       liveSubPreview.innerHTML = `<span style="font-family: 'Montserrat', sans-serif; font-weight: 800; text-shadow: 0 2px 8px rgba(0,0,0,0.9); color: #ffffff;">${textPrimary}<span class="highlight" style="color: #ffd700; text-shadow: 0 0 12px rgba(255,215,0,0.6);">${textActive}</span></span>`;
     } else if (style === "pop") {
       liveSubPreview.innerHTML = `<span style="font-family: 'Anton', Impact, sans-serif; letter-spacing: 1px; color: #ffffff; text-shadow: 0 3px 8px rgba(0,0,0,0.9);">${textPrimary}<span class="highlight" style="color: #ffff00; font-size: 1.12em; display: inline-block; transform: scale(1.12); text-shadow: 0 0 14px rgba(255,255,0,0.8);">${textActive}</span></span>`;
@@ -2214,25 +2200,13 @@ function bootstrapJesusStudio() {
   }
 
   function updateSubtitleAnimation() {
-    const anim = subtitleAnimationSelect ? subtitleAnimationSelect.value : "pop";
-    const animClasses = ["anim-pop", "anim-glow", "anim-fade", "anim-scale_slow", "anim-bounce", "anim-none"];
     if (stagePlaceholder) {
-      stagePlaceholder.classList.remove(...animClasses);
-      stagePlaceholder.classList.add(`anim-${anim}`);
-    }
-    if (liveSubPreview) {
-      liveSubPreview.classList.remove(...animClasses);
-      // Trigger reflow para reiniciar la animación CSS visiblemente en la palabra activa
-      void liveSubPreview.offsetWidth;
-      liveSubPreview.classList.add(`anim-${anim}`);
+      stagePlaceholder.classList.add("anim-pop");
     }
   }
 
   if (subtitlePositionSelect) {
     subtitlePositionSelect.addEventListener("change", updateSubtitlePosition);
-  }
-  if (subtitleAnimationSelect) {
-    subtitleAnimationSelect.addEventListener("change", updateSubtitleAnimation);
   }
 
   // ─── Live Preview: Camera Motion ──────────────────────────────────────────
@@ -2403,17 +2377,20 @@ function bootstrapJesusStudio() {
           hook: hook,
           body: body,
           cta: cta,
+          hook_en: scriptHook.dataset.en || "",
+          body_en: scriptBody.dataset.en || "",
+          cta_en: scriptCta.dataset.en || "",
           target_duration_sec: ({ micro: 15, deep: 22, story: 38 })[scriptDurationMode?.value || "deep"] || 22,
           duration_mode: scriptDurationMode?.value || "deep",
           voice_key: voiceSelect.value,
           rate: rateSelect.value,
-          video_mode: videoModeSelect ? videoModeSelect.value : "images",
+          video_mode: "images",
           image_name: selectedImageName,
           image_name_2: selectedImageName2 || "none",
           image_name_3: selectedImageName3 || "none",
           subtitle_style: subtitleStyleSelect.value,
           subtitle_size: subtitleSizeSelect.value,
-          subtitle_animation: animSelect ? animSelect.value : "pop",
+          subtitle_animation: "pop",
           subtitle_position: subPosSelect ? subPosSelect.value : "bottom",
           all_caps: !!(document.getElementById("chkSubtitlesAllCaps") && document.getElementById("chkSubtitlesAllCaps").checked),
           camera_motion: camSelect ? camSelect.value : "zoom_in",

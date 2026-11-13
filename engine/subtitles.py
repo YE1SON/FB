@@ -20,6 +20,66 @@ from .tts import CueItem
 # =============================================================================
 
 SUBTITLE_STYLES: Dict[str, Dict] = {
+    "clean": {
+        "key": "clean",
+        "name": "🏷️ CLEAN PROFESSIONAL (Cartela Discreta y Alta Legibilidad)",
+        "font": "Montserrat",
+        "primary": "&H00FFFFFF&",    # Blanco limpio
+        "highlight": "&H0080FFFF&",  # Amarillo / Cian suave
+        "outline": "&H00000000&",
+        "outline_width": 12,         # Cartela con padding real que coincide con la vista previa
+        "shadow_width": 0,
+        "fontsize": 78,
+        "border_style": 3,           # Fondo de caja opaca elegante
+        "back_color": "&HD00A0E1A&",  # Slate oscuro elegante idéntico a la vista previa
+        "bold": -1,                  # Bold visible en todos los sistemas
+        "all_caps": False
+    },
+    "hormozi": {
+        "key": "hormozi",
+        "name": "🔥 HORMOZI VIRAL (Ultra-Impacto Amarillo Neón · #1 Retención Reels)",
+        "font": "Anton",
+        "primary": "&H00FFFFFF&",    # Blanco puro
+        "highlight": "&H0000FFFF&",  # Amarillo Neón Eléctrico (#FFFF00 en BGR)
+        "outline": "&H00000000&",    # Borde negro ultra-grueso
+        "outline_width": 8,
+        "shadow_width": 3,
+        "fontsize": 88,
+        "border_style": 1,
+        "back_color": "&H90000000&",
+        "bold": -1,
+        "all_caps": True
+    },
+    "editorial_luxury": {
+        "key": "editorial_luxury",
+        "name": "🕊️ EDITORIAL LUXURY (Serif Devocional Marfil con Oro Champán)",
+        "font": "Cinzel",
+        "primary": "&H00F5F5FA&",    # Blanco marfil cálido
+        "highlight": "&H0080E5FF&",  # Oro Champán (#FFE580 en BGR)
+        "outline": "&H00000000&",
+        "outline_width": 12,         # Cartela de cristal con buen padding
+        "shadow_width": 0,
+        "fontsize": 76,
+        "border_style": 3,           # Caja translúcida
+        "back_color": "&HA0101622&",  # Cristal ahumado
+        "bold": -1,
+        "all_caps": False
+    },
+    "neon_celestial": {
+        "key": "neon_celestial",
+        "name": "✨ NEON CELESTIAL (Halo Azul Celestial con Resplandor Oro)",
+        "font": "Montserrat",
+        "primary": "&H00FFFFFF&",    # Blanco puro
+        "highlight": "&H0000E5FF&",  # Oro Sol Radiante (#FFE500 en BGR)
+        "outline": "&H00D09000&",    # Halo Azul Cielo (#0090D0 en BGR)
+        "outline_width": 6,
+        "shadow_width": 2,
+        "fontsize": 80,
+        "border_style": 1,
+        "back_color": "&H80000000&",
+        "bold": -1,
+        "all_caps": False
+    },
     "karaoke": {
         "key": "karaoke",
         "name": "🎤 KARAOKE (Resaltado Palabra por Palabra — Estilo CapCut)",
@@ -63,21 +123,6 @@ SUBTITLE_STYLES: Dict[str, Dict] = {
         "border_style": 1,
         "back_color": "&H90000000&",
         "bold": -1,
-        "all_caps": False
-    },
-    "clean": {
-        "key": "clean",
-        "name": "🏷️ CLEAN PROFESSIONAL (Cartela Discreta y Alta Legibilidad)",
-        "font": "Montserrat",
-        "primary": "&H00FFFFFF&",    # Blanco limpio
-        "highlight": "&H0080FFFF&",  # Amarillo / Cian suave
-        "outline": "&H00000000&",
-        "outline_width": 12,         # Cartela con padding real que coincide con la vista previa
-        "shadow_width": 0,
-        "fontsize": 78,
-        "border_style": 3,           # Fondo de caja opaca elegante
-        "back_color": "&HD00A0E1A&",  # Slate oscuro elegante idéntico a la vista previa
-        "bold": -1,                  # Bold visible en todos los sistemas
         "all_caps": False
     }
 }
@@ -397,8 +442,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 line_text = " ".join(formatted_words)
                 events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{line_text}")
 
-        # ─── MODO 2: POP (Salto cinético con destello de color, base estable sin jitter) ───────
-        elif style_key == "pop":
+        # ─── MODO 2: POP & HORMOZI (Salto cinético con destello de color, base estable) ───
+        elif style_key in ["pop", "hormozi"]:
             for active_idx, active_cue in enumerate(chunk):
                 w_start = min(max(0.0, float(active_cue.start_sec)), timeline_end_sec)
                 raw_word_end = max(float(active_cue.end_sec), w_start + 0.20)
@@ -413,16 +458,40 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 for idx, item in enumerate(chunk):
                     txt = item.text.upper() if use_caps else item.text
                     if idx == active_idx:
-                        # Resalte de alta visibilidad: destello de color y borde de glow,
-                        # manteniendo estricto \fscy100 para evitar cualquier salto vertical o jitter
-                        formatted_words.append(f"{{\\c{c_high}\\bord{outline_w+2}\\3c{c_high}}}{txt}{{\\c{c_prim}\\bord{outline_w}\\3c{outline}}}")
+                        if style_key == "hormozi":
+                            formatted_words.append(f"{{\\c{c_high}\\bord{outline_w+3}\\3c&H00000000&\\fscx112\\fscy112}}{txt}{{\\c{c_prim}\\bord{outline_w}\\fscx100\\fscy100}}")
+                        else:
+                            formatted_words.append(f"{{\\c{c_high}\\bord{outline_w+2}\\3c{c_high}}}{txt}{{\\c{c_prim}\\bord{outline_w}\\3c{outline}}}")
                     else:
                         formatted_words.append(txt)
 
                 line_text = " ".join(formatted_words)
                 events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{line_text}")
 
-        # ─── MODO 3: CINEMATIC (Frases breves, tipografía noble, fade y resalte de fe) ──
+        # ─── MODO 3: NEON CELESTIAL (Halo Azul Cielo con Resplandor Oro) ───────────────
+        elif style_key == "neon_celestial":
+            for active_idx, active_cue in enumerate(chunk):
+                w_start = min(max(0.0, float(active_cue.start_sec)), timeline_end_sec)
+                raw_word_end = max(float(active_cue.end_sec), w_start + 0.20)
+                w_end = min(raw_word_end, timeline_end_sec)
+                if w_end <= w_start:
+                    continue
+
+                s_time = format_ass_time(w_start)
+                e_time = format_ass_time(w_end)
+
+                formatted_words = []
+                for idx, item in enumerate(chunk):
+                    txt = item.text.upper() if use_caps else item.text
+                    if idx == active_idx:
+                        formatted_words.append(f"{{\\c{c_high}\\bord{outline_w+3}\\3c&H00D09000&}}{txt}{{\\c{c_prim}\\bord{outline_w}\\3c&H00D09000&}}")
+                    else:
+                        formatted_words.append(txt)
+
+                line_text = " ".join(formatted_words)
+                events.append(f"Dialogue: 2,{s_time},{e_time},MainSub,,0,0,0,,{line_text}")
+
+        # ─── MODO 4: CINEMATIC (Frases breves, tipografía noble, fade y resalte de fe) ──
         elif style_key == "cinematic":
             s_time = format_ass_time(chunk_start)
             e_time = format_ass_time(chunk_end)

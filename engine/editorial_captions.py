@@ -16,89 +16,37 @@ from typing import Dict, List, Optional, Any, Tuple
 # Cada tema tiene 5 etiquetas específicas ordenadas por relevancia temática.
 
 THEMATIC_HASHTAGS: Dict[str, List[str]] = {
-    "lost_child": [
-        "#PrayingParents", "#ProdigalSon", "#FamilyPrayer", "#ParentingFaith", "#QuietTrust"
-    ],
-    "family_protection": [
-        "#FamilyPrayer", "#PeaceInTheHome", "#HouseholdGrace", "#BedtimeBlessing", "#FaithfulHome"
-    ],
-    "medical_fear": [
-        "#WaitingOnGod", "#MedicalPeace", "#ComfortInTrials", "#TrustGodsTiming", "#HealingGrace"
-    ],
-    "zero_balance": [
-        "#FinancialFaith", "#GodProvides", "#DailyProvision", "#TrustingInHardTimes", "#PeaceOverWorry"
-    ],
-    "night_anxiety": [
-        "#NightPrayer", "#PeaceBeforeSleep", "#AnxietyRelief", "#QuietEvening", "#RestInGod"
-    ],
-    "morning_favor": [
-        "#MorningPrayer", "#DailyGrace", "#StartWithFaith", "#FreshMercies", "#MorningDevotion"
-    ],
-    "marriage_healing": [
-        "#MarriagePrayer", "#GraceInMarriage", "#Reconciliation", "#PatienceAndLove", "#FaithfulMarriage"
-    ],
-    "healing_depression": [
-        "#QuietHope", "#FaithInDarkness", "#GentleGrace", "#BrokenheartedComfort", "#OneDayAtATime"
-    ],
-    "job_breakthrough": [
-        "#JobSearchFaith", "#WorkplaceBlessing", "#OpenDoors", "#TrustGodsPlan", "#CareerGuidance"
-    ],
-    "lonely_widow": [
-        "#GriefAndGrace", "#ComfortInSolitude", "#GodNearTheBroken", "#QuietEvening", "#FaithfulCompanion"
-    ],
-    "addiction_chains": [
-        "#OneStepAtATime", "#FreedomInChrist", "#GraceToOvercome", "#HonestFaith", "#DailyStrength"
-    ],
-    "elderly_parents": [
-        "#CaregiverGrace", "#HonoringParents", "#StrengthForCaregivers", "#QuietPatience", "#FamilyLove"
-    ],
-    "single_parent": [
-        "#SingleParentFaith", "#StrengthForToday", "#ParentingGrace", "#GodOurProvider", "#QuietCourage"
-    ],
-    "sick_grandchild": [
-        "#GrandparentsPrayer", "#PrayingForHealing", "#ComfortForFamily", "#FaithInUncertainty", "#QuietTears"
-    ],
-    "court_legal": [
-        "#PeaceInTrials", "#WisdomForToday", "#TrustGodsJustice", "#FacingUncertainty", "#QuietResolution"
-    ],
-    "restless_sleep": [
-        "#SleepPrayer", "#PeaceTonight", "#QuietMind", "#RestInHisHands", "#RestfulNight"
-    ],
-    "gratitude_harvest": [
-        "#EverydayGratitude", "#ThankfulHeart", "#CountYourBlessings", "#DailyGrace", "#FaithfulWalk"
-    ],
-    "unspoken_prayer": [
-        "#UnspokenPrayer", "#WhenWordsFail", "#TheSpiritIntercedes", "#SilentPrayer", "#GodUnderstands"
-    ],
-    "spiritual_warfare": [
-        "#QuietCourage", "#StandingFirm", "#PeaceOverFear", "#FaithOverAnxiety", "#ArmorOfGod"
-    ],
-    "business_blessing": [
-        "#WorkplaceFaith", "#HonestWork", "#IntegrityInBusiness", "#DailyDirection", "#QuietFaith"
-    ],
-    "forgiving_past": [
-        "#ForgivenessJourney", "#HealingOldHurts", "#LettingGoWithGrace", "#InnerPeace", "#FreedomToHeal"
-    ],
-    "grief_loss": [
-        "#GriefJourney", "#ComfortInLoss", "#HoldingOntoHope", "#QuietMemories", "#GodWipesTears"
-    ],
-    "guidance_direction": [
-        "#SeekingWisdom", "#NextStepsFaith", "#TrustingHisLead", "#ClarityInDecisions", "#FaithfulWalk"
-    ],
-    "strength_weary": [
-        "#GraceForWeary", "#RenewedStrength", "#RestForTiredSouls", "#GentleFaith", "#GodSustains"
-    ],
-    "peace_in_storm": [
-        "#PeaceInTheStorm", "#CalmInChaos", "#SteadfastHope", "#QuietAnchor", "#FaithThroughWaves"
-    ],
-    "divine_grace": [
-        "#GraceForToday", "#FreshStart", "#MercyNewEveryMorning", "#GodNeverGivesUp", "#RestInGrace"
-    ]
+    "lost_child": ["#PrayingParents", "#DailyPrayer", "#FamilyPrayer", "#PrayForYourChildren"],
+    "family_protection": ["#FamilyPrayer", "#DailyPrayer", "#ChristianReels", "#PeaceInTheHome"],
+    "medical_fear": ["#HealingPrayer", "#GodIsWithYou", "#DailyPrayer", "#FaithInGod"],
+    "zero_balance": ["#GodWillProvide", "#TrustGod", "#FaithOverFear", "#DailyPrayer"],
+    "night_anxiety": ["#NightPrayer", "#PeaceOfGod", "#OvercomingAnxiety", "#DailyPrayer"],
+    "morning_favor": ["#MorningPrayer", "#DailyPrayer", "#BibleVerse", "#ChristianReels"],
+    "marriage_healing": ["#MarriagePrayer", "#FamilyPrayer", "#ChristianReels", "#GodIsGood"],
+    "healing_depression": ["#GodIsWithYou", "#OvercomingAnxiety", "#FaithInGod", "#DailyPrayer"],
+    "job_breakthrough": ["#TrustGod", "#GodWillProvide", "#DailyPrayer", "#FaithOverFear"],
+    "lonely_widow": ["#GodIsWithYou", "#ComfortInChrist", "#DailyPrayer", "#ChristianLife"],
+    "addiction_chains": ["#FreedomInChrist", "#FaithInGod", "#DailyPrayer", "#TrustGod"],
+    "elderly_parents": ["#FamilyPrayer", "#DailyPrayer", "#ChristianParenting", "#GodIsGood"],
+    "single_parent": ["#PrayingMom", "#FamilyPrayer", "#TrustGod", "#DailyPrayer"],
+    "sick_grandchild": ["#HealingPrayer", "#FamilyPrayer", "#PrayForYourChildren", "#DailyPrayer"],
+    "court_legal": ["#TrustGod", "#FaithOverFear", "#DailyPrayer", "#GodIsGood"],
+    "restless_sleep": ["#NightPrayer", "#PeaceOfGod", "#SleepPeacefully", "#DailyPrayer"],
+    "gratitude_harvest": ["#GiveThanks", "#GodIsGood", "#DailyPrayer", "#BlessedAndGrateful"],
+    "unspoken_prayer": ["#DailyPrayer", "#GodHearsYou", "#FaithInGod", "#ChristianReels"],
+    "spiritual_warfare": ["#FaithOverFear", "#DailyPrayer", "#TrustGod", "#ChristianReels"],
+    "business_blessing": ["#WorkplaceBlessing", "#GodWillProvide", "#TrustGod", "#DailyPrayer"],
+    "forgiving_past": ["#DailyPrayer", "#GodsGrace", "#PeaceOfGod", "#FaithInGod"],
+    "grief_loss": ["#GriefSupport", "#ComfortInChrist", "#GodIsWithYou", "#DailyPrayer"],
+    "guidance_direction": ["#TrustGod", "#BibleVerse", "#DailyPrayer", "#ChristianReels"],
+    "strength_weary": ["#FaithOverFear", "#GodIsWithYou", "#DailyPrayer", "#RenewedStrength"],
+    "peace_in_storm": ["#PeaceInTheStorm", "#FaithOverFear", "#TrustGod", "#DailyPrayer"],
+    "divine_grace": ["#GodsGrace", "#JesusChrist", "#DailyPrayer", "#BibleVerse"],
 }
 
 # Hashtags generales de fe para completar la estrategia de 5 tags
 GENERAL_FAITH_HASHTAGS: List[str] = [
-    "#FaithSparkDaily", "#DailyDevotional", "#ChristianReels", "#FaithInGod", "#DailyPrayer"
+    "#FaithSparkDaily", "#DailyPrayer", "#ChristianReels", "#FaithInGod", "#BibleVerse"
 ]
 
 # ─── 2. Normalización y Deduplicación de Hashtags ─────────────────────────────
@@ -581,8 +529,15 @@ def generate_optimized_social_post(
     from engine.editorial import english_title
     clean_title = english_title(theme_key)
 
-    # Armar texto definitivo de la publicación
-    parts = [f"✝️ {clean_title} ✝️", "", caption_body]
+    # Llamada a la acción de alto impacto algorítmico (Compartir y Guardar impulsan la distribución en Reels)
+    share_save_cta = "🕊️ Share this prayer with someone who needs God's peace today.\n💾 Save this post to revisit in your evening prayer."
+
+    # Armar texto definitivo para Facebook Reels 2025/2026:
+    # 1. Título e identificador de devoción
+    # 2. Gancho y contexto devocional con palabras clave para IA de Meta
+    # 3. CTA relacional (Share + Save)
+    # 4. Hashtags verificados de alta demanda (3 a 4 tags)
+    parts = [f"✝️ {clean_title} ✝️", "", caption_body, "", share_save_cta]
     if tags_str:
         parts.extend(["", tags_str])
 

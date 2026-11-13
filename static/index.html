@@ -370,15 +370,19 @@
             Estimación de locución: genera un guion para calcular la duración estimada.
           </div>
 
+          <div class="quality-note mt-8" id="scriptLangNotice" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #059669;">
+            <span aria-hidden="true">🌐</span><span><strong>Interfaz en Español:</strong> Puedes revisar, elegir y editar el gancho y la oración en español. El video final se sintetizará automáticamente en inglés estadounidense para maximizar el alcance en Facebook Reels.</span>
+          </div>
+
           <div class="provider-status-badge mb-12" id="scriptProviderStatus" style="display: none; font-size: 12px; padding: 7px 12px; border-radius: 6px; background: rgba(59, 130, 246, 0.10); border: 1px solid rgba(59, 130, 246, 0.30); color: #2563eb;" role="status">
             📋 <strong>Motor:</strong> Generado con IA.
           </div>
 
-          <!-- 3 Alternativas de Apertura Generadas en 1 Solicitud -->
+          <!-- 3 Alternativas de Apertura Generadas en 1 Solicitud (En Español para el creador) -->
           <div id="hookAlternativesSection" class="hook-alternatives-card mt-12" style="display: none;">
             <div class="flex-between align-center mb-6">
               <label class="mb-0" style="font-size: 12px; font-weight: 700; color: var(--gold);">
-                🎣 3 Alternativas de Gancho Inicial (Haz clic para alternar sin regenerar):
+                🎣 3 Alternativas de Gancho Inicial (Haz clic para alternar en español):
               </label>
               <span class="text-xs text-muted">1 clic cambia la apertura</span>
             </div>
@@ -392,11 +396,11 @@
             <!-- Caja 1: Gancho -->
             <div class="script-box hook-box">
               <div class="box-head">
-                <span class="box-title">🎣 1. Gancho / Scroll-Stopper (0–3s)</span>
+                <span class="box-title">🎣 1. Gancho / Apertura (0–3s)</span>
                 <span class="char-count" id="hookCharCount">0/500</span>
               </div>
               <small class="box-desc">Frase de apertura que capta la atención de inmediato</small>
-              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Before you close your eyes tonight..."></textarea>
+              <textarea id="scriptHook" rows="3" class="form-control" placeholder="Antes de que cierres los ojos esta noche..."></textarea>
             </div>
 
             <!-- Caja 2: Reflexión u Oración -->
@@ -406,7 +410,7 @@
                 <span class="char-count" id="bodyCharCount">0/500</span>
               </div>
               <small class="box-desc">Mensaje profundo de fe, consuelo y esperanza</small>
-              <textarea id="scriptBody" rows="4" class="form-control" placeholder="Lord, bring Your gentle peace into our hearts tonight..."></textarea>
+              <textarea id="scriptBody" rows="4" class="form-control" placeholder="Señor, trae tu paz a nuestros corazones esta noche..."></textarea>
             </div>
 
             <!-- Caja 3: Llamada a la Acción (CTA Reintegrado) -->
@@ -416,7 +420,7 @@
                 <span class="char-count" id="ctaCharCount">0/500</span>
               </div>
               <small class="box-desc">Invitación sincera a comentar o guardar la oración</small>
-              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Leave your first name below so we can keep you in our prayers tonight."></textarea>
+              <textarea id="scriptCta" rows="3" class="form-control" placeholder="Guarda esta oración o compártela con quien necesite la paz de Dios hoy."></textarea>
             </div>
           </div>
 
@@ -516,14 +520,14 @@
             <div class="form-group col-8 mb-0">
               <label for="aiImageProviderSelect">🤖 Motor de Generación IA</label>
               <select id="aiImageProviderSelect" class="form-control" style="font-weight: 600;">
-                <option value="puter" selected>💎 Puter AI (DALL-E 3 HD — Gratuito y Sin Límites)</option>
-                <option value="google_imagen">✨ Google Imagen 3 (Google AI Studio — 100-500/día Gratis)</option>
-                <option value="pollinations">⚡ Pollinations FLUX (Ilimitado y Rápido — Sin Cuotas de GPU)</option>
-                <option value="auto">🔄 Cascada Automática Resiliente (Pollinations ➔ FLUX ➔ Z-Image ➔ Horde)</option>
-                <option value="cloudflare_auto">⚡ Cloudflare Workers AI — Auto (Escena 1: Klein 9B + Escenas 2 y 3: Klein 4B)</option>
+                <option value="pollinations" selected>⚡ Pollinations FLUX (Recomendado — Ultra Rápido y Sin Límites)</option>
+                <option value="cloudflare_auto">☁️ Cloudflare Workers AI (FLUX.2 Klein — Respaldo Automático)</option>
+                <option value="auto">🔄 Cascada Automática Resiliente (FLUX ➔ Z-Image ➔ Horde)</option>
+                <option value="google_imagen">✨ Google Imagen 3 (Google AI Studio)</option>
+                <option value="puter">💎 Puter AI (DALL-E 3 HD)</option>
                 <option value="klein_9b">🌟 Cloudflare FLUX.2 Klein 9B (Ultra-Calidad Hero)</option>
-                <option value="klein_4b">⚡ Cloudflare FLUX.2 Klein 4B (Rápido + Consistencia de Referencia)</option>
-                <option value="z_image">🥇 Z-Image Turbo (Alibaba Tongyi DiT — Respaldo Activo)</option>
+                <option value="klein_4b">⚡ Cloudflare FLUX.2 Klein 4B (Rápido + Consistencia)</option>
+                <option value="z_image">🥇 Z-Image Turbo (Alibaba Tongyi DiT)</option>
                 <option value="flux_schnell">🥈 FLUX.1 Schnell (Black Forest Labs HD)</option>
                 <option value="aihorde">🥉 AI Horde (Comunidad Gratuita)</option>
                 <option value="curated">🏛️ Biblioteca Curada HD (Instantáneo Local)</option>
@@ -679,23 +683,7 @@
           <button type="button" id="btnGenerate3ScenesAi" style="display: none;"></button>
 
 
-          <!-- Selector de Modo de Fondo (Imágenes vs B-Roll) -->
-          <div class="form-group mt-14">
-            <label for="videoModeSelect">🎬 Modo de Fondo Visual</label>
-            <select id="videoModeSelect" class="form-control">
-              <option value="images" selected>🖼️ Escenas Bíblicas Cinematográficas (Imágenes HD + Movimiento de Cámara)</option>
-              <option value="broll">🎬 Clips de Video B-Roll (Pexels / Pixabay / Biblioteca Local)</option>
-            </select>
-          </div>
-
-          <!-- Panel de B-Roll -->
-          <div id="brollInfo" class="subpanel-card mt-8" style="display: none;">
-            <div class="flex-between mb-4">
-              <strong>Motor B-Roll Automático</strong>
-              <span id="brollApiStatus" class="badge badge-free">Verificando...</span>
-            </div>
-            <p class="text-sm text-muted">El sistema seleccionará automáticamente clips de video verticales en alta resolución (720p+).</p>
-          </div>
+          <!-- Entorno visual: 1 imagen bíblica de alta calidad con movimiento continuo de cámara -->
 
           <!-- Galería de Escenas Visuales -->
           <div id="imageGallerySection" class="mt-14">
@@ -756,6 +744,9 @@
               <label for="subtitleStyleSelect">Diseño y Tipografía de Subtítulo</label>
               <select id="subtitleStyleSelect" class="form-control">
                 <option value="clean" selected>🪟 CLEAN MODERNO (Caja Minimalista Oscura y Alta Legibilidad) (Recomendado)</option>
+                <option value="hormozi">🔥 HORMOZI VIRAL (Ultra-Impacto Amarillo Neón · #1 Retención Reels)</option>
+                <option value="editorial_luxury">🕊️ EDITORIAL LUXURY (Serif Devocional Marfil con Oro Champán)</option>
+                <option value="neon_celestial">✨ NEON CELESTIAL (Halo Azul Celestial con Resplandor Oro)</option>
                 <option value="karaoke">🎤 KARAOKE (Resaltado Palabra por Palabra — CapCut)</option>
                 <option value="pop">💥 POP DINÁMICO (Salto Cinético y Destello en Palabra Activa)</option>
                 <option value="cinematic">🎬 CINEMATIC NOBLE (Tipografía Sagrada Cinzel con Fade)</option>
@@ -772,33 +763,26 @@
           </div>
 
           <div class="form-row mt-10">
-            <div class="form-group col-7">
-              <label for="subtitleAnimationSelect">Animación de Palabras</label>
-              <select id="subtitleAnimationSelect" class="form-control">
-                <option value="pop" selected>💥 Resalte Pop Dinámico (CapCut / Estable)</option>
-                <option value="glow">✨ Resplandor Divino (Glow / Destello)</option>
-                <option value="fade">🌫️ Aparición Suave (Fade in)</option>
-                <option value="scale_slow">🔍 Escala Lenta (Cinematográfico)</option>
-                <option value="none">⏹️ Estático (Sin animación)</option>
+            <div class="form-group col-6">
+              <label for="subtitleSizeSelect">Tamaño de Subtítulos</label>
+              <select id="subtitleSizeSelect" class="form-control">
+                <option value="normal" selected>Normal (Recomendado)</option>
+                <option value="large">Grande (Mayor Impacto)</option>
               </select>
             </div>
-            <div class="form-group col-5">
-              <label for="subtitleSizeSelect">Tamaño & Formato</label>
-              <div class="flex-gap-8 align-center">
-                <select id="subtitleSizeSelect" class="form-control" style="flex: 1;">
-                  <option value="normal" selected>Normal</option>
-                  <option value="large">Grande</option>
-                </select>
+            <div class="form-group col-6">
+              <label for="chkSubtitlesAllCaps">Formato de Texto</label>
+              <div style="height: 42px; display: flex; align-items: center;">
                 <label class="chk-label nowrap">
                   <input type="checkbox" id="chkSubtitlesAllCaps">
-                  <span>MAYÚS</span>
+                  <span style="font-weight: 600;">Subtítulos en MAYÚSCULAS</span>
                 </label>
               </div>
             </div>
           </div>
 
           <div class="quality-note" role="note">
-            <span aria-hidden="true">🔎</span><span><strong>Cómo probarlo:</strong> cambia estilo, posición, animación y tamaño; la vista previa del teléfono debe actualizarse. Es una maqueta, no una garantía de sincronización: revisa los subtítulos en el MP4 exportado antes de publicar.</span>
+            <span aria-hidden="true">🔎</span><span><strong>Vista Previa Fiel:</strong> Cambia estilo, posición y tamaño; la vista previa lateral reproduce exactamente la tipografía, color y fondo que tendrá el MP4 exportado.</span>
           </div>
 
           <!-- Pie de Acciones de la Etapa 4 -->

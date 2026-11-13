@@ -169,8 +169,10 @@ def apply_brief(result, brief, theme):
     result["human_situation"] = situation or theme.get("human_situation", "")
     result["central_idea"] = idea or theme.get("central_idea", "")
     result["hook_alternatives"] = alternatives
+    result["hook_options"] = alternatives
     result["selected_hook_index"] = selected
     result["seamless_loop"] = False
+
     result["seo_caption"] = generate_seo_caption(result["english_title"], result["full_text"],
                                                   result["scripture"], result["cta"], result["hashtags"])
     result["pinned_comment"] = "A moment to reflect on today's passage together."

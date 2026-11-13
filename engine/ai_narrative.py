@@ -92,24 +92,36 @@ def _build_user_prompt(
 
 Theme: {theme_title}
 Underlying Human Need: {human_situation}
-Specific Focus/Angle: {specific_focus or 'General comforting reflection on this theme'} (NOTE: The angle or situation may be provided in Spanish, but you must write the entire devotional script strictly in natural, contemporary, dignified American English addressing this exact human reality with deep empathy)
+Specific Focus/Angle: {specific_focus or 'General comforting reflection on this theme'}
 Custom Situation from User: {custom_topic or 'None provided'}
 Narration Style: {narration_type.upper()} ({style_guide})
 Target Word Count for Body: {target['words_min']} to {target['words_max']} words.
 Biblical Reference Base: {verse_candidate}
 {avoid_block}
 
+CRITICAL LANGUAGE REQUIREMENT:
+Provide the script in BOTH American English (for video voiceover) AND Spanish (for the creator's user interface review).
+
 RESPOND WITH A SINGLE VALID JSON OBJECT MATCHING THIS EXACT SCHEMA:
 {{
   "title": "Short title (3-5 words in English)",
-  "hook": "Primary opening hook (1-2 sentences, ~8-16 words, spoken in first 3 seconds)",
+  "title_es": "Título corto en español",
+  "hook": "Primary opening hook in English (1-2 sentences, ~8-14 words, spoken in first 3 seconds)",
+  "hook_es": "Gancho inicial en español para revisión del creador",
   "hook_options": [
-    "Hook Option 1: Direct emotional hook",
-    "Hook Option 2: Relational hook (praying for family / friend)",
-    "Hook Option 3: Quiet biblical reassurance hook"
+    "Hook Option 1 in English: Direct emotional hook",
+    "Hook Option 2 in English: Relational hook (family/friend)",
+    "Hook Option 3 in English: Quiet biblical reassurance hook"
   ],
-  "body": "Devotional message ({target['words_min']}-{target['words_max']} words in natural US English)",
-  "cta": "Contextual call to action (relational / prayer request / gentle sharing, ~12-22 words)",
+  "hook_options_es": [
+    "Opción 1 en español: Gancho emocional directo",
+    "Opción 2 en español: Gancho relacional por familia o seres queridos",
+    "Opción 3 en español: Gancho de consuelo bíblico y paz"
+  ],
+  "body": "Devotional message in natural US English ({target['words_min']}-{target['words_max']} words)",
+  "body_es": "Mensaje devocional completo en español para que el creador lo entienda y evalúe",
+  "cta": "Contextual call to action in English (~12-22 words)",
+  "cta_es": "Llamada a la acción en español",
   "scripture": "Canonical Bible verse with book, chapter, verse and translation, e.g. 'Philippians 4:6-7 (NIV) — ...'",
   "visual_prompt": "Cinematic vertical 9:16 photorealistic prompt for ONE single impactful visual (Jesus reverent, open Bible with warm candlelight, praying family, or majestic cross at sunrise). Strictly text-free."
 }}"""
@@ -439,6 +451,20 @@ def generate_ai_narrative_script(
         theme_title
     ).strip()
 
+    # Traducción al español para visualización en la interfaz del usuario
+    from engine.translator import translate_en_to_es, translate_list_en_to_es
+    hook_es = str(parsed_result.get("hook_es") or "").strip() or translate_en_to_es(hook)
+    
+    raw_opts_es = parsed_result.get("hook_options_es")
+    if isinstance(raw_opts_es, list) and len(raw_opts_es) >= len(hook_options):
+        hook_options_es = [str(o).strip() for o in raw_opts_es[:len(hook_options)]]
+    else:
+        hook_options_es = translate_list_en_to_es(hook_options)
+
+    body_es = str(parsed_result.get("body_es") or "").strip() or translate_en_to_es(body)
+    cta_es = str(parsed_result.get("cta_es") or "").strip() or (translate_en_to_es(cta) if cta else "")
+    title_es = str(parsed_result.get("title_es") or "").strip() or translate_en_to_es(title)
+
     # Construir texto completo para locución
     full_text_parts = [hook, body]
     if include_cta and cta:
@@ -475,15 +501,21 @@ def generate_ai_narrative_script(
     return {
         "theme_key": theme_key,
         "theme_title": theme_title,
+        "theme_title_es": theme_title,
         "english_title": title,
+        "title_es": title_es,
         "specific_focus": specific_focus or "",
         "custom_topic": custom_topic or "",
         "narration_type": narration_type,
         "mode": mode,
         "hook": hook,
+        "hook_es": hook_es,
         "hook_options": hook_options,
+        "hook_options_es": hook_options_es,
         "body": body,
+        "body_es": body_es,
         "cta": cta,
+        "cta_es": cta_es,
         "include_cta": include_cta,
         "full_text": full_text,
         "scripture": scripture,

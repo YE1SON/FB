@@ -164,7 +164,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "WHEN A CHILD FEELS DISTANT",
         "recommended_image": "jesus_reaching_hand.jpg",
         "scripture": BIBLICAL_CATALOGUE["lost_child"],
-        "hashtags": ["#PrayingParents", "#FaithfulGod", "#FamilyGrace", "#ProdigalLove"],
+        "hashtags": ["#DailyPrayer", "#FamilyPrayer", "#PrayingMom", "#PrayForYourChildren"],
         "hooks": [
             "If your heart aches tonight over a child who feels far away...",
             "To every parent whispering silent prayers before switching off the light...",
@@ -198,7 +198,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "PEACE OVER THIS HOUSE",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["family_protection"],
-        "hashtags": ["#FamilyPrayer", "#PeaceInTheHome", "#ChristianLiving", "#NightDevotion"],
+        "hashtags": ["#FamilyPrayer", "#DailyPrayer", "#ChristianReels", "#PeaceInTheHome"],
         "hooks": [
             "Tonight, let quiet peace settle inside the walls of your home.",
             "Before turning off the lights, bring the day's stress to a calm halt.",
@@ -232,7 +232,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "STRENGTH IN WEAKNESS",
         "recommended_image": "jesus_healing_miracle.jpg",
         "scripture": BIBLICAL_CATALOGUE["medical_fear"],
-        "hashtags": ["#StrengthInChrist", "#ComfortAndFaith", "#DailyEndurance", "#PeaceInTrials"],
+        "hashtags": ["#HealingPrayer", "#GodIsWithYou", "#DailyPrayer", "#FaithInGod"],
         "hooks": [
             "If your body feels weary and medical worries cloud your thoughts today...",
             "When waiting for health answers makes tomorrow feel fragile...",
@@ -266,7 +266,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "TRUST IN PROVISION",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["zero_balance"],
-        "hashtags": ["#FaithfulGod", "#DailyBread", "#ChristianHope", "#TrustingGod"],
+        "hashtags": ["#GodWillProvide", "#TrustGod", "#FaithOverFear", "#DailyPrayer"],
         "hooks": [
             "If checking your finances today left a knot of worry in your stomach...",
             "When bills arrive faster than income, take a moment to breathe.",
@@ -300,7 +300,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "CALM IN THE NIGHT",
         "recommended_image": "jesus_praying_gethsemane.jpg",
         "scripture": BIBLICAL_CATALOGUE["night_anxiety"],
-        "hashtags": ["#OvercomingAnxiety", "#NightPrayer", "#PeaceOfMind", "#RestInGod"],
+        "hashtags": ["#NightPrayer", "#PeaceOfGod", "#OvercomingAnxiety", "#DailyPrayer"],
         "hooks": [
             "If your mind is racing tonight with thoughts you cannot resolve right now...",
             "When the quiet of the night makes every problem seem twice as loud...",
@@ -334,7 +334,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "MORNING DEVOTION",
         "recommended_image": "jesus_holy_bible.jpg",
         "scripture": BIBLICAL_CATALOGUE["morning_favor"],
-        "hashtags": ["#MorningDevotion", "#DailyWisdom", "#FreshMercy", "#ChristianRoutine"],
+        "hashtags": ["#MorningPrayer", "#DailyPrayer", "#BibleVerse", "#ChristianReels"],
         "hooks": [
             "Before the rush of this day begins, pause for one quiet breath.",
             "This sunrise brings a clean slate and fresh mercy designed just for you.",
@@ -368,7 +368,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "HEALING IN MARRIAGE",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["marriage_healing"],
-        "hashtags": ["#ChristianMarriage", "#ForgivenessInLove", "#HealthyRelationships", "#MarriageMatters"],
+        "hashtags": ["#MarriagePrayer", "#FamilyPrayer", "#ChristianReels", "#GodIsGood"],
         "hooks": [
             "If emotional silence has created distance in your marriage lately...",
             "When daily stress makes patience run thin between two people who love each other...",
@@ -402,7 +402,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "HOPE IN THE VALLEY",
         "recommended_image": "jesus_comforting_embrace.jpg",
         "scripture": BIBLICAL_CATALOGUE["healing_depression"],
-        "hashtags": ["#MentalHealthAndFaith", "#GodIsNear", "#QuietHope", "#GentleGrace"],
+        "hashtags": ["#GodIsWithYou", "#OvercomingAnxiety", "#FaithInGod", "#DailyPrayer"],
         "hooks": [
             "If just getting through today felt like a quiet, exhausting battle...",
             "To anyone carrying an emotional heaviness they cannot easily explain...",
@@ -436,7 +436,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "DIRECTION & PURPOSE",
         "recommended_image": "jesus_reaching_hand.jpg",
         "scripture": BIBLICAL_CATALOGUE["job_breakthrough"],
-        "hashtags": ["#CareerFaith", "#OpenDoors", "#TrustingGodsPlan", "#WorkWithPurpose"],
+        "hashtags": ["#TrustGod", "#GodWillProvide", "#DailyPrayer", "#FaithOverFear"],
         "hooks": [
             "If you have been waiting anxiously on job responses or career direction...",
             "When closed doors make you question your value and abilities...",
@@ -470,7 +470,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "COMFORT IN SOLITUDE",
         "recommended_image": "jesus_comforting_embrace.jpg",
         "scripture": BIBLICAL_CATALOGUE["lonely_widow"],
-        "hashtags": ["#ComfortForGrief", "#GodIsNear", "#GentlePeace", "#SolitudeToSanctuary"],
+        "hashtags": ["#GodIsWithYou", "#ComfortInChrist", "#DailyPrayer", "#ChristianLife"],
         "hooks": [
             "If the house feels particularly quiet and empty this evening...",
             "To the faithful heart cherishing precious memories through quiet tears...",
@@ -504,7 +504,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "STEPPING INTO FREEDOM",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["addiction_chains"],
-        "hashtags": ["#OvercomingStruggles", "#GraceToHeal", "#DailyRecovery", "#FreedomInChrist"],
+        "hashtags": ["#FreedomInChrist", "#FaithInGod", "#DailyPrayer", "#TrustGod"],
         "hooks": [
             "If you fell today and feel tempted to give up on yourself completely...",
             "To anyone fighting a quiet battle against habits they despise...",
@@ -538,7 +538,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "HONORING OUR ELDERS",
         "recommended_image": "jesus_comforting_embrace.jpg",
         "scripture": BIBLICAL_CATALOGUE["elderly_parents"],
-        "hashtags": ["#CaringForAgingParents", "#HonoringElders", "#FamilyDevotion", "#ChristianCaregiving"],
+        "hashtags": ["#FamilyPrayer", "#DailyPrayer", "#ChristianParenting", "#GodIsGood"],
         "hooks": [
             "If you spent today helping an aging parent or grandparent navigate frailty...",
             "When caregiving leaves your own physical energy depleted...",
@@ -572,7 +572,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "STRENGTH FOR SINGLE PARENTS",
         "recommended_image": "jesus_reaching_hand.jpg",
         "scripture": BIBLICAL_CATALOGUE["single_parent"],
-        "hashtags": ["#SingleParenting", "#StrengthForMoms", "#FaithfulFather", "#ParentingGrace"],
+        "hashtags": ["#PrayingMom", "#FamilyPrayer", "#TrustGod", "#DailyPrayer"],
         "hooks": [
             "If you put the children to bed tonight completely worn out from doing it all...",
             "When carrying both the provider and caregiver roles feels overwhelming...",
@@ -606,7 +606,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "PRAYER FOR A GRANDCHILD",
         "recommended_image": "jesus_comforting_embrace.jpg",
         "scripture": BIBLICAL_CATALOGUE["sick_grandchild"],
-        "hashtags": ["#GrandparentsPrayer", "#ChildrensHealth", "#FamilyFaith", "#GenerationalGrace"],
+        "hashtags": ["#HealingPrayer", "#FamilyPrayer", "#PrayForYourChildren", "#DailyPrayer"],
         "hooks": [
             "If your heart is aching tonight for a grandchild who is sick or hurting...",
             "To every grandmother and grandfather carrying a little one in prayer...",
@@ -640,7 +640,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "JUSTICE & INTEGRITY",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["court_legal"],
-        "hashtags": ["#PeaceInDisputes", "#IntegrityAndTruth", "#TrustInGod", "#FaithInTrials"],
+        "hashtags": ["#TrustGod", "#FaithOverFear", "#DailyPrayer", "#GodIsGood"],
         "hooks": [
             "If an unresolved legal dispute or paperwork has been keeping you anxious...",
             "When facing unfair treatment or waiting on judicial decisions...",
@@ -674,7 +674,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "PEACEFUL SLEEP",
         "recommended_image": "jesus_praying_gethsemane.jpg",
         "scripture": BIBLICAL_CATALOGUE["restless_sleep"],
-        "hashtags": ["#SweetSleep", "#NightPeace", "#RestInChrist", "#BedtimeDevotion"],
+        "hashtags": ["#NightPrayer", "#PeaceOfGod", "#SleepPeacefully", "#DailyPrayer"],
         "hooks": [
             "Before you close your eyes carrying the unsolved problems of today...",
             "If your pillow feels like a place of thinking instead of resting tonight...",
@@ -708,7 +708,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "A HEART OF THANKS",
         "recommended_image": "jesus_holy_bible.jpg",
         "scripture": BIBLICAL_CATALOGUE["gratitude_harvest"],
-        "hashtags": ["#GratitudeDaily", "#ThankfulHeart", "#CountYourBlessings", "#ChristianJoy"],
+        "hashtags": ["#GiveThanks", "#GodIsGood", "#DailyPrayer", "#BlessedAndGrateful"],
         "hooks": [
             "Before today ends, name three simple things that went right.",
             "It is easy to focus on what is missing, but pause to notice what remains.",
@@ -742,7 +742,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "THE UNSPOKEN BURDEN",
         "recommended_image": "jesus_comforting_embrace.jpg",
         "scripture": BIBLICAL_CATALOGUE["unspoken_prayer"],
-        "hashtags": ["#GodHearsYou", "#UnspokenPrayer", "#QuietTrust", "#SecretPrayer"],
+        "hashtags": ["#DailyPrayer", "#GodHearsYou", "#FaithInGod", "#ChristianReels"],
         "hooks": [
             "If you are carrying a prayer tonight that you cannot say out loud to anyone...",
             "To the heart holding a burden too tender or private to explain...",
@@ -776,7 +776,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "STANDING FIRM IN FAITH",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["spiritual_warfare"],
-        "hashtags": ["#SpiritualArmor", "#FaithfulStand", "#VictoryInChrist", "#SteadfastSoul"],
+        "hashtags": ["#FaithOverFear", "#DailyPrayer", "#TrustGod", "#ChristianReels"],
         "hooks": [
             "If discouragement has been whispering that your efforts do not matter...",
             "When everyday trials feel like a relentless spiritual opposition...",
@@ -810,7 +810,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "INTEGRITY IN WORK",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["business_blessing"],
-        "hashtags": ["#FaithInBusiness", "#HonestLabor", "#KingdomEthics", "#DailyIntegrity"],
+        "hashtags": ["#WorkplaceBlessing", "#GodWillProvide", "#TrustGod", "#DailyPrayer"],
         "hooks": [
             "If managing your work or small business brought stress to your shoulders today...",
             "When commercial decisions require wisdom, honesty, and courage...",
@@ -844,7 +844,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "FREEDOM TO FORGIVE",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["forgiving_past"],
-        "hashtags": ["#HealingThroughForgiveness", "#LettingGo", "#InnerPeace", "#GraceWins"],
+        "hashtags": ["#DailyPrayer", "#GodsGrace", "#PeaceOfGod", "#FaithInGod"],
         "hooks": [
             "If an old hurt or bitter memory resurfaced to trouble your heart today...",
             "When carrying resentment feels like holding onto burning embers...",
@@ -878,7 +878,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "COMFORT IN MOURNING",
         "recommended_image": "jesus_comforting_embrace.jpg",
         "scripture": BIBLICAL_CATALOGUE["grief_loss"],
-        "hashtags": ["#GriefSupport", "#ComfortInChrist", "#EternalHope", "#PreciousMemories"],
+        "hashtags": ["#GriefSupport", "#ComfortInChrist", "#GodIsWithYou", "#DailyPrayer"],
         "hooks": [
             "To anyone sitting with an empty chair and a heart full of memories tonight...",
             "When grief catches you unexpectedly in the middle of an ordinary day...",
@@ -912,7 +912,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "WISDOM FOR THE ROAD",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["guidance_direction"],
-        "hashtags": ["#DivineGuidance", "#GodsWill", "#WisdomDaily", "#NextSteps"],
+        "hashtags": ["#TrustGod", "#BibleVerse", "#DailyPrayer", "#ChristianReels"],
         "hooks": [
             "If you are standing at an important crossroads unsure of which path to take...",
             "When big decisions make your mind feel overwhelmed with questions...",
@@ -946,7 +946,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "RENEWED STRENGTH",
         "recommended_image": "jesus_reaching_hand.jpg",
         "scripture": BIBLICAL_CATALOGUE["strength_weary"],
-        "hashtags": ["#RenewedStrength", "#WearySoul", "#WaitOnTheLord", "#DailyGrace"],
+        "hashtags": ["#FaithOverFear", "#GodIsWithYou", "#DailyPrayer", "#RenewedStrength"],
         "hooks": [
             "If your energy is completely running on empty tonight...",
             "When carrying everyone else's needs has left you feeling exhausted...",
@@ -980,7 +980,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "CALM IN THE STORM",
         "recommended_image": "jesus_reaching_hand.jpg",
         "scripture": BIBLICAL_CATALOGUE["peace_in_storm"],
-        "hashtags": ["#PeaceInTheStorm", "#AnchorOfHope", "#FaithOverFear", "#CalmSoul"],
+        "hashtags": ["#PeaceInTheStorm", "#FaithOverFear", "#TrustGod", "#DailyPrayer"],
         "hooks": [
             "If external circumstances feel chaotic and swirling out of control today...",
             "When sudden bad news tries to shatter your quiet peace...",
@@ -1014,7 +1014,7 @@ VIRAL_THEMES: Dict[str, Dict[str, Any]] = {
         "hook_badge_text": "THE GIFT OF GRACE",
         "recommended_image": "holy_cross_calvary.jpg",
         "scripture": BIBLICAL_CATALOGUE["divine_grace"],
-        "hashtags": ["#GraceUponGrace", "#AcceptedInChrist", "#UnconditionalLove", "#ChristianAssurance"],
+        "hashtags": ["#GodsGrace", "#JesusChrist", "#DailyPrayer", "#BibleVerse"],
         "hooks": [
             "If you have been feeling spiritually inadequate or hard on yourself lately...",
             "Before you measure your standing with God by how well you performed today...",
@@ -1091,7 +1091,13 @@ def generate_seo_caption(
     cta: str,
     hashtags: List[str]
 ) -> str:
-    """Crea un copy breve: un solo extracto, referencia bíblica y CTA sin duplicar la locución."""
+    """Crea una descripción optimizada para el algoritmo de Meta Reels 2025/2026:
+    - Gancho frontal (< 120 caracteres) visible antes del corte 'Ver más'.
+    - Contexto devocional enriquecido con palabras clave semánticas para indexación de IA.
+    - Referencia bíblica canónica.
+    - Llamada a la acción relacional enfocada en Compartir y Guardar (máximo peso algorítmico).
+    - Exactamente 3 a 4 hashtags verificados de alta demanda comunitaria (evita penalización de spam).
+    """
     from engine.editorial import english_title, clean_narration
     title_key = next((key for key, theme in VIRAL_THEMES.items() if theme["title"] == theme_title), None)
     clean_title = english_title(title_key) if title_key else re.sub(r'^[^\w]+', '', theme_title).strip()
@@ -1099,27 +1105,36 @@ def generate_seo_caption(
     cta = clean_narration(cta)
     clean_cta = re.sub(r"\s+", " ", cta or "").strip()
 
-    # El llamador proporciona la locución completa. Retira el CTA final antes de
-    # elegir el extracto, porque el CTA se añade una sola vez como bloque propio.
     narration = re.sub(r"\s+", " ", prayer_text or "").strip().strip('"“”')
     if clean_cta and narration.casefold().endswith(clean_cta.casefold()):
         narration = narration[:-len(clean_cta)].rstrip(" —–-,:;")
 
-    # No copiar todo el audio a la descripción: deja solo la primera oración.
-    excerpt = re.split(r"(?<=[.!?])\s+", narration, maxsplit=1)[0].strip() if narration else ""
-    if len(excerpt) > 220:
-        excerpt = excerpt[:217].rstrip() + "..."
+    # Gancho directo < 120 caracteres para la primera línea visible
+    first_sentence = re.split(r"(?<=[.!?])\s+", narration, maxsplit=1)[0].strip() if narration else ""
+    if len(first_sentence) > 120:
+        hook_line = first_sentence[:117].rstrip() + "..."
+    else:
+        hook_line = first_sentence or f"A quiet prayer for {clean_title.lower()} today."
 
-    tags_str = " ".join((hashtags or [])[:5])
-    parts = [f"✝️ {clean_title} ✝️"]
-    if excerpt:
-        parts.extend(["", f"“{excerpt}”"])
+    # Bloque de contexto y consuelo
+    remaining = narration[len(first_sentence):].strip() if first_sentence else ""
+    context_sentence = re.split(r"(?<=[.!?])\s+", remaining, maxsplit=1)[0].strip() if remaining else ""
+
+    # CTA de alto impacto en Compartir y Guardar (las señales de mayor peso en Meta Reels)
+    relational_cta = "🕊️ Share this prayer with someone who needs God's peace today.\n💾 Save this post to revisit in your evening prayer."
+
+    # Hashtags verificados (máximo 4)
+    tags_str = " ".join((hashtags or [])[:4])
+
+    parts = [hook_line]
+    if context_sentence:
+        parts.extend(["", context_sentence])
     if scripture:
         parts.extend(["", f"📖 {scripture}"])
-    if clean_cta:
-        parts.extend(["", f"🕊️ {clean_cta}"])
+    parts.extend(["", relational_cta])
     if tags_str:
         parts.extend(["", tags_str])
+
     return "\n".join(parts)
 
 
@@ -1130,6 +1145,7 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
                                       include_cta=True):
     """Composer local con memoria, perspectiva seleccionada y CTA empático."""
     from engine.narrative_composer import build_narration, build_hook, NARRATION_TYPES
+    from engine.translator import translate_en_to_es, translate_list_en_to_es
     history = get_history_manager()
     records = history.load_history()
     if theme_key not in VIRAL_THEMES:
@@ -1167,12 +1183,20 @@ def generate_internal_template_script(theme_key=None, custom_topic=None, mode="d
         narration_type=style, narrative_angle=part["narrative_angle"],
         scene_prompts=[prompts["scene_1_prompt"],prompts["scene_2_prompt"],prompts["scene_3_prompt"]]
     )
+
+    # 3 Alternativas de gancho
+    theme_hooks = theme.get("hooks", [hook])
+    hook_options = list(dict.fromkeys([hook] + theme_hooks))[:3]
+    while len(hook_options) < 3:
+        hook_options.append(f"A gentle prayer for today: {hook}")
+
     return {
         "theme_key":theme_key, "theme_title_es":theme["title"],
         "thematic_pillar":theme.get("pillar",""),
         "human_situation":theme.get("human_situation",""),
         "central_idea":theme.get("central_idea",""),
-        "hook":hook,"body":body,"closing":closing,"cta":cta,"full_text":full,
+        "hook":hook, "hook_options": hook_options,
+        "body":body, "closing":closing,"cta":cta, "full_text":full,
         "word_count":len(full.split()),"mode":mode,"narration_type":style,
         "tone":style,"perspective":style,"seamless_loop":False,
         "narrative_angle":part["narrative_angle"],

@@ -227,10 +227,13 @@ class RenderRequest(BaseModel):
     hook: str
     body: str
     cta: str = ""
+    hook_en: Optional[str] = None
+    body_en: Optional[str] = None
+    cta_en: Optional[str] = None
     theme_key: Optional[str] = "morning_favor"
     voice_key: str = "guy"
     rate: str = "-6%"
-    video_mode: str = "images"  # "images" or "broll"
+    video_mode: str = "images"  # strictly images
     image_name: str = "jesus_healing_miracle.jpg"
     image_name_2: Optional[str] = None
     image_name_3: Optional[str] = None
@@ -354,11 +357,22 @@ def api_generate_script(req: ScriptRequest):
             gemini_api_key=keys.get("gemini_api_key"),
             groq_api_key=keys.get("groq_api_key")
         )
-    return generate_script(
+    res = generate_script(
         req.theme_key, req.custom_topic or req.specific_focus, mode=req.mode, narration_type=req.narration_type,
         include_cta=req.include_cta, seamless_loop=False,
         brief=req.brief.model_dump() if req.brief else None
     )
+    from engine.translator import translate_en_to_es, translate_list_en_to_es
+    if not res.get("hook_es"):
+        res["hook_es"] = translate_en_to_es(res.get("hook", ""))
+    if not res.get("body_es"):
+        res["body_es"] = translate_en_to_es(res.get("body", ""))
+    if not res.get("cta_es") and res.get("cta"):
+        res["cta_es"] = translate_en_to_es(res.get("cta", ""))
+    if not res.get("hook_options_es"):
+        opts = res.get("hook_options") or res.get("hook_alternatives") or [res.get("hook", "")]
+        res["hook_options_es"] = translate_list_en_to_es(opts)
+    return res
 
 @app.get("/api/editorial-config")
 @app.get("/studio/api/editorial-config")
@@ -789,12 +803,17 @@ async def preview_audio(req: AudioPreviewRequest):
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="El texto no puede estar vacío.")
 
+    from engine.translator import is_spanish_text, translate_es_to_en
+    text_to_speak = req.text.strip()
+    if is_spanish_text(text_to_speak):
+        text_to_speak = translate_es_to_en(text_to_speak)
+
     voice_key = LEGACY_VOICE_MAP.get(req.voice_key, req.voice_key)
     voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
     audio_id = f"preview_{uuid.uuid4().hex[:8]}.mp3"
     audio_path = os.path.join(OUTPUTS_DIR, audio_id)
 
-    await synthesize_speech(req.text, voice_info["id"], audio_path, rate=req.rate)
+    await synthesize_speech(text_to_speak, voice_info["id"], audio_path, rate=req.rate)
     return {"audio_url": f"/outputs/{audio_id}"}
 
 
@@ -803,7 +822,24 @@ async def preview_audio(req: AudioPreviewRequest):
 @app.post("/api/render-video")
 @app.post("/studio/api/render-video")
 async def api_render_video(req: RenderRequest):
-    full_text = f"{req.hook.strip()} {req.body.strip()} {req.cta.strip()}"
+    from engine.translator import is_spanish_text, translate_es_to_en
+
+    # Determinar texto en inglés para locución TTS y subtítulos
+    narration_hook = (req.hook_en or "").strip()
+    narration_body = (req.body_en or "").strip()
+    narration_cta = (req.cta_en or "").strip()
+
+    # Si no se pasó explícitamente texto en inglés o si el usuario editó en español en la UI:
+    if not narration_hook or is_spanish_text(req.hook):
+        narration_hook = translate_es_to_en(req.hook.strip()) if is_spanish_text(req.hook) else req.hook.strip()
+
+    if not narration_body or is_spanish_text(req.body):
+        narration_body = translate_es_to_en(req.body.strip()) if is_spanish_text(req.body) else req.body.strip()
+
+    if req.cta and (not narration_cta or is_spanish_text(req.cta)):
+        narration_cta = translate_es_to_en(req.cta.strip()) if is_spanish_text(req.cta) else req.cta.strip()
+
+    full_text = f"{narration_hook} {narration_body} {narration_cta}".strip()
     if not full_text.strip():
         raise HTTPException(status_code=400, detail="El guion no puede estar vacío.")
 
@@ -825,12 +861,12 @@ async def api_render_video(req: RenderRequest):
         word_count = len(full_text.split())
         estimated_dur = round((word_count / 125.0) * 60.0, 1)
 
-        # 1. Synthesize TTS audio
+        # 1. Synthesize TTS audio in English
         voice_key = LEGACY_VOICE_MAP.get(req.voice_key, req.voice_key)
         voice_info = VOICES.get(voice_key, VOICES.get("adam", list(VOICES.values())[0]))
         cues = await synthesize_speech(full_text, voice_info["id"], audio_file, rate=req.rate)
         audio_dur = round(get_audio_duration(audio_file), 2)
-        scene_breaks = compute_scene_breaks(req.hook, req.body, req.cta, audio_dur, cues)
+        scene_breaks = compute_scene_breaks(narration_hook, narration_body, narration_cta, audio_dur, cues)
 
         # 2. Generate ASS subtitles & Embedded Particles
         margin_v = 400 if req.subtitle_size == "large" else 440

@@ -806,7 +806,6 @@ def generate_ai_scene_image(
                 target_model = CLOUDFLARE_MODELS["klein_4b"]
                 engine_used = "Cloudflare FLUX.2 Klein 4B (Auto Escena 2/3)"
 
-        # Ejecutar llamada oficial (las excepciones se propagan directamente para informar el error real)
         try:
             img_bytes = generate_cloudflare_flux_klein(
                 prompt=prompt,
@@ -815,23 +814,24 @@ def generate_ai_scene_image(
                 reference_image_path=reference_image_path,
                 scene_num=scene_num
             )
-        except RuntimeError as cf_err:
-            if "flagged" in str(cf_err).lower():
-                print(f"[ImageGen] Cloudflare Workers AI bloqueó por filtro de seguridad (falso positivo). Activando respaldo automático en Pollinations FLUX...")
-                try:
-                    img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
-                    engine_used = "Pollinations FLUX (Respaldo por filtro Cloudflare)"
-                except Exception as fb_err:
-                    print(f"[ImageGen] Respaldo Pollinations falló ({fb_err}). Re-lanzando error de Cloudflare.")
-                    raise cf_err
-            else:
-                raise cf_err
+        except Exception as cf_err:
+            print(f"[ImageGen] Cloudflare Workers AI reportó error ({cf_err}). Activando respaldo automático en Pollinations FLUX...")
+            try:
+                img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+                engine_used = "Pollinations FLUX (Respaldo Automático)"
+            except Exception as fb_err:
+                raise RuntimeError(f"Fallo en Cloudflare ({cf_err}) y en respaldo Pollinations: {fb_err}")
 
     # ─── Google Imagen 3 (Google AI Studio — Cuota Gratuita) ──────────────────
     elif norm_provider in ("google_imagen", "imagen3", "google", "imagen_3"):
         gem_key = gemini_api_key or keys.get("gemini_api_key", "")
-        img_bytes = generate_google_imagen(prompt=prompt, aspect_ratio=aspect_ratio, api_key=gem_key)
-        engine_used = "Google Imagen 3 (Google AI Studio)"
+        try:
+            img_bytes = generate_google_imagen(prompt=prompt, aspect_ratio=aspect_ratio, api_key=gem_key)
+            engine_used = "Google Imagen 3 (Google AI Studio)"
+        except Exception as gim_err:
+            print(f"[ImageGen] Google Imagen 3 falló ({gim_err}). Respaldo automático en Pollinations FLUX...")
+            img_bytes = generate_pollinations(prompt, aspect_ratio=aspect_ratio)
+            engine_used = "Pollinations FLUX (Respaldo de Google Imagen)"
 
     # ─── Cascada Automática Resiliente (Pollinations -> FLUX -> Z-Image -> Horde)
     elif norm_provider in ("auto", "cascada", "resilient"):
